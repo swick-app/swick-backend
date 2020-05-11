@@ -1,6 +1,31 @@
 {% extends 'restaurant/base.html' %}
+{% load bootstrap3 %}
 
 {% block title %}Account{% endblock %}
 
-{% block page %}
+{% block content %}
+  <div class="col-lg-offset-2 col-lg-8">
+    <!--- Account header --->
+    <div class="panel">
+      <div class="panel-heading bg-blue">
+        <h4 class="panel-title text-center">
+          Account
+        </h4>
+      </div>
+
+      <!--- User and restaurant forms --->
+      <div class="panel-body">
+        <form method="POST" enctype="multipart/form-data">
+          {% csrf_token %}
+          {% bootstrap_form user_form %}
+          {% bootstrap_form restaurant_form %}
+          <button type="submit" class="btn btn-blue">Update</button>
+        </form>
+        <br>
+
+        <!--- Change password link --->
+        <a href="{% url 'password_change' %}">Change password</a>
+      </div>
+    </div>
+  </div>
 {% endblock %}

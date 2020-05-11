@@ -4,12 +4,12 @@
 {% block title %}Sign up{% endblock %}
 {% block heading %}Restaurant sign up{% endblock %}
 
-{% block page %}
+{% block content %}
 <form method="POST" enctype="multipart/form-data">
   {% csrf_token %}
   {% bootstrap_form user_form %}
   {% bootstrap_form restaurant_form %}
-  <button type="submit" class="btn btn-blue pull-right">Sign up</button>
-  <a href="{% url 'restaurant-login'%}">Already have an account?</a>
+  <button type="submit" class="btn btn-blue">Sign up</button>
+  <a href="{% url 'login'%}" class="pull-right">Already have an account?</a>
 </form>
 {% endblock %}

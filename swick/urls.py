@@ -1,7 +1,6 @@
 from django.contrib import admin
 from django.urls import path, include
 from swickapp import views
-from django.contrib.auth import views as auth_views
 from django.conf.urls.static import static
 from django.conf import settings
 
@@ -11,31 +10,34 @@ urlpatterns = [
     # Home page url
     path('', views.home, name='home'),
 
+    ##### RESTAURANT REGISTRATION URLS #####
+    # accounts/login/ [name='login']
+    # accounts/logout/ [name='logout']
+    # accounts/password_change/ [name='password_change']
+    # accounts/password_change/done/ [name='password_change_done']
+    # accounts/password_reset/ [name='password_reset']
+    # accounts/password_reset/done/ [name='password_reset_done']
+    # accounts/reset/<uidb64>/<token>/ [name='password_reset_confirm']
+    # accounts/reset/done/ [name='password_reset_complete']
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('accounts/sign_up/', views.restaurant_sign_up,
+        name = 'sign_up'),
+
     ##### RESTAURANT URLS #####
     # Restaurant home page url
     path('restaurant/', views.restaurant_home, name = 'restaurant-home'),
-    # Restaurant login url
-    # registration/login.html is automatically set as template
-    path('restaurant/login/', auth_views.LoginView.as_view(),
-        name = 'restaurant-login'),
-    # Restaurant logout url
-    path('restaurant/logout/', auth_views.LogoutView.as_view(),
-        {'next_page': '/'}, name = 'restaurant-logout'),
-    # Restaurant sign-up url
-    path('restaurant/sign-up/', views.restaurant_sign_up,
-        name = 'restaurant-sign-up'),
     # Restaurant menu page url
     path('restaurant/menu/', views.restaurant_menu,
-        name = 'restaurant-menu'),
+        name = 'restaurant_menu'),
     # Restaurant order history page url
     path('restaurant/order-history/', views.restaurant_order_history,
-        name = 'restaurant-order-history'),
+        name = 'restaurant_order_history'),
     # Restaurant servers page url
     path('restaurant/servers/', views.restaurant_servers,
-        name = 'restaurant-servers'),
+        name = 'restaurant_servers'),
     # Restaurant account page url
     path('restaurant/account/', views.restaurant_account,
-        name = 'restaurant-account'),
+        name = 'restaurant_account'),
 
     # Facebook authentication
     # /api/social/convert-token POST request to get Django access token

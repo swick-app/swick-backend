@@ -4,11 +4,13 @@
 {% block title %}Login{% endblock %}
 {% block heading %}Restaurant login{% endblock %}
 
-{% block page %}
+{% block content %}
 <form method="POST">
-    {% csrf_token %}
-    {% bootstrap_form form %}
-    <button type="submit" class="btn btn-blue pull-right">Login</button>
-    <a href="{% url 'restaurant-sign-up' %}">Create an account</a>
-  </form>
+  {% csrf_token %}
+  {% bootstrap_form form %}
+  <button type="submit" class="btn btn-blue">Login</button>
+  <a href="{% url 'sign_up' %}" class="pull-right">Create an account</a>
+  <br>
+  <a href="{% url 'password_reset' %}" class="pull-right">Forgot your password?</a>
+</form>
 {% endblock %}

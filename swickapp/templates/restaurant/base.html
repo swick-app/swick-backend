@@ -23,26 +23,26 @@
           <!--- Navigation bar items --->
           <div class="text-center">
             <div class="list-group">
-              <a href="{% url 'restaurant-menu' %}"
+              <a href="{% url 'restaurant_menu' %}"
                 class="list-group-item">Menu</a>
-              <a href="{% url 'restaurant-order-history' %}"
+              <a href="{% url 'restaurant_order_history' %}"
                 class="list-group-item">Order History</a>
-              <a href="{% url 'restaurant-servers' %}"
+              <a href="{% url 'restaurant_servers' %}"
                 class="list-group-item">Servers</a>
-              <a href="{% url 'restaurant-account' %}"
+              <a href="{% url 'restaurant_account' %}"
                 class="list-group-item">Account</a>
             </div>
           </div>
           <!--- Logout button --->
           <div class="text-center">
-            <a href="{% url 'restaurant-logout' %}?next={{ request.path }}"
+            <a href="{% url 'logout' %}?next={{ request.path }}"
                 class="btn btn-blue">Logout</a>
           </div>
       </div>
 
       <!--- Page content --->
-      <div class="col-lg-10 col-md-10 col-sm-10 content">
-          {% block page %}{% endblock %}
+      <div class="col-lg-10 col-lg-offset-2 col-md-10 col-md-offset-2 col-sm-10 col-sm-offset-2 content">
+          {% block content %}{% endblock %}
       </div>
     </div>
   </div>

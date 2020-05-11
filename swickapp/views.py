@@ -1,17 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from swickapp.forms import UserForm, RestaurantForm
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 
 # Home page: redirect to restaurant home page
 def home(request):
     return redirect(restaurant_home)
-
-# Restaurant home page
-@login_required(login_url='/restaurant/login/')
-def restaurant_home(request):
-    return redirect(restaurant_menu)
 
 # Restaurant sign up page
 def restaurant_sign_up(request):
@@ -44,22 +39,41 @@ def restaurant_sign_up(request):
         "restaurant_form": restaurant_form,
     })
 
+# Restaurant home page
+@login_required(login_url='/accounts/login/')
+def restaurant_home(request):
+    return redirect(restaurant_menu)
+
 # Restaurant menu page
-@login_required(login_url='/restaurant/login/')
+@login_required(login_url='/accounts/login/')
 def restaurant_menu(request):
     return render(request, 'restaurant/menu.html', {})
 
 # Restaurant order history page
-@login_required(login_url='/restaurant/login/')
+@login_required(login_url='/accounts/login/')
 def restaurant_order_history(request):
     return render(request, 'restaurant/order_history.html', {})
 
 # Restaurant servers page
-@login_required(login_url='/restaurant/login/')
+@login_required(login_url='/accounts/login/')
 def restaurant_servers(request):
     return render(request, 'restaurant/servers.html', {})
 
 # Restaurant account page
-@login_required(login_url='/restaurant/login/')
+@login_required(login_url='/accounts/login/')
 def restaurant_account(request):
-    return render(request, 'restaurant/account.html', {})
+    user_form = UserUpdateForm(instance = request.user)
+    restaurant_form = RestaurantForm(instance = request.user.restaurant)
+
+    # Update account info
+    if request.method == "POST":
+        user_form = UserUpdateForm(request.POST, instance = request.user)
+        restaurant_form = RestaurantForm(request.POST, request.FILES, instance = request.user.restaurant)
+        if user_form.is_valid() and restaurant_form.is_valid():
+            user_form.save()
+            restaurant_form.save()
+
+    return render(request, 'restaurant/account.html', {
+        "user_form": user_form,
+        "restaurant_form": restaurant_form,
+    })

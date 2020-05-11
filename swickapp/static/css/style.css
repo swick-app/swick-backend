@@ -1,5 +1,6 @@
 body {
   padding-top: 50px;
+  background-color: #ebf4fa;
   overflow: auto;
 }
 
@@ -60,4 +61,7 @@ body {
 /* Content */
 .content {
   padding: 0 40px;
+}
+.content .panel {
+  border-color: none;
 }
