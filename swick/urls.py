@@ -24,6 +24,7 @@ urlpatterns = [
     # Restaurant sign-up url
     path('restaurant/sign-up/', views.restaurant_sign_up,
         name = 'restaurant-sign-up'),
+
     # Facebook authentication
     # /api/social/convert-token POST request to get Django access token
     # grant_type: convert-token

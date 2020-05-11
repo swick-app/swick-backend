@@ -28,6 +28,8 @@ class Customer(models.Model):
 class Server(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE,
         related_name = 'server')
+    restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE,
+        null = True)
 
     def __str__(self):
         return self.user.get_full_name()
