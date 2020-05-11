@@ -1,18 +1,14 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="{% static 'css/bootstrap.min.css' %}">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <script src="{% static 'js/bootstrap.min.js' %}"></script>
-  <title>Home page</title>
-</head>
-<body>
-  <form method="POST">
-      {% csrf_token %}
-      {{ form }}
-      <button type="submit">Login</button>
-    </form>
-</body>
-</html>
+{% extends 'registration/base.html' %}
+{% load bootstrap3 %}
+
+{% block title %}Login{% endblock %}
+{% block heading %}Restaurant login{% endblock %}
+
+{% block page %}
+<form method="POST">
+    {% csrf_token %}
+    {% bootstrap_form form %}
+    <button type="submit" class="btn btn-blue pull-right">Login</button>
+    <a href="{% url 'restaurant-sign-up' %}">Create an account</a>
+  </form>
+{% endblock %}

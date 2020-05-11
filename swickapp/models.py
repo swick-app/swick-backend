@@ -7,7 +7,6 @@ class Restaurant(models.Model):
     user = models.OneToOneField(User, on_delete = models.CASCADE,
         related_name = 'restaurant')
     restaurant_name = models.CharField(max_length = 256)
-    restaurant_phone_number = models.CharField(max_length = 32)
     restaurant_address = models.CharField(max_length = 256)
     restaurant_image = models.ImageField(upload_to = 'restaurant_images/',
         blank = False)

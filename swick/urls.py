@@ -24,6 +24,18 @@ urlpatterns = [
     # Restaurant sign-up url
     path('restaurant/sign-up/', views.restaurant_sign_up,
         name = 'restaurant-sign-up'),
+    # Restaurant menu page url
+    path('restaurant/menu/', views.restaurant_menu,
+        name = 'restaurant-menu'),
+    # Restaurant order history page url
+    path('restaurant/order-history/', views.restaurant_order_history,
+        name = 'restaurant-order-history'),
+    # Restaurant servers page url
+    path('restaurant/servers/', views.restaurant_servers,
+        name = 'restaurant-servers'),
+    # Restaurant account page url
+    path('restaurant/account/', views.restaurant_account,
+        name = 'restaurant-account'),
 
     # Facebook authentication
     # /api/social/convert-token POST request to get Django access token

@@ -11,7 +11,7 @@ def home(request):
 # Restaurant home page
 @login_required(login_url='/restaurant/login/')
 def restaurant_home(request):
-    return render(request, 'restaurant/home.html', {})
+    return redirect(restaurant_menu)
 
 # Restaurant sign up page
 def restaurant_sign_up(request):
@@ -43,3 +43,23 @@ def restaurant_sign_up(request):
         "user_form": user_form,
         "restaurant_form": restaurant_form,
     })
+
+# Restaurant menu page
+@login_required(login_url='/restaurant/login/')
+def restaurant_menu(request):
+    return render(request, 'restaurant/menu.html', {})
+
+# Restaurant order history page
+@login_required(login_url='/restaurant/login/')
+def restaurant_order_history(request):
+    return render(request, 'restaurant/order_history.html', {})
+
+# Restaurant servers page
+@login_required(login_url='/restaurant/login/')
+def restaurant_servers(request):
+    return render(request, 'restaurant/servers.html', {})
+
+# Restaurant account page
+@login_required(login_url='/restaurant/login/')
+def restaurant_account(request):
+    return render(request, 'restaurant/account.html', {})

@@ -1,0 +1,63 @@
+body {
+  padding-top: 50px;
+  overflow: auto;
+}
+
+/* Light blue background color */
+.bg-blue {
+  background-color: #bad9f5;
+}
+
+/* Dark blue button color */
+.btn-blue {
+  color: white;
+  background-color: #063f80;
+}
+.btn-blue:hover, .btn-blue:focus {
+  color: white;
+  background-color: #0867d4;
+}
+
+/* Sidebar */
+.sidebar {
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  padding: 0;
+  background-color: #bad9f5;
+  overflow: auto;
+}
+
+/* Sidebar header */
+.sidebar > div:first-child {
+  padding: 20px;
+  background-color: #96cafa;
+}
+.sidebar > div:first-child > h3 {
+  padding-bottom: 15px;
+}
+
+/* Sidebar list */
+.sidebar .list-group .list-group-item,
+.sidebar .list-group .list-group-item:focus {
+  background-color: #bad9f5;
+  color: #474747;
+  border: 0;
+  padding-top: 15px;
+  padding-bottom: 15px;
+}
+.sidebar .list-group .list-group-item.active,
+.sidebar .list-group .list-group-item:hover {
+  background-color: #96cafa;
+  color: black;
+}
+
+/* Sidebar logout button */
+.sidebar > div:last-child .btn {
+  width: 80%;
+}
+
+/* Content */
+.content {
+  padding: 0 40px;
+}
