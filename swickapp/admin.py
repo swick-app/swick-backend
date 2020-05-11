@@ -1,5 +1,7 @@
 from django.contrib import admin
-from swickapp.models import Restaurant
+from swickapp.models import Restaurant, Customer, Server
 
-# Display restaurants on Django dashboard
+# Display models on Django dashboard
 admin.site.register(Restaurant)
+admin.site.register(Customer)
+admin.site.register(Server)
