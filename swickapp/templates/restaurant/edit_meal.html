@@ -10,11 +10,19 @@
       </h4>
     </div>
     <div class="panel-body">
+      <!--- Form to update meal --->
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         {% bootstrap_form form %}
-        <button type="submit" class="btn btn-blue">Update</button>
+        <button type="submit" class="btn btn-blue" name="update">Update</button>
       </form>
+      <br>
+      <!--- Button to delete meal --->
+      <form method="POST">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-danger" name="delete">Delete</button>
+      </form>
+      <div class="clearfix"></div>
     </div>
   </div>
 </div>

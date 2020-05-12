@@ -12,7 +12,7 @@
 <body>
   <!--- Aliases for navigation bar item active conditional --->
   {% url 'restaurant_menu' as menu_url %}
-  {% url 'restaurant_order_history' as order_history_url %}
+  {% url 'restaurant_orders' as orders_url %}
   {% url 'restaurant_servers' as servers_url %}
   {% url 'restaurant_account' as account_url %}
 
@@ -23,7 +23,7 @@
       <div class="col-lg-2 col-md-2 col-sm-2 sidebar">
           <!--- Display name and restaurant name --->
           <div class="text-center">
-            <h3>SWICK</h3>
+            <h3><i>SWICK</i></h3>
             <h5>{{ request.user.restaurant.restaurant_name }}</h5>
           </div>
           <br>
@@ -32,9 +32,9 @@
             <a href="{% url 'restaurant_menu' %}"
               class="list-group-item {% if request.path == menu_url %} active {% endif %}">
               Menu</a>
-            <a href="{% url 'restaurant_order_history' %}"
-              class="list-group-item {% if request.path == order_history_url %} active {% endif %}">
-              Order History</a>
+            <a href="{% url 'restaurant_orders' %}"
+              class="list-group-item {% if request.path == orders %} active {% endif %}">
+              Orders</a>
             <a href="{% url 'restaurant_servers' %}"
               class="list-group-item {% if request.path == servers_url %} active {% endif %}">
               Servers</a>

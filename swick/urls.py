@@ -36,8 +36,8 @@ urlpatterns = [
     path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
         name = 'restaurant_edit_meal'),
     # Restaurant order history page url
-    path('restaurant/order_history/', views.restaurant_order_history,
-        name = 'restaurant_order_history'),
+    path('restaurant/orders/', views.restaurant_orders,
+        name = 'restaurant_orders'),
     # Restaurant servers page url
     path('restaurant/servers/', views.restaurant_servers,
         name = 'restaurant_servers'),

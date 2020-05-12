@@ -1,52 +1,47 @@
 {% extends 'restaurant/base.html' %}
 
 {% block content %}
-  <div class="panel">
-    <!--- Menu header --->
-    <div class="panel-heading bg-blue">
-      <h4 class="panel-title text-center">Menu</h4>
-    </div>
-
-    <div class="panel-body">
-      <!--- Add meal button --->
-      <div class="text-right">
-        <a href="{% url 'restaurant_add_meal' %}" class="btn btn-blue">Add Meal</a>
-        <br/>
-        <br/>
-      </div>
-
-      <!--- Meals table --->
-      <table class="table table-bordered table-hover">
-        <!--- Meals table header --->
-        <thead>
-          <tr class="bg-light-blue">
-            <th class="text-center">Name</th>
-            <th class="text-center">Description</th>
-            <th class="text-center">Price</th>
-            <th class="text-center">Image</th>
-            <th class="text-center">Edit</th>
-          </tr>
-        </thead>
-        <!--- Meals table body --->
-        <tbody>
-          {% for meal in meals %}
-            <tr>
-              <td>{{ meal.name }}</td>
-              <td>{{ meal.description }}</td>
-              <td>${{ meal.price }}</td>
-              <td class="text-center">
-                <img class="img-rounded" src="{{ MEDIA_URL }}{{ meal.image }}"
-                  width="80" height="60"
-              </td>
-              <td class="text-center">
-                <a href="{% url 'restaurant_edit_meal' meal.id %}">
-                  <button class="btn btn-blue">Edit</button>
-                </a>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
+<div class="panel">
+  <!--- Menu header --->
+  <div class="panel-heading bg-blue">
+    <h4 class="panel-title text-center">Menu</h4>
   </div>
+
+  <div class="panel-body">
+    <!--- Add meal button --->
+    <a href="{% url 'restaurant_add_meal' %}" class="btn btn-success pull-right">Add Meal</a>
+    <br/>
+    <br/>
+
+    <!--- Menu table --->
+    <table class="table table-bordered table-hover">
+      <!--- Menu table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Name</th>
+          <th class="text-center">Description</th>
+          <th class="text-center">Price</th>
+          <th class="text-center">Image</th>
+        </tr>
+      </thead>
+      <!--- Menu table body --->
+      <tbody>
+        {% for meal in meals %}
+          <tr>
+            <td><a href="{% url 'restaurant_edit_meal' meal.id %}">
+              {{ meal.name }}
+            </a></td>
+            <td>{{ meal.description }}</td>
+            <td>${{ meal.price }}</td>
+            <!--- Meal image --->
+            <td class="text-center">
+              <img class="img-rounded" src="{{ MEDIA_URL }}{{ meal.image }}"
+                width="80" height="60"
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

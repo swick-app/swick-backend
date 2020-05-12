@@ -1,0 +1,51 @@
+{% extends 'restaurant/base.html' %}
+
+{% block content %}
+<div class="panel">
+  <!--- Order header --->
+  <div class="panel-heading bg-blue">
+    <h4 class="panel-title text-center">Orders</h4>
+  </div>
+
+  <div class="panel-body">
+
+    <!--- Orders table --->
+    <table class="table table-bordered table-hover">
+      <!--- Orders table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Time</th>
+          <th class="text-center">Status</th>
+          <th class="text-center">Customer</th>
+          <th class="text-center">Table</th>
+          <th class="text-center">Chef</th>
+          <th class="text-center">Server</th>
+          <th class="text-center">Details</th>
+          <th class="text-center">Total</th>
+        </tr>
+      </thead>
+      <!--- Orders table body --->
+      <tbody>
+        {% for order in orders %}
+          <tr>
+              <td>{{ order.order_time|date:"d/m/y g:iA" }}</td>
+              <td>{{ order.get_status_display }}</td>
+              <td>{{ order.customer }}</td>
+              <td>{{ order.table }}</td>
+              <td>{{ order.chef }}</td>
+              <td>{{ order.server }}</td>
+              <!--- Details --->
+              <td>
+                {% for om in order.order_meal.all %}
+                  {{ om.meal.name }}: {{ om.quantity }} x ${{ om.meal.price }}
+                  = ${{ om.total }}
+                {% endfor %}
+              </td>
+              <td>${{ order.total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
