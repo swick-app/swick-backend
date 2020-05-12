@@ -8,8 +8,7 @@ class Restaurant(models.Model):
         related_name = 'restaurant')
     restaurant_name = models.CharField(max_length = 256)
     restaurant_address = models.CharField(max_length = 256)
-    restaurant_image = models.ImageField(upload_to = 'restaurant_images/',
-        blank = False)
+    restaurant_image = models.ImageField()
 
     # For displaying name in Django dashboard
     def __str__(self):
@@ -32,3 +31,14 @@ class Server(models.Model):
 
     def __str__(self):
         return self.user.get_full_name()
+
+# Meal model
+class Meal(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
+    name = models.CharField(max_length = 256)
+    description = models.CharField(max_length = 512)
+    price = models.DecimalField(max_digits = 7, decimal_places = 2)
+    image = models.ImageField(blank = True, null = True)
+
+    def __str__(self):
+        return self.name

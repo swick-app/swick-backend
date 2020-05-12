@@ -1,8 +1,9 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm
+from swickapp.models import Meal
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -47,7 +48,45 @@ def restaurant_home(request):
 # Restaurant menu page
 @login_required(login_url='/accounts/login/')
 def restaurant_menu(request):
-    return render(request, 'restaurant/menu.html', {})
+    # Get all of restaurant's meals from database
+    meals = Meal.objects.filter(restaurant = request.user.restaurant).order_by("-id")
+    return render(request, 'restaurant/menu.html', {"meals": meals})
+
+# Restaurant add meal page
+@login_required(login_url='/accounts/login/')
+def restaurant_add_meal(request):
+    form = MealForm()
+
+    if request.method == "POST":
+        form = MealForm(request.POST, request.FILES)
+
+        if form.is_valid():
+            meal = form.save(commit = False)
+            meal.restaurant = request.user.restaurant
+            meal.save()
+            return redirect(restaurant_menu)
+
+    return render(request, 'restaurant/add_meal.html', {
+        "form": form
+    })
+
+# Restaurant edit meal page
+@login_required(login_url='/accounts/login/')
+def restaurant_edit_meal(request, meal_id):
+    # Get meal from database with meal_id
+    form = MealForm(instance = Meal.objects.get(id = meal_id))
+
+    if request.method == "POST":
+        form = MealForm(request.POST, request.FILES,
+            instance = Meal.objects.get(id = meal_id))
+
+        if form.is_valid():
+            form.save()
+            return redirect(restaurant_menu)
+
+    return render(request, 'restaurant/edit_meal.html', {
+        "form": form
+    })
 
 # Restaurant order history page
 @login_required(login_url='/accounts/login/')

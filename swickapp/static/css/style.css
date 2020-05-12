@@ -1,12 +1,18 @@
 body {
   padding-top: 50px;
+  /* Background color */
   background-color: #ebf4fa;
   overflow: auto;
 }
 
-/* Light blue background color */
+/* Blue color */
 .bg-blue {
   background-color: #bad9f5;
+}
+
+/* Light blue color */
+.bg-light-blue {
+  background-color: #ebf4fa;
 }
 
 /* Dark blue button color */
@@ -14,7 +20,8 @@ body {
   color: white;
   background-color: #063f80;
 }
-.btn-blue:hover, .btn-blue:focus {
+.btn-blue:hover,
+.btn-blue:focus {
   color: white;
   background-color: #0867d4;
 }
@@ -63,5 +70,5 @@ body {
   padding: 0 40px;
 }
 .content .panel {
-  border-color: none;
+  border: none;
 }

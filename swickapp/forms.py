@@ -1,10 +1,10 @@
 from django import forms
 from django.contrib.auth.models import User
-from swickapp.models import Restaurant
+from swickapp.models import Restaurant, Meal
 
 # Restaurant owner form
 class UserForm(forms.ModelForm):
-    email = forms.CharField(max_length=256, required=True)
+    email = forms.CharField(max_length = 256)
     password = forms.CharField(widget=forms.PasswordInput())
 
     class Meta:
@@ -14,7 +14,7 @@ class UserForm(forms.ModelForm):
 
 # Restaurant owner update form
 class UserUpdateForm(forms.ModelForm):
-    email = forms.CharField(max_length=256, required=True)
+    email = forms.CharField(max_length = 256)
 
     class Meta:
         # Model imported from django
@@ -26,3 +26,10 @@ class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
         fields = ("restaurant_name", "restaurant_address", "restaurant_image")
+
+# Meal form
+class MealForm(forms.ModelForm):
+    class Meta:
+        model = Meal
+        # Exlude restaurant form from meal form
+        exclude = ("restaurant",)

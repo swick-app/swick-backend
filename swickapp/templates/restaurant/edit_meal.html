@@ -4,23 +4,17 @@
 {% block content %}
 <div class="col-lg-offset-2 col-lg-8">
   <div class="panel">
-    <!--- Account header --->
     <div class="panel-heading bg-blue">
-      <h4 class="panel-title text-center">Account</h4>
+      <h4 class="panel-title text-center">
+        Edit Meal
+      </h4>
     </div>
-
     <div class="panel-body">
-      <!--- User and restaurant forms --->
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {% bootstrap_form user_form %}
-        {% bootstrap_form restaurant_form %}
+        {% bootstrap_form form %}
         <button type="submit" class="btn btn-blue">Update</button>
       </form>
-      <br>
-
-      <!--- Change password link --->
-      <a href="{% url 'password_change' %}">Change password</a>
     </div>
   </div>
 </div>

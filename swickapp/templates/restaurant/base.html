@@ -7,9 +7,15 @@
   <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
   <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <title>{% block title %}{% endblock %}</title>
+  <title>Swick</title>
 </head>
 <body>
+  <!--- Aliases for navigation bar item active conditional --->
+  {% url 'restaurant_menu' as menu_url %}
+  {% url 'restaurant_order_history' as order_history_url %}
+  {% url 'restaurant_servers' as servers_url %}
+  {% url 'restaurant_account' as account_url %}
+
   <div class="container-fluid">
     <div class="row">
 
@@ -20,18 +26,21 @@
             <h3>SWICK</h3>
             <h5>{{ request.user.restaurant.restaurant_name }}</h5>
           </div>
+          <br>
           <!--- Navigation bar items --->
-          <div class="text-center">
-            <div class="list-group">
-              <a href="{% url 'restaurant_menu' %}"
-                class="list-group-item">Menu</a>
-              <a href="{% url 'restaurant_order_history' %}"
-                class="list-group-item">Order History</a>
-              <a href="{% url 'restaurant_servers' %}"
-                class="list-group-item">Servers</a>
-              <a href="{% url 'restaurant_account' %}"
-                class="list-group-item">Account</a>
-            </div>
+          <div class="list-group text-center">
+            <a href="{% url 'restaurant_menu' %}"
+              class="list-group-item {% if request.path == menu_url %} active {% endif %}">
+              Menu</a>
+            <a href="{% url 'restaurant_order_history' %}"
+              class="list-group-item {% if request.path == order_history_url %} active {% endif %}">
+              Order History</a>
+            <a href="{% url 'restaurant_servers' %}"
+              class="list-group-item {% if request.path == servers_url %} active {% endif %}">
+              Servers</a>
+            <a href="{% url 'restaurant_account' %}"
+              class="list-group-item {% if request.path == account_url %} active {% endif %}">
+              Account</a>
           </div>
           <!--- Logout button --->
           <div class="text-center">

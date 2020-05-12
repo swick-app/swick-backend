@@ -25,12 +25,18 @@ urlpatterns = [
 
     ##### RESTAURANT URLS #####
     # Restaurant home page url
-    path('restaurant/', views.restaurant_home, name = 'restaurant-home'),
+    path('restaurant/', views.restaurant_home, name = 'restaurant_home'),
     # Restaurant menu page url
     path('restaurant/menu/', views.restaurant_menu,
         name = 'restaurant_menu'),
+    # Restaurant add meal page url
+    path('restaurant/menu/add_meal', views.restaurant_add_meal,
+        name = 'restaurant_add_meal'),
+    # Restaurant edit meal page url
+    path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
+        name = 'restaurant_edit_meal'),
     # Restaurant order history page url
-    path('restaurant/order-history/', views.restaurant_order_history,
+    path('restaurant/order_history/', views.restaurant_order_history,
         name = 'restaurant_order_history'),
     # Restaurant servers page url
     path('restaurant/servers/', views.restaurant_servers,
