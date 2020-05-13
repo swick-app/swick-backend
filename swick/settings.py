@@ -173,3 +173,7 @@ SOCIAL_AUTH_PIPELINE = (
     'social_core.pipeline.social_auth.load_extra_data',
     'social_core.pipeline.user.user_details',
 )
+
+# stripe.com -> Developers -> API keys
+# Test secret key
+STRIPE_API_KEY = 'sk_test_oThgAc9JEuw7WKYk62AWVS8K00exvKfnkV'

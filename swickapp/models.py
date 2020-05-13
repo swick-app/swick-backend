@@ -1,7 +1,7 @@
+from decimal import Decimal
 from django.db import models
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
-from decimal import Decimal
 from django.utils import timezone
 
 # Restaurant model
@@ -9,13 +9,13 @@ class Restaurant(models.Model):
     # One-to-one: one restaurant has one owner (user)
     user = models.OneToOneField(User, on_delete = models.CASCADE,
         related_name = 'restaurant')
-    restaurant_name = models.CharField(max_length = 256)
-    restaurant_address = models.CharField(max_length = 256)
-    restaurant_image = models.ImageField()
+    name = models.CharField(max_length = 256, verbose_name = "restaurant name")
+    address = models.CharField(max_length = 256, verbose_name = "restaurant address")
+    image = models.ImageField(verbose_name = "restaurant image (displayed in app)")
 
     # For displaying name in Django dashboard
     def __str__(self):
-        return self.restaurant_name
+        return self.name
 
 # Customer model
 class Customer(models.Model):

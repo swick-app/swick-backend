@@ -25,7 +25,7 @@ class UserUpdateForm(forms.ModelForm):
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ("restaurant_name", "restaurant_address", "restaurant_image")
+        fields = ("name", "address", "image")
 
 # Meal form
 class MealForm(forms.ModelForm):

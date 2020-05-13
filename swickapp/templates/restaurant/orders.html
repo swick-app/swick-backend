@@ -10,7 +10,7 @@
   <div class="panel-body">
 
     <!--- Orders table --->
-    <table class="table table-bordered table-hover">
+    <table class="table table-bordered">
       <!--- Orders table header --->
       <thead>
         <tr class="bg-light-blue">
@@ -37,8 +37,8 @@
               <!--- Details --->
               <td>
                 {% for om in order.order_meal.all %}
-                  {{ om.meal.name }}: {{ om.quantity }} x ${{ om.meal.price }}
-                  = ${{ om.total }}
+                  <div>-{{ om.meal.name }}: {{ om.quantity }} x ${{ om.meal.price }}
+                  = ${{ om.total }} </div>
                 {% endfor %}
               </td>
               <td>${{ order.total }}</td>
