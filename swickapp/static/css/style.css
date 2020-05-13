@@ -1,29 +1,44 @@
+/* Color variables */
+:root {
+  --lightest-blue: #ebf4fa;
+  --lighter-blue: #bad9f5;
+  --light-blue: #96cafa;
+  --blue: #0867d4;
+  --dark-blue: #063f80;
+  --grey: #474747;
+}
+
 body {
   padding-top: 50px;
   /* Background color */
-  background-color: #ebf4fa;
+  background-color: var(--lightest-blue);
   overflow: auto;
 }
 
-/* Blue color */
-.bg-blue {
-  background-color: #bad9f5;
+/* Image aspect fill */
+img {
+  object-fit: cover;
 }
 
-/* Light blue color */
+/* Lighter blue color */
+.bg-blue {
+  background-color: var(--lighter-blue);
+}
+
+/* Lightest blue color */
 .bg-light-blue {
-  background-color: #ebf4fa;
+  background-color: var(--lightest-blue);
 }
 
 /* Dark blue button color */
 .btn-blue {
   color: white;
-  background-color: #063f80;
+  background-color: var(--dark-blue);
 }
 .btn-blue:hover,
 .btn-blue:focus {
   color: white;
-  background-color: #0867d4;
+  background-color: var(--blue);
 }
 
 /* Sidebar */
@@ -32,14 +47,14 @@ body {
   position: fixed;
   top: 0;
   padding: 0;
-  background-color: #bad9f5;
+  background-color: var(--lighter-blue);
   overflow: auto;
 }
 
 /* Sidebar header */
 .sidebar > div:first-child {
   padding: 20px;
-  background-color: #96cafa;
+  background-color: var(--light-blue);
 }
 .sidebar > div:first-child > h3 {
   padding-bottom: 15px;
@@ -48,15 +63,15 @@ body {
 /* Sidebar list */
 .sidebar .list-group .list-group-item,
 .sidebar .list-group .list-group-item:focus {
-  background-color: #bad9f5;
-  color: #474747;
+  background-color: var(--lighter-blue);
+  color:var(--grey);
   border: 0;
   padding-top: 15px;
   padding-bottom: 15px;
 }
 .sidebar .list-group .list-group-item.active,
 .sidebar .list-group .list-group-item:hover {
-  background-color: #96cafa;
+  background-color: var(--light-blue);
   color: black;
 }
 

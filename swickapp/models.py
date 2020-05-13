@@ -11,7 +11,8 @@ class Restaurant(models.Model):
         related_name = 'restaurant')
     name = models.CharField(max_length = 256, verbose_name = "restaurant name")
     address = models.CharField(max_length = 256, verbose_name = "restaurant address")
-    image = models.ImageField(verbose_name = "restaurant image (displayed in app)")
+    image = models.ImageField(verbose_name =
+        "restaurant image (displayed with 16:9 aspect ratio)")
 
     # For displaying name in Django dashboard
     def __str__(self):
@@ -40,9 +41,10 @@ class Meal(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
     name = models.CharField(max_length = 256)
     description = models.CharField(max_length = 512)
-    price = models.DecimalField(max_digits = 8, decimal_places = 2,
+    price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
-    image = models.ImageField(blank = True, null = True)
+    image = models.ImageField(blank = True, null = True,
+        verbose_name = "Image (displayed as square)")
 
     def __str__(self):
         return self.name
@@ -66,7 +68,7 @@ class Order(models.Model):
         related_name = 'server')
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
     table = models.IntegerField()
-    total = models.DecimalField(max_digits = 8, decimal_places = 2)
+    total = models.DecimalField(max_digits = 7, decimal_places = 2)
     order_time = models.DateTimeField(default = timezone.now)
     status = models.IntegerField(choices = STATUS_CHOICES)
 
@@ -79,7 +81,7 @@ class OrderMeal(models.Model):
         related_name = 'order_meal')
     meal = models.ForeignKey(Meal, null = True, on_delete = models.SET_NULL)
     quantity = models.IntegerField()
-    total = models.DecimalField(max_digits = 8, decimal_places = 2)
+    total = models.DecimalField(max_digits = 7, decimal_places = 2)
 
     def __str__(self):
         return str(self.id)
