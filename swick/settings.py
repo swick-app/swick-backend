@@ -121,6 +121,10 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Send times through rest framework in this format
+REST_FRAMEWORK = {
+    'DATETIME_FORMAT': "%m/%d/%y %I:%M%PM"
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/

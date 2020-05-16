@@ -20,7 +20,7 @@
           <th class="text-center">Table</th>
           <th class="text-center">Chef</th>
           <th class="text-center">Server</th>
-          <th class="text-center">Details</th>
+          <th class="text-center">Items</th>
           <th class="text-center">Total</th>
         </tr>
       </thead>
@@ -28,15 +28,15 @@
       <tbody>
         {% for order in orders %}
           <tr>
-              <td>{{ order.order_time|date:"d/m/y g:iA" }}</td>
+              <td>{{ order.order_time|date:"m/d/y g:iA" }}</td>
               <td>{{ order.get_status_display }}</td>
               <td>{{ order.customer }}</td>
               <td>{{ order.table }}</td>
               <td>{{ order.chef }}</td>
               <td>{{ order.server }}</td>
-              <!--- Details --->
+              <!--- Items --->
               <td>
-                {% for om in order.order_meal.all %}
+                {% for om in order.order_item.all %}
                   <div>-{{ om.meal.name }}: {{ om.quantity }} x ${{ om.meal.price }}
                   = ${{ om.total }} </div>
                 {% endfor %}

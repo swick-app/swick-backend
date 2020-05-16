@@ -30,7 +30,7 @@ urlpatterns = [
     path('restaurant/menu/', views.restaurant_menu,
         name = 'restaurant_menu'),
     # Restaurant add meal page url
-    path('restaurant/menu/add_meal', views.restaurant_add_meal,
+    path('restaurant/menu/add_meal/', views.restaurant_add_meal,
         name = 'restaurant_add_meal'),
     # Restaurant edit meal page url
     path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
@@ -45,25 +45,48 @@ urlpatterns = [
     path('restaurant/account/', views.restaurant_account,
         name = 'restaurant_account'),
 
-    ##### FACEBOOK AUTHENTICATION URLS #####
+    ##### AUTHENTICATION URLS #####
+
     # /auth/convert-token POST request to get Django access token
-    # grant_type: convert-token
-    # client_id: [in Django -> Applications]
-    # client_secret: [in Django -> Applications]
-    # backend: facebook
-    # token: [Facebook access token], get test user token from:
-    #   https://developers.facebook.com/tools/explorer
-    # user_type: [customer or server]
+    # params:
+        # grant_type: convert-token
+        # client_id
+        # client_secret
+        # backend: facebook
+        # token (Facebook access token), get test user token from:
+        #   https://developers.facebook.com/tools/explorer
+        # user_type: [customer or server]
+    # return:
+        # access_token
+        # refresh_token
+        # expires_in (time till expiration)
+
     # /auth/revoke-token POST request to delete Django access token
-    # client_id: [in Django -> Applications]
-    # client_secret: [in Django -> Applications]
-    # token: [Django -> Access tokens]
+    # params:
+        # client_id
+        # client_secret
+        # token (Django access token)
+
+    # /auth/token POST request to refresh Django access token
+    # params:
+        # grant_type: refresh-token
+        # client_id
+        # client_secret
+        # refresh_token
+    # return:
+        # access_token
+        # refresh_token
+        # expires_in
+
     path('auth/', include('rest_framework_social_oauth2.urls')),
+
+    ##### USER API URLS #####
+    path('api/get_user_info/', apis.get_user_info),
 
     ##### CUSTOMER API URLS #####
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_menu/<int:restaurant_id>/', apis.customer_get_menu),
-    path('api/customer/add_order/', apis.customer_add_order),
+    path('api/customer/place_order/', apis.customer_place_order),
     path('api/customer/get_orders/', apis.customer_get_orders),
 
 # Specify where images should be stored
