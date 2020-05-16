@@ -22,21 +22,24 @@
           <th class="text-center">Description</th>
           <th class="text-center">Price</th>
           <th class="text-center">Image</th>
+          <th class="text-center">Edit</th>
         </tr>
       </thead>
       <!--- Menu table body --->
       <tbody>
         {% for meal in meals %}
           <tr>
-            <td><a href="{% url 'restaurant_edit_meal' meal.id %}">
-              {{ meal.name }}
-            </a></td>
+            <td>{{ meal.name }}</td>
             <td>{{ meal.description }}</td>
             <td>${{ meal.price }}</td>
             <!--- Meal image --->
             <td class="text-center">
               <img class="img-square" src="{{ MEDIA_URL }}{{ meal.image }}"
                 width="60" height="60"
+            </td>
+            <!--- Edit button --->
+            <td class="text-center"><a href="{% url 'restaurant_edit_meal' meal.id %}"
+              class="btn btn-blue">Edit</a>
             </td>
           </tr>
         {% endfor %}

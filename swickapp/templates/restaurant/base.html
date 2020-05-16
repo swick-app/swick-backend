@@ -33,7 +33,7 @@
               class="list-group-item {% if request.path == menu_url %} active {% endif %}">
               Menu</a>
             <a href="{% url 'restaurant_orders' %}"
-              class="list-group-item {% if request.path == orders %} active {% endif %}">
+              class="list-group-item {% if request.path == orders_url %} active {% endif %}">
               Orders</a>
             <a href="{% url 'restaurant_servers' %}"
               class="list-group-item {% if request.path == servers_url %} active {% endif %}">
