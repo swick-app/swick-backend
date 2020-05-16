@@ -6,8 +6,6 @@ from oauth2_provider.models import AccessToken
 from swickapp.models import Restaurant, Meal, Order, OrderItem
 from swickapp.serializers import RestaurantSerializer, MealSerializer, OrderSerializer
 import stripe
-from swick.settings import STRIPE_API_KEY
-stripe.api_key = STRIPE_API_KEY
 
 ##### CUSTOMER APIS #####
 
