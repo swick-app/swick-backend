@@ -1,7 +1,9 @@
 from decimal import Decimal
 from django.db import models
+from django.contrib.postgres.fields import ArrayField
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
+from django.core.exceptions import ValidationError
 from django.utils import timezone
 
 # Restaurant model
@@ -39,14 +41,35 @@ class Server(models.Model):
 # Meal model
 class Meal(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
-    name = models.CharField(max_length = 256)
+    meal_name = models.CharField(max_length = 256)
     description = models.CharField(max_length = 512)
     price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
     image = models.ImageField(blank = True, null = True)
 
     def __str__(self):
-        return self.name
+        return self.meal_name
+
+# Customization model
+class Customization(models.Model):
+    meal = models.ForeignKey(Meal, on_delete = models.CASCADE)
+    customization_name = models.CharField(max_length = 256)
+    options = ArrayField(models.CharField(max_length = 256),
+        verbose_name = "options (one on each line)")
+    price_additions = ArrayField(models.DecimalField(
+            max_digits = 7,
+            decimal_places = 2,
+            validators = [MinValueValidator(Decimal('0'))]),
+        verbose_name = "price additions (one on each line, insert 0 if no addition)")
+    min = models.IntegerField(verbose_name = "minimum selectable options")
+    max = models.IntegerField(verbose_name = "maximum selectable options")
+
+    def clean(self):
+        if len(self.options) != len(self.price_additions):
+            raise ValidationError("Options and price additions must be the same length.")
+
+    def __str__(self):
+        return self.customization_name
 
 # Order model
 class Order(models.Model):
@@ -60,11 +83,12 @@ class Order(models.Model):
         (COMPLETE, "Complete")
     )
 
-    customer = models.ForeignKey(Customer, blank = True, null = True, on_delete = models.SET_NULL)
-    chef = models.ForeignKey(Server, blank = True, null = True, on_delete = models.SET_NULL,
-        related_name = 'chef')
-    server = models.ForeignKey(Server, blank = True, null = True, on_delete = models.SET_NULL,
-        related_name = 'server')
+    customer = models.ForeignKey(Customer, blank = True, null = True,
+        on_delete = models.SET_NULL)
+    chef = models.ForeignKey(Server, blank = True, null = True,
+        on_delete = models.SET_NULL, related_name = 'chef')
+    server = models.ForeignKey(Server, blank = True, null = True,
+        on_delete = models.SET_NULL, related_name = 'server')
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
     table = models.IntegerField()
     total = models.DecimalField(max_digits = 7, decimal_places = 2)
@@ -78,7 +102,8 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete = models.CASCADE,
         related_name = 'order_item')
-    meal = models.ForeignKey(Meal, blank = True, null = True, on_delete = models.SET_NULL)
+    meal = models.ForeignKey(Meal, blank = True, null = True,
+        on_delete = models.SET_NULL)
     quantity = models.IntegerField()
     total = models.DecimalField(max_digits = 7, decimal_places = 2)
 

@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationForm
 from swickapp.models import Meal, Order
 
 # Home page: redirect to restaurant home page
@@ -55,19 +55,25 @@ def restaurant_menu(request):
 # Restaurant add meal page
 @login_required(login_url = '/accounts/login/')
 def restaurant_add_meal(request):
-    form = MealForm()
+    meal_form = MealForm()
+    customization_form = CustomizationForm()
 
     if request.method == "POST":
-        form = MealForm(request.POST, request.FILES)
+        meal_form = MealForm(request.POST, request.FILES)
+        customization_form = CustomizationForm(request.POST)
 
-        if form.is_valid():
-            meal = form.save(commit = False)
-            meal.restaurant = request.user.restaurant
-            meal.save()
+        if meal_form.is_valid() and customization_form.is_valid():
+            new_meal = meal_form.save(commit = False)
+            new_meal.restaurant = request.user.restaurant
+            new_meal.save()
+            new_customization = customization_form.save(commit = False)
+            new_customization.meal = new_meal
+            new_customization.save()
             return redirect(restaurant_menu)
 
     return render(request, 'restaurant/add_meal.html', {
-        "form": form
+        "meal_form": meal_form,
+        "customization_form": customization_form
     })
 
 # Restaurant edit meal page

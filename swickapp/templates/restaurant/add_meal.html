@@ -12,7 +12,8 @@
     <div class="panel-body">
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {% bootstrap_form form %}
+        {% bootstrap_form meal_form %}
+        {% bootstrap_form customization_form %}
         <button type="submit" class="btn btn-blue">Add</button>
       </form>
     </div>
