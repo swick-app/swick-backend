@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationForm
-from swickapp.models import Meal, Order
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationFormset
+from swickapp.models import Meal, Customization, Order
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -56,39 +56,40 @@ def restaurant_menu(request):
 @login_required(login_url = '/accounts/login/')
 def restaurant_add_meal(request):
     meal_form = MealForm()
-    customization_form = CustomizationForm()
+    customization_formset = CustomizationFormset()
 
     if request.method == "POST":
         meal_form = MealForm(request.POST, request.FILES)
-        customization_form = CustomizationForm(request.POST)
+        customization_formset = CustomizationFormset(request.POST)
 
-        if meal_form.is_valid() and customization_form.is_valid():
+        if meal_form.is_valid() and customization_formset.is_valid():
             new_meal = meal_form.save(commit = False)
             new_meal.restaurant = request.user.restaurant
             new_meal.save()
-            new_customization = customization_form.save(commit = False)
-            new_customization.meal = new_meal
-            new_customization.save()
+            # Loop through each form in customization formset
+            for form in customization_formset:
+                new_customization = form.save(commit = False)
+                new_customization.meal = new_meal
+                new_customization.save()
             return redirect(restaurant_menu)
 
     return render(request, 'restaurant/add_meal.html', {
         "meal_form": meal_form,
-        "customization_form": customization_form
+        "customization_formset": customization_formset
     })
 
 # Restaurant edit meal page
 @login_required(login_url = '/accounts/login/')
 def restaurant_edit_meal(request, meal_id):
-    # Get meal from database with meal_id
-    form = MealForm(instance = Meal.objects.get(id = meal_id))
+    meal_form = MealForm(instance = Meal.objects.get(id = meal_id))
 
     # Request to update meal
     if request.method == "POST" and "update" in request.POST:
-        form = MealForm(request.POST, request.FILES,
+        meal_form = MealForm(request.POST, request.FILES,
             instance = Meal.objects.get(id = meal_id))
 
-        if form.is_valid():
-            form.save()
+        if meal_form.is_valid():
+            meal_form.save()
             return redirect(restaurant_menu)
 
     # Request to delete meal
@@ -97,7 +98,7 @@ def restaurant_edit_meal(request, meal_id):
         return redirect(restaurant_menu)
 
     return render(request, 'restaurant/edit_meal.html', {
-        "form": form
+        "meal_form": meal_form
     })
 
 # Restaurant orders page

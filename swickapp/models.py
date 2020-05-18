@@ -42,7 +42,7 @@ class Server(models.Model):
 class Meal(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
     meal_name = models.CharField(max_length = 256)
-    description = models.CharField(max_length = 512)
+    description = models.CharField(max_length = 512, blank = True, null = True)
     price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
     image = models.ImageField(blank = True, null = True)
@@ -61,12 +61,10 @@ class Customization(models.Model):
             decimal_places = 2,
             validators = [MinValueValidator(Decimal('0'))]),
         verbose_name = "price additions (one on each line, insert 0 if no addition)")
-    min = models.IntegerField(verbose_name = "minimum selectable options")
-    max = models.IntegerField(verbose_name = "maximum selectable options")
-
-    def clean(self):
-        if len(self.options) != len(self.price_additions):
-            raise ValidationError("Options and price additions must be the same length.")
+    min = models.IntegerField(verbose_name = "minimum selectable options",
+        validators = [MinValueValidator(0)])
+    max = models.IntegerField(verbose_name = "maximum selectable options",
+        validators = [MinValueValidator(0)])
 
     def __str__(self):
         return self.customization_name

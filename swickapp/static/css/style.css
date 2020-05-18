@@ -35,10 +35,13 @@ img {
   color: white;
   background-color: var(--dark-blue);
 }
-.btn-blue:hover,
-.btn-blue:focus {
+.btn-blue:hover {
   color: white;
   background-color: var(--blue);
+}
+.btn-blue:focus {
+  color: white;
+  background-color: var(--dark-blue);
 }
 
 /* Sidebar */
