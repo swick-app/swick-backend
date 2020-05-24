@@ -1,5 +1,4 @@
 from django import forms
-from django.forms import formset_factory
 from django.contrib.auth.models import User
 from swickapp.models import Restaurant, Meal, Customization
 
@@ -44,7 +43,7 @@ class CustomizationForm(forms.ModelForm):
         # Set options and price additions array field delimiters to new line
         self.fields['options'].delimiter = '\n'
         self.fields['price_additions'].delimiter = '\n'
-        
+
     class Meta:
         model = Customization
         widgets = {
@@ -56,6 +55,3 @@ class CustomizationForm(forms.ModelForm):
                 attrs = {'placeholder': 'Example:\n0\n1.25\n2.50', 'rows': 6}),
         }
         exclude = ("meal",)
-
-# Customization formset
-CustomizationFormset = formset_factory(CustomizationForm, extra = 0)

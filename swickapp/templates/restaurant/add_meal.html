@@ -14,7 +14,6 @@
         {% csrf_token %}
         <!--- Meal form --->
         {% bootstrap_form meal_form %}
-        
         <!--- Customization formset --->
         {{ customization_formset.management_form }}
         <div id="form_set">
@@ -64,4 +63,5 @@
         }
     });
 </script>
+
 {% endblock %}

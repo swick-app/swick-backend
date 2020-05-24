@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationFormset
+from django.forms import formset_factory, modelformset_factory
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationForm
 from swickapp.models import Meal, Customization, Order
 
 # Home page: redirect to restaurant home page
@@ -56,8 +57,10 @@ def restaurant_menu(request):
 @login_required(login_url = '/accounts/login/')
 def restaurant_add_meal(request):
     meal_form = MealForm()
+    CustomizationFormset = formset_factory(CustomizationForm, extra = 0)
     customization_formset = CustomizationFormset()
 
+    # Add new meal and customizations
     if request.method == "POST":
         meal_form = MealForm(request.POST, request.FILES)
         customization_formset = CustomizationFormset(request.POST)
@@ -82,23 +85,35 @@ def restaurant_add_meal(request):
 @login_required(login_url = '/accounts/login/')
 def restaurant_edit_meal(request, meal_id):
     meal_form = MealForm(instance = Meal.objects.get(id = meal_id))
+    CustomizationFormset = modelformset_factory(Customization, form = CustomizationForm, extra = 0)
+    customization_objects = Customization.objects.filter(meal__id = meal_id)
+    customization_formset = CustomizationFormset(queryset = customization_objects)
 
-    # Request to update meal
+    # Update meal
     if request.method == "POST" and "update" in request.POST:
         meal_form = MealForm(request.POST, request.FILES,
             instance = Meal.objects.get(id = meal_id))
+        customization_formset = CustomizationFormset(request.POST)
 
-        if meal_form.is_valid():
+        if meal_form.is_valid() and customization_formset.is_valid():
             meal_form.save()
+            # Delete previous customizations
+            Customization.objects.filter(meal__id = meal_id).delete()
+            # Add updated customizations
+            for form in customization_formset:
+                new_customization = form.save(commit = False)
+                new_customization.meal_id = meal_id
+                new_customization.save()
             return redirect(restaurant_menu)
 
-    # Request to delete meal
+    # Delete meal
     if request.method == "POST" and "delete" in request.POST:
         Meal.objects.filter(id = meal_id).delete()
         return redirect(restaurant_menu)
 
     return render(request, 'restaurant/edit_meal.html', {
-        "meal_form": meal_form
+        "meal_form": meal_form,
+        "customization_formset": customization_formset
     })
 
 # Restaurant orders page

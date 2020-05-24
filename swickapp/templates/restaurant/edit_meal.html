@@ -10,20 +10,65 @@
       </h4>
     </div>
     <div class="panel-body">
-      <!--- Form to update meal --->
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
-        {% bootstrap_form form %}
-        <button type="submit" class="btn btn-blue" name="update">Update</button>
+        <!--- Meal form --->
+        {% bootstrap_form meal_form %}
+
+        <!--- Customization formset --->
+        {{ customization_formset.management_form }}
+        <div id="form_set">
+          {% for form in customization_formset.forms %}
+            <div id="{{ form.prefix }}">
+              {% bootstrap_form form %}
+            </div>
+          {% endfor %}
+        </div>
+        <!--- Add customization form button --->
+        <input type="button" class="btn btn-success" value="Add customization" id="add_form">
+        <!--- Delete customization form button --->
+        <input type="button" class="btn btn-danger" value="Delete customization" id="delete_form">
+        <br>
+        <br>
+
+        <!--- Update meal button --->
+        <button type="submit" class="btn btn-blue" name="update">Update meal</button>
       </form>
       <br>
-      <!--- Button to delete meal --->
+
+      <!--- Delete meal button --->
       <form method="POST">
         {% csrf_token %}
-        <button type="submit" class="btn btn-danger" name="delete">Delete</button>
+        <button type="submit" class="btn btn-danger" name="delete">Delete meal</button>
       </form>
-      <div class="clearfix"></div>
     </div>
   </div>
 </div>
+
+<!--- Empty customization form template --->
+<div id="empty_form" style="display:none">
+  <div id="form-replace">
+    {% bootstrap_form customization_formset.empty_form %}
+  </div>
+</div>
+
+<script>
+    // Add customization form
+    $('#add_form').click(function() {
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        $('#form_set').append($('#empty_form').html().replace(/__prefix__/g, form_idx)
+          .replace("form-replace", "form-" + form_idx));
+        $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) + 1);
+    });
+    // Delete customization form
+    $('#delete_form').click(function() {
+        var form_idx = $('#id_form-TOTAL_FORMS').val();
+        if (form_idx > 0) {
+          $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) - 1);
+          var form_idx = form_idx - 1;
+          $("#form-" + form_idx).remove()
+        }
+    });
+</script>
+
 {% endblock %}
