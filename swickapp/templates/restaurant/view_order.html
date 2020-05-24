@@ -1,0 +1,55 @@
+{% extends 'restaurant/base.html' %}
+{% load extra_filters %}
+
+{% block content %}
+<div class="panel">
+  <!--- Order header --->
+  <div class="panel-heading bg-blue">
+    <h4 class="panel-title text-center">View Order</h4>
+  </div>
+
+  <div class="panel-body">
+    <!--- Order information --->
+    <div>Time: {{ order.order_time|date:"m/d/y g:iA" }}</div>
+    <div>Status: {{ order.get_status_display }}</div>
+    <div>Customer: {{ order.customer }}</div>
+    <div>Table: {{ order.table }}</div>
+    <div>Chef: {{ order.chef }}</div>
+    <div>Server: {{ order.server }}</div>
+    <div>Total: ${{ order.total }}</div>
+    <br>
+
+    <!--- Order items table --->
+    <table class="table table-bordered">
+      <!--- Order items table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Meal</th>
+          <th class="text-center">Customizations</th>
+          <th class="text-center">Quantity</th>
+          <th class="text-center">Total</th>
+        </tr>
+      </thead>
+      <!--- Order items table body --->
+      <tbody>
+        {% for item in order.order_item.all %}
+          <tr>
+            <td>{{ item.meal.name }} (${{ item.meal_price }})</td>
+            <!--- Customizations --->
+            <td>
+              {% for cust in item.order_item_cust.all %}
+                <div><b>{{ cust.customization.name }}</b></div>
+                {% for option, addition in cust.options|zip:cust.price_additions %}
+                  <div>- {{ option }} (+${{ addition }})</div>
+                {% endfor %}
+              {% endfor %}
+            </td>
+            <td>{{ item.quantity }}</td>
+            <td>${{ item.total }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

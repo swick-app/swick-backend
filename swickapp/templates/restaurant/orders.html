@@ -8,7 +8,6 @@
   </div>
 
   <div class="panel-body">
-
     <!--- Orders table --->
     <table class="table table-bordered">
       <!--- Orders table header --->
@@ -20,8 +19,8 @@
           <th class="text-center">Table</th>
           <th class="text-center">Chef</th>
           <th class="text-center">Server</th>
-          <th class="text-center">Items</th>
           <th class="text-center">Total</th>
+          <th class="text-center">View</th>
         </tr>
       </thead>
       <!--- Orders table body --->
@@ -34,14 +33,11 @@
               <td>{{ order.table }}</td>
               <td>{{ order.chef }}</td>
               <td>{{ order.server }}</td>
-              <!--- Items --->
-              <td>
-                {% for om in order.order_item.all %}
-                  <div>-{{ om.meal.name }}: {{ om.quantity }} x ${{ om.meal.price }}
-                  = ${{ om.total }} </div>
-                {% endfor %}
-              </td>
               <td>${{ order.total }}</td>
+              <!--- View button --->
+              <td class="text-center"><a href="{% url 'restaurant_view_order' order.id %}"
+                class="btn btn-blue">View</a>
+              </td>
           </tr>
         {% endfor %}
       </tbody>

@@ -49,7 +49,6 @@ def restaurant_home(request):
 # Restaurant menu page
 @login_required(login_url = '/accounts/login/')
 def restaurant_menu(request):
-    # Get all of restaurant's meals from database
     meals = Meal.objects.filter(restaurant = request.user.restaurant).order_by("-id")
     return render(request, 'restaurant/menu.html', {"meals": meals})
 
@@ -121,6 +120,12 @@ def restaurant_edit_meal(request, meal_id):
 def restaurant_orders(request):
     orders = Order.objects.filter(restaurant = request.user.restaurant).order_by("-id")
     return render(request, 'restaurant/orders.html', {"orders": orders})
+
+# Restaurant view order page
+@login_required(login_url = '/accounts/login/')
+def restaurant_view_order(request, order_id):
+    order = Order.objects.get(id = order_id)
+    return render(request, 'restaurant/view_order.html', {"order": order})
 
 # Restaurant servers page
 @login_required(login_url='/accounts/login/')

@@ -41,19 +41,20 @@ class Server(models.Model):
 # Meal model
 class Meal(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
-    meal_name = models.CharField(max_length = 256)
+    name = models.CharField(max_length = 256, verbose_name = "meal name")
     description = models.CharField(max_length = 512, blank = True, null = True)
     price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
     image = models.ImageField(blank = True, null = True)
 
     def __str__(self):
-        return self.meal_name
+        return self.name
 
 # Customization model
 class Customization(models.Model):
-    meal = models.ForeignKey(Meal, on_delete = models.CASCADE)
-    customization_name = models.CharField(max_length = 256)
+    meal = models.ForeignKey(Meal, on_delete = models.CASCADE,
+        related_name = 'customization')
+    name = models.CharField(max_length = 256, verbose_name = "customization name")
     options = ArrayField(models.CharField(max_length = 256),
         verbose_name = "options (one on each line)")
     price_additions = ArrayField(models.DecimalField(
@@ -67,7 +68,7 @@ class Customization(models.Model):
         validators = [MinValueValidator(0)])
 
     def __str__(self):
-        return self.customization_name
+        return self.name
 
 # Order model
 class Order(models.Model):
@@ -89,7 +90,8 @@ class Order(models.Model):
         on_delete = models.SET_NULL, related_name = 'server')
     restaurant = models.ForeignKey(Restaurant, on_delete = models.CASCADE)
     table = models.IntegerField()
-    total = models.DecimalField(max_digits = 7, decimal_places = 2)
+    total = models.DecimalField(max_digits = 7, decimal_places = 2,
+        blank = True, null = True)
     order_time = models.DateTimeField(default = timezone.now)
     status = models.IntegerField(choices = STATUS_CHOICES)
 
@@ -102,8 +104,23 @@ class OrderItem(models.Model):
         related_name = 'order_item')
     meal = models.ForeignKey(Meal, blank = True, null = True,
         on_delete = models.SET_NULL)
+    meal_price = models.DecimalField(max_digits = 7, decimal_places = 2)
     quantity = models.IntegerField()
-    total = models.DecimalField(max_digits = 7, decimal_places = 2)
+    total = models.DecimalField(max_digits = 7, decimal_places = 2,
+        blank = True, null = True)
+
+    def __str__(self):
+        return str(self.id)
+
+# Order item customization model
+class OrderItemCustomization(models.Model):
+    order_item = models.ForeignKey(OrderItem, on_delete = models.CASCADE,
+        related_name = 'order_item_cust')
+    customization = models.ForeignKey(Customization, blank = True, null = True,
+        on_delete = models.SET_NULL)
+    options = ArrayField(models.CharField(max_length = 256))
+    price_additions = ArrayField(models.DecimalField(max_digits = 7,
+        decimal_places = 2))
 
     def __str__(self):
         return str(self.id)

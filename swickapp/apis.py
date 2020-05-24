@@ -3,7 +3,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import AccessToken
-from swickapp.models import Restaurant, Meal, Order, OrderItem
+from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, OrderItemCustomization
 from swickapp.serializers import RestaurantSerializer, MealSerializer, OrderSerializer
 import stripe
 
@@ -60,6 +60,9 @@ def customer_place_order(request):
         [order_items]
             meal_id
             quantity
+            [customizations]
+                customization_id
+                [options]
         stripe_token (test tokens at https://stripe.com/docs/testing#cards)
 
     return:
@@ -72,32 +75,56 @@ def customer_place_order(request):
         access_token = AccessToken.objects.get(token = request.POST.get("access_token"),
             expires__gt = timezone.now())
 
-        # Calculate order total
-        order_items = json.loads(request.POST["order_items"])
-        order_total = 0
-        for item in order_items:
-            order_total += Meal.objects.get(id = item["meal_id"]).price * item["quantity"]
-
-        # INSERT STRIPE PAYMENT HERE
-
-        # Create an order in database
+        # Create order in database
         order = Order.objects.create(
             customer = access_token.user.customer,
             restaurant_id = request.POST["restaurant_id"],
             table = request.POST["table"],
-            total = order_total,
             status = Order.COOKING
         )
-        # Create order items in database
+        # Variable for calculating order total
+        order_total = 0
+        order_items = json.loads(request.POST["order_items"])
+        # Loop through order items
         for item in order_items:
-            # Calculate item total
-            item_total = Meal.objects.get(id = item["meal_id"]).price * item["quantity"]
-            OrderItem.objects.create(
+            # Create order item in database
+            order_item = OrderItem.objects.create(
                 order = order,
                 meal_id = item["meal_id"],
-                quantity = item["quantity"],
-                total = item_total
+                meal_price = Meal.objects.get(id = item["meal_id"]).price,
+                quantity = item["quantity"]
             )
+            # Variable for calculating price of one meal in order item
+            meal_total = order_item.meal_price
+            # Loop through customizations of order items
+            for cust in item["customizations"]:
+                cust_id = cust["customization_id"]
+                cust_object = Customization.objects.get(id = cust_id)
+                options = cust["options"]
+                # Extract price additions corresponding with options
+                price_additions = []
+                for option in options:
+                    for i, opt in enumerate(cust_object.options):
+                        if option == opt:
+                            price_additions.append(cust_object.price_additions[i])
+                            meal_total += cust_object.price_additions[i]
+                # Create order item customization in database
+                order_item_customization = OrderItemCustomization.objects.create(
+                    order_item = order_item,
+                    customization_id = cust_id,
+                    options = options,
+                    price_additions = price_additions
+                )
+            # Calculate order item total and update field
+            order_item.total = meal_total * order_item.quantity
+            order_item.save()
+            order_total += order_item.total
+        # Update order total field
+        order.total = order_total
+        order.save()
+
+        # INSERT STRIPE PAYMENT HERE
+        # If it fails, delete order from database
 
         return JsonResponse({"status": "success"})
 

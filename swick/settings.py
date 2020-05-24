@@ -33,6 +33,7 @@ ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com']
 
 INSTALLED_APPS = [
     'swickapp',
+    'swickapp.templatetags',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
