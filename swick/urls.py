@@ -89,6 +89,7 @@ urlpatterns = [
     ##### CUSTOMER API URLS #####
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_menu/<int:restaurant_id>/', apis.customer_get_menu),
+    path('api/customer/get_meal/<int:meal_id>/', apis.customer_get_meal),
     path('api/customer/place_order/', apis.customer_place_order),
     path('api/customer/get_orders/', apis.customer_get_orders),
 

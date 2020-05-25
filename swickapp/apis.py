@@ -3,8 +3,10 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import AccessToken
-from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, OrderItemCustomization
-from swickapp.serializers import RestaurantSerializer, MealSerializer, OrderSerializer
+from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
+    OrderItemCustomization
+from swickapp.serializers import RestaurantSerializer, MealSerializer, \
+    CustomizationSerializer, OrderSerializer
 import stripe
 
 ##### CUSTOMER APIS #####
@@ -47,6 +49,26 @@ def customer_get_menu(request, restaurant_id):
         context = {"request": request}
     ).data
     return JsonResponse({"menu": meals})
+
+# GET request
+# Get meal associated with meal_id
+def customer_get_meal(request, meal_id):
+    """
+    return:
+        [customizations]
+            id
+            name
+            options
+            price_additions
+            min
+            max
+    """
+    customizations = CustomizationSerializer(
+        Customization.objects.filter(meal_id = meal_id).order_by("-id"),
+        many = True,
+        context = {"request": request}
+    ).data
+    return JsonResponse({"customizations": customizations})
 
 # POST request: CSRF token not needed because access token is checked
 # Create order in database
@@ -101,13 +123,21 @@ def customer_place_order(request):
                 cust_id = cust["customization_id"]
                 cust_object = Customization.objects.get(id = cust_id)
                 options = cust["options"]
-                # Extract price additions corresponding with options
+
+                options = []
                 price_additions = []
-                for option in options:
-                    for i, opt in enumerate(cust_object.options):
-                        if option == opt:
-                            price_additions.append(cust_object.price_additions[i])
-                            meal_total += cust_object.price_additions[i]
+                for opt_idx in cust["options"]:
+                    options.append(cust_object.options[opt_idx])
+                    price_additions.append(cust_object.price_additions[opt_idx])
+                    meal_total += cust_object.price_additions[opt_idx]
+
+                # Extract price additions corresponding with options
+                # price_additions = []
+                # for option in options:
+                #     for i, opt in enumerate(cust_object.options):
+                #         if option == opt:
+                #             price_additions.append(cust_object.price_additions[i])
+                #             meal_total += cust_object.price_additions[i]
                 # Create order item customization in database
                 order_item_customization = OrderItemCustomization.objects.create(
                     order_item = order_item,

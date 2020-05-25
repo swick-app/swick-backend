@@ -3,7 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.forms import formset_factory, modelformset_factory
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, CustomizationForm
+from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
+    CustomizationForm
 from swickapp.models import Meal, Customization, Order
 
 # Home page: redirect to restaurant home page

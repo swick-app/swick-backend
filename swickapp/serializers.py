@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from swickapp.models import Restaurant, Customer, Server, Meal, Order, OrderItem
+from swickapp.models import Restaurant, Customer, Server, Meal, Customization, \
+    Order, OrderItem
 
 # Serialize restaurant object to JSON
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -12,6 +13,12 @@ class MealSerializer(serializers.ModelSerializer):
     class Meta:
         model = Meal
         fields = ("id", "name", "description", "price", "image")
+
+# Serialize customization object to JSON
+class CustomizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Customization
+        fields = ("id", "name", "options", "price_additions", "min", "max")
 
 ##### ORDER SERIALIZERS #####
 
