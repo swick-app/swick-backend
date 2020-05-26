@@ -92,6 +92,7 @@ urlpatterns = [
     path('api/customer/get_meal/<int:meal_id>/', apis.customer_get_meal),
     path('api/customer/place_order/', apis.customer_place_order),
     path('api/customer/get_orders/', apis.customer_get_orders),
+    path('api/customer/get_order_details/<int:order_id>/', apis.customer_get_order_details),
 
 # Specify where images should be stored
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

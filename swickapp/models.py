@@ -102,8 +102,7 @@ class Order(models.Model):
 class OrderItem(models.Model):
     order = models.ForeignKey(Order, on_delete = models.CASCADE,
         related_name = 'order_item')
-    meal = models.ForeignKey(Meal, blank = True, null = True,
-        on_delete = models.SET_NULL)
+    meal_name = models.CharField(max_length = 256)
     meal_price = models.DecimalField(max_digits = 7, decimal_places = 2)
     quantity = models.IntegerField()
     total = models.DecimalField(max_digits = 7, decimal_places = 2,
@@ -116,8 +115,7 @@ class OrderItem(models.Model):
 class OrderItemCustomization(models.Model):
     order_item = models.ForeignKey(OrderItem, on_delete = models.CASCADE,
         related_name = 'order_item_cust')
-    customization = models.ForeignKey(Customization, blank = True, null = True,
-        on_delete = models.SET_NULL)
+    customization_name = models.CharField(max_length = 256)
     options = ArrayField(models.CharField(max_length = 256))
     price_additions = ArrayField(models.DecimalField(max_digits = 7,
         decimal_places = 2))

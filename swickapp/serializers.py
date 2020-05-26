@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from swickapp.models import Restaurant, Customer, Server, Meal, Customization, \
-    Order, OrderItem
+    Order, OrderItem, OrderItemCustomization
 
 # Serialize restaurant object to JSON
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -28,6 +28,31 @@ class OrderRestaurantSerializer(serializers.ModelSerializer):
         model = Restaurant
         fields = ("name",)
 
+# Serialize order object to JSON
+class OrderSerializer(serializers.ModelSerializer):
+    restaurant = OrderRestaurantSerializer()
+    status = serializers.ReadOnlyField(source = "get_status_display")
+
+    class Meta:
+        model = Order
+        fields = ("id", "restaurant", "status", "order_time")
+
+##### ORDER DETAILS SERIALIZERS #####
+
+# Serialize order item customization objects to JSON
+class OrderItemCustomizationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = OrderItemCustomization
+        fields = ("customization_name", "options")
+
+# Serialize order item objects to JSON
+class OrderItemSerializer(serializers.ModelSerializer):
+    order_item_cust = OrderItemCustomizationSerializer(many = True)
+
+    class Meta:
+        model = OrderItem
+        fields = ("meal_name", "quantity", "total", "order_item_cust")
+
 # Serialize server object to JSON
 class OrderServerSerializer(serializers.ModelSerializer):
     name = serializers.ReadOnlyField(source="user.get_full_name")
@@ -36,28 +61,12 @@ class OrderServerSerializer(serializers.ModelSerializer):
         model = Server
         fields = ("name",)
 
-# Serialize meal object to JSON
-class OrderMealSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Meal
-        fields = ("name",)
-
-# Serialize order item objects to JSON
-class OrderItemSerializer(serializers.ModelSerializer):
-    meal = OrderMealSerializer()
-
-    class Meta:
-        model = OrderItem
-        fields = ("meal", "quantity", "total")
-
-# Serialize order object to JSON
-class OrderSerializer(serializers.ModelSerializer):
-    restaurant = OrderRestaurantSerializer()
+# Serialize order object for order details to JSON
+class OrderDetailsSerializer(serializers.ModelSerializer):
+    status = serializers.ReadOnlyField(source = "get_status_display")
     server = OrderServerSerializer()
     order_item = OrderItemSerializer(many = True)
-    status = serializers.ReadOnlyField(source = "get_status_display")
 
     class Meta:
         model = Order
-        fields = ("restaurant", "server", "order_item", "status", "order_time",
-        "total", "table")
+        fields = ("status", "table", "server", "total", "order_item")

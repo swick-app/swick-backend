@@ -6,7 +6,7 @@ from oauth2_provider.models import AccessToken
 from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
     OrderItemCustomization
 from swickapp.serializers import RestaurantSerializer, MealSerializer, \
-    CustomizationSerializer, OrderSerializer
+    CustomizationSerializer, OrderSerializer, OrderDetailsSerializer
 import stripe
 
 ##### CUSTOMER APIS #####
@@ -112,7 +112,7 @@ def customer_place_order(request):
             # Create order item in database
             order_item = OrderItem.objects.create(
                 order = order,
-                meal_id = item["meal_id"],
+                meal_name = Meal.objects.get(id = item["meal_id"]).name,
                 meal_price = Meal.objects.get(id = item["meal_id"]).price,
                 quantity = item["quantity"]
             )
@@ -122,8 +122,7 @@ def customer_place_order(request):
             for cust in item["customizations"]:
                 cust_id = cust["customization_id"]
                 cust_object = Customization.objects.get(id = cust_id)
-                options = cust["options"]
-
+                # Build options and price_additions arrays with option indices
                 options = []
                 price_additions = []
                 for opt_idx in cust["options"]:
@@ -131,17 +130,10 @@ def customer_place_order(request):
                     price_additions.append(cust_object.price_additions[opt_idx])
                     meal_total += cust_object.price_additions[opt_idx]
 
-                # Extract price additions corresponding with options
-                # price_additions = []
-                # for option in options:
-                #     for i, opt in enumerate(cust_object.options):
-                #         if option == opt:
-                #             price_additions.append(cust_object.price_additions[i])
-                #             meal_total += cust_object.price_additions[i]
                 # Create order item customization in database
                 order_item_customization = OrderItemCustomization.objects.create(
                     order_item = order_item,
-                    customization_id = cust_id,
+                    customization_name = Customization.objects.get(id = cust_id).name,
                     options = options,
                     price_additions = price_additions
                 )
@@ -165,30 +157,50 @@ def customer_get_orders(request):
     params:
         access_token
     return:
+        id
         restaurant
             name
-        server
-            name
-        [order_item]
-            meal
-                name
-            quantity
-            total
         status
         order_time
-        total
-        table
     """
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
     customer = access_token.user.customer
     orders = OrderSerializer(
         Order.objects.filter(customer = customer).order_by("-id"),
-        many = True,
-        context = {"request": request}
+        many = True
     ).data
 
     return JsonResponse({"orders": orders})
+
+# GET request
+# Get customer's order details
+def customer_get_order_details(request, order_id):
+    """
+    params:
+        access_token
+    return:
+        status
+        table
+        server
+            name
+        total
+        [order_item]
+            meal
+                name
+            quantity
+            total
+    """
+    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
+        expires__gt = timezone.now())
+    order = Order.objects.get(id = order_id)
+    # Check if order's customer is the customer making the request
+    if order.customer == access_token.user.customer:
+        order_details = OrderDetailsSerializer(
+            order
+        ).data
+        return JsonResponse({"order_details": order_details})
+    return JsonResponse({"status": "failed"})
 
 # GET request
 # Get user's information
