@@ -45,6 +45,7 @@ class Meal(models.Model):
     description = models.CharField(max_length = 512, blank = True, null = True)
     price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
+    category = models.CharField(max_length = 256, verbose_name = "category (ex. Appetizers)")
     image = models.ImageField(blank = True, null = True)
 
     def __str__(self):

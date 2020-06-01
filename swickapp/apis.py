@@ -5,7 +5,7 @@ from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import AccessToken
 from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
     OrderItemCustomization
-from swickapp.serializers import RestaurantSerializer, MealSerializer, \
+from swickapp.serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializer, OrderDetailsSerializer
 import stripe
 
@@ -21,19 +21,33 @@ def customer_get_restaurants(request):
             name
             address
             image
+        status
     """
     restaurants = RestaurantSerializer(
-        Restaurant.objects.all().order_by("-id"),
+        Restaurant.objects.all().order_by("name"),
         many = True,
         # Needed to get absolute image url
         context = {"request": request}
     ).data
 
-    return JsonResponse({"restaurants": restaurants})
+    return JsonResponse({"restaurants": restaurants, "status": "success"})
 
 # GET request
-# Get menu associated with restaurant_id
-def customer_get_menu(request, restaurant_id):
+# Get categories associated with restaurant_id
+def customer_get_categories(request, restaurant_id):
+    """
+    return:
+        [categories]
+    """
+    categories = CategorySerializer(
+        Meal.objects.all().order_by("category").distinct("category"),
+        many = True,
+    ).data
+    return JsonResponse({"categories": categories, "status": "success"})
+
+# GET request
+# Get menu associated with category
+def customer_get_menu(request, restaurant_id, category):
     """
     return:
         [menu]
@@ -42,13 +56,21 @@ def customer_get_menu(request, restaurant_id):
             description
             price
             image
+        status
     """
-    meals = MealSerializer(
-        Meal.objects.filter(restaurant_id = restaurant_id).order_by("-id"),
-        many = True,
-        context = {"request": request}
-    ).data
-    return JsonResponse({"menu": meals})
+    if category == "All":
+        meals = MealSerializer(
+            Meal.objects.filter(restaurant_id = restaurant_id).order_by("name"),
+            many = True,
+            context = {"request": request}
+        ).data
+    else:
+        meals = MealSerializer(
+            Meal.objects.filter(restaurant_id = restaurant_id, category = category).order_by("name"),
+            many = True,
+            context = {"request": request}
+        ).data
+    return JsonResponse({"menu": meals, "status": "success"})
 
 # GET request
 # Get meal associated with meal_id
@@ -62,13 +84,14 @@ def customer_get_meal(request, meal_id):
             price_additions
             min
             max
+        status
     """
     customizations = CustomizationSerializer(
-        Customization.objects.filter(meal_id = meal_id).order_by("-id"),
+        Customization.objects.filter(meal_id = meal_id).order_by("name"),
         many = True,
         context = {"request": request}
     ).data
-    return JsonResponse({"customizations": customizations})
+    return JsonResponse({"customizations": customizations, "status": "success"})
 
 # POST request: CSRF token not needed because access token is checked
 # Create order in database
@@ -157,21 +180,23 @@ def customer_get_orders(request):
     params:
         access_token
     return:
-        id
-        restaurant
-            name
+        [orders]
+            id
+            restaurant
+                name
+            status
+            order_time
         status
-        order_time
     """
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
     customer = access_token.user.customer
     orders = OrderSerializer(
-        Order.objects.filter(customer = customer).order_by("-id"),
+        Order.objects.filter(customer = customer, total__isnull = False).order_by("-id"),
         many = True
     ).data
 
-    return JsonResponse({"orders": orders})
+    return JsonResponse({"orders": orders, "status": "success"})
 
 # GET request
 # Get customer's order details
@@ -180,16 +205,18 @@ def customer_get_order_details(request, order_id):
     params:
         access_token
     return:
-        status
-        table
-        server
-            name
-        total
-        [order_item]
-            meal
+        order_details
+            status
+            table
+            server
                 name
-            quantity
             total
+            [order_item]
+                meal
+                    name
+                quantity
+                total
+        status
     """
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
@@ -199,8 +226,7 @@ def customer_get_order_details(request, order_id):
         order_details = OrderDetailsSerializer(
             order
         ).data
-        return JsonResponse({"order_details": order_details})
-    return JsonResponse({"status": "failed"})
+        return JsonResponse({"order_details": order_details, "status": "success"})
 
 # GET request
 # Get user's information
@@ -211,10 +237,11 @@ def get_user_info(request):
     return:
         name
         email
+        status
     """
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
     name = access_token.user.get_full_name()
     email = access_token.user.email
 
-    return JsonResponse({"name": name, "email": email})
+    return JsonResponse({"name": name, "email": email, "status": "success"})

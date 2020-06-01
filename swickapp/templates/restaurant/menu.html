@@ -22,6 +22,7 @@
           <th class="text-center">Name</th>
           <th class="text-center">Description</th>
           <th class="text-center">Price</th>
+          <th class="text-center">Category</th>
           <th class="text-center">Image</th>
           <th class="text-center">Customizations</th>
           <th class="text-center">Edit</th>
@@ -34,6 +35,7 @@
             <td>{{ meal.name }}</td>
             <td>{{ meal.description }}</td>
             <td>${{ meal.price }}</td>
+            <td>{{ meal.category }}</td>
             <!--- Meal image --->
             <td class="text-center">
               <img class="img-square" src="{{ MEDIA_URL }}{{ meal.image }}"

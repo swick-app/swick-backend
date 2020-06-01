@@ -50,7 +50,7 @@ def restaurant_home(request):
 # Restaurant menu page
 @login_required(login_url = '/accounts/login/')
 def restaurant_menu(request):
-    meals = Meal.objects.filter(restaurant = request.user.restaurant).order_by("-id")
+    meals = Meal.objects.filter(restaurant = request.user.restaurant).order_by("name")
     return render(request, 'restaurant/menu.html', {"meals": meals})
 
 # Restaurant add meal page

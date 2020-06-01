@@ -8,6 +8,12 @@ class RestaurantSerializer(serializers.ModelSerializer):
         model = Restaurant
         fields = ("id", "name", "address", "image")
 
+# Serialize meal category to JSON
+class CategorySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Meal
+        fields = ("category",)
+
 # Serialize meal object to JSON
 class MealSerializer(serializers.ModelSerializer):
     class Meta:
