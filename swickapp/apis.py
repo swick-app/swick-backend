@@ -33,6 +33,28 @@ def customer_get_restaurants(request):
     return JsonResponse({"restaurants": restaurants, "status": "success"})
 
 # GET request
+# Get restaurant associated with restaurant_id
+def customer_get_restaurant(request, restaurant_id):
+    """
+    return:
+        restaurant
+            id
+            name
+            address
+            image
+        status
+    """
+    try:
+        restaurant_object = Restaurant.objects.get(id = restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
+    restaurant = RestaurantSerializer(
+        restaurant_object,
+        context = {"request": request}
+    ).data
+    return JsonResponse({"restaurant": restaurant, "status": "success"})
+
+# GET request
 # Get categories associated with restaurant_id
 def customer_get_categories(request, restaurant_id):
     """
