@@ -13,8 +13,7 @@ class Restaurant(models.Model):
         related_name = 'restaurant')
     name = models.CharField(max_length = 256, verbose_name = "restaurant name")
     address = models.CharField(max_length = 256, verbose_name = "restaurant address")
-    image = models.ImageField(verbose_name =
-        "restaurant image")
+    image = models.FileField(verbose_name = "restaurant image")
 
     # For displaying name in Django dashboard
     def __str__(self):
@@ -46,7 +45,7 @@ class Meal(models.Model):
     price = models.DecimalField(max_digits = 7, decimal_places = 2,
         validators = [MinValueValidator(Decimal('0.01'))])
     category = models.CharField(max_length = 256, verbose_name = "category (ex. Appetizers)")
-    image = models.ImageField(blank = True, null = True)
+    image = models.FileField(blank = True, null = True)
 
     def __str__(self):
         return self.name
