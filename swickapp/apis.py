@@ -8,6 +8,9 @@ from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
 from swickapp.serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializer, OrderDetailsSerializer
 import stripe
+from swick.settings import STRIPE_API_KEY
+
+stripe.api_key = STRIPE_API_KEY
 
 ##### CUSTOMER APIS #####
 
@@ -190,8 +193,18 @@ def customer_place_order(request):
         order.total = order_total
         order.save()
 
-        # INSERT STRIPE PAYMENT HERE
-        # If it fails, delete order from database
+        # Create Stripe charge
+        stripe_token = request.POST["stripe_token"]
+        charge = stripe.Charge.create(
+            amount = int(order_total * 100), # Amount in cents
+            currency = "usd",
+            source = stripe_token,
+            description = "Swick order"
+        )
+        if charge.status == "failed":
+            # Delete order if charge failed
+            order.delete()
+            return JsonResponse({"status": "failed", "error": "Stripe transaction error"})
 
         return JsonResponse({"status": "success"})
 
