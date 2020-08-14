@@ -337,10 +337,6 @@ def server_get_order_details(request, order_id):
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
     restaurant = access_token.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
     order = Order.objects.get(id = order_id)
     # Check if a restaurant's server is making the request
     if order.restaurant == restaurant:
@@ -395,13 +391,12 @@ def server_get_info(request):
     name = access_token.user.get_full_name()
     email = access_token.user.email
     restaurant = access_token.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
+    restaurant_name = "none"
+    if restaurant is not None:
+        restaurant_name = restaurant.name
     return JsonResponse({
         "name": name,
         "email": email,
-        "restaurant_name": restaurant.name,
+        "restaurant_name": restaurant_name,
         "status": "success"
     })
