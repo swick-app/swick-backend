@@ -4,9 +4,10 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import AccessToken
 from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
-    OrderItemCustomization
+    OrderItemCustomization, Server
 from swickapp.serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
-    CustomizationSerializer, OrderSerializer, OrderDetailsSerializer
+    CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
+    OrderSerializerForServer, OrderDetailsSerializerForServer
 import stripe
 from swick.settings import STRIPE_API_KEY
 
@@ -226,7 +227,7 @@ def customer_get_orders(request):
     access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
         expires__gt = timezone.now())
     customer = access_token.user.customer
-    orders = OrderSerializer(
+    orders = OrderSerializerForCustomer(
         Order.objects.filter(customer = customer, total__isnull = False).order_by("-id"),
         many = True
     ).data
@@ -258,14 +259,14 @@ def customer_get_order_details(request, order_id):
     order = Order.objects.get(id = order_id)
     # Check if order's customer is the customer making the request
     if order.customer == access_token.user.customer:
-        order_details = OrderDetailsSerializer(
+        order_details = OrderDetailsSerializerForCustomer(
             order
         ).data
         return JsonResponse({"order_details": order_details, "status": "success"})
 
 # GET request
-# Get user's information
-def get_user_info(request):
+# Get customer's information
+def customer_get_info(request):
     """
     params:
         access_token
@@ -280,3 +281,127 @@ def get_user_info(request):
     email = access_token.user.email
 
     return JsonResponse({"name": name, "email": email, "status": "success"})
+
+##### SERVER APIS #####
+
+# GET request
+# Get list of restaurant's orders
+def server_get_orders(request, status):
+    """
+    params:
+        access_token
+    return:
+        [orders]
+            id
+            customer
+                name
+            table
+            order_time
+        status
+    """
+    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
+        expires__gt = timezone.now())
+    restaurant = access_token.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    orders = OrderSerializerForServer(
+        Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
+            .order_by("id"),
+        many = True
+    ).data
+
+    return JsonResponse({"orders": orders, "status": "success"})
+
+# GET request
+# Get restaurant's order details
+def server_get_order_details(request, order_id):
+    """
+    params:
+        access_token
+    return:
+        order_details
+            chef
+                name
+            server
+                name
+            total
+            [order_item]
+                meal
+                    name
+                quantity
+                total
+        status
+    """
+    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
+        expires__gt = timezone.now())
+    restaurant = access_token.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    order = Order.objects.get(id = order_id)
+    # Check if a restaurant's server is making the request
+    if order.restaurant == restaurant:
+        order_details = OrderDetailsSerializerForServer(
+            order
+        ).data
+        return JsonResponse({"order_details": order_details, "status": "success"})
+
+# POST request: CSRF token not needed because access token is checked
+# Update order status
+@csrf_exempt
+def server_update_order_status(request):
+    """
+    params:
+        access_token
+        order_id
+        status
+
+    return:
+        status
+    """
+    if request.method == "POST":
+        access_token = AccessToken.objects.get(token = request.POST.get("access_token"),
+            expires__gt = timezone.now())
+        restaurant = access_token.user.server.restaurant
+        order = Order.objects.get(id = request.POST.get("order_id"))
+        # Check if a restaurant's server is making the request
+        if order.restaurant == restaurant:
+            status = request.POST.get("status")
+            order.status = status
+            if status == "2":
+                order.chef = access_token.user.server
+            elif status == "3":
+                order.server = access_token.user.server
+            order.save()
+            return JsonResponse({"status": "success"})
+
+# GET request
+# Get server's information
+def server_get_info(request):
+    """
+    params:
+        access_token
+    return:
+        name
+        email
+        restaurant_name
+        status
+    """
+    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
+        expires__gt = timezone.now())
+    name = access_token.user.get_full_name()
+    email = access_token.user.email
+    restaurant = access_token.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    return JsonResponse({
+        "name": name,
+        "email": email,
+        "restaurant_name": restaurant.name,
+        "status": "success"
+    })

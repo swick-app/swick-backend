@@ -83,9 +83,6 @@ urlpatterns = [
 
     path('auth/', include('rest_framework_social_oauth2.urls')),
 
-    ##### USER API URLS #####
-    path('api/get_user_info/', apis.get_user_info),
-
     ##### CUSTOMER API URLS #####
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_restaurant/<int:restaurant_id>/', apis.customer_get_restaurant),
@@ -95,4 +92,11 @@ urlpatterns = [
     path('api/customer/place_order/', apis.customer_place_order),
     path('api/customer/get_orders/', apis.customer_get_orders),
     path('api/customer/get_order_details/<int:order_id>/', apis.customer_get_order_details),
+    path('api/customer/get_info/', apis.customer_get_info),
+
+    ##### SERVER API URLS #####
+    path('api/server/get_orders/<int:status>/', apis.server_get_orders),
+    path('api/server/get_order_details/<int:order_id>/', apis.server_get_order_details),
+    path('api/server/update_order_status/', apis.server_update_order_status),
+    path('api/server/get_info/', apis.server_get_info),
 ]
