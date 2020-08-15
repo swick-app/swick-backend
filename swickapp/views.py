@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.forms import formset_factory, modelformset_factory
 from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
     CustomizationForm
-from swickapp.models import Meal, Customization, Order
+from swickapp.models import Meal, Customization, Order, Server
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -131,7 +131,8 @@ def restaurant_view_order(request, order_id):
 # Restaurant servers page
 @login_required(login_url='/accounts/login/')
 def restaurant_servers(request):
-    return render(request, 'restaurant/servers.html', {})
+    servers = Server.objects.filter(restaurant = request.user.restaurant)
+    return render(request, 'restaurant/servers.html', {"servers": servers})
 
 # Restaurant account page
 @login_required(login_url = '/accounts/login/')

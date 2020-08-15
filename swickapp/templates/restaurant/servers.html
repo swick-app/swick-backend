@@ -1,4 +1,32 @@
 {% extends 'restaurant/base.html' %}
 
 {% block content %}
+<div class="panel">
+  <!--- Servers header --->
+  <div class="panel-heading bg-blue">
+    <h4 class="panel-title text-center">Servers</h4>
+  </div>
+
+  <div class="panel-body">
+    <!--- Server table --->
+    <table class="table table-bordered">
+      <!--- Server table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Name</th>
+          <th class="text-center">Email</th>
+        </tr>
+      </thead>
+      <!--- Server table body --->
+      <tbody>
+        {% for server in servers %}
+          <tr>
+            <td>{{ server.user.get_full_name }}</td>
+            <td>{{ server.user.email }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
 {% endblock %}

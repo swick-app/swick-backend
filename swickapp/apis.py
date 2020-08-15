@@ -66,7 +66,8 @@ def customer_get_categories(request, restaurant_id):
         [categories]
     """
     categories = CategorySerializer(
-        Meal.objects.all().order_by("category").distinct("category"),
+        Meal.objects.filter(restaurant_id = restaurant_id).order_by("category")
+            .distinct("category"),
         many = True,
     ).data
     return JsonResponse({"categories": categories, "status": "success"})
