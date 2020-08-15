@@ -307,12 +307,19 @@ def server_get_orders(request, status):
         return JsonResponse({
             "status": "restaurant_not_set"
         })
-    orders = OrderSerializerForServer(
-        Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
-            .order_by("id"),
-        many = True
-    ).data
-
+    # Reverse order if retrieving completed orders
+    if status == Order.COMPLETE:
+        orders = OrderSerializerForServer(
+            Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
+                .order_by("-id"),
+            many = True
+        ).data
+    else:
+        orders = OrderSerializerForServer(
+            Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
+                .order_by("id"),
+            many = True
+        ).data
     return JsonResponse({"orders": orders, "status": "success"})
 
 # GET request
