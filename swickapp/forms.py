@@ -4,7 +4,6 @@ from swickapp.models import Restaurant, Meal, Customization
 
 # Restaurant owner form
 class UserForm(forms.ModelForm):
-    email = forms.CharField(max_length = 256)
     password = forms.CharField(widget=forms.PasswordInput())
 
     class Meta:
@@ -14,8 +13,6 @@ class UserForm(forms.ModelForm):
 
 # Restaurant owner update form
 class UserUpdateForm(forms.ModelForm):
-    email = forms.CharField(max_length = 256)
-
     class Meta:
         # Model imported from django
         model = User

@@ -1,5 +1,6 @@
 {% extends 'restaurant/base.html' %}
 {% load extra_filters %}
+{% load static %}
 
 {% block content %}
 <div class="panel">
@@ -38,7 +39,10 @@
             <td>{{ meal.category }}</td>
             <!--- Meal image --->
             <td class="text-center">
-              <img class="img-square" src="{{ meal.image.url }}"
+              <img class="img-square"
+                src="{% if not meal.image %} {% static 'img/nullimage.png' %}
+                    {% else %} {{ meal.image.url }}
+                    {% endif %}"
                 width="60" height="60"
             </td>
             <!--- Customizations --->

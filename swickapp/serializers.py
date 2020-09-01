@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from django.templatetags.static import static
 from swickapp.models import Restaurant, Customer, Server, Meal, Customization, \
     Order, OrderItem, OrderItemCustomization
 
@@ -16,9 +17,17 @@ class CategorySerializer(serializers.ModelSerializer):
 
 # Serialize meal object to JSON
 class MealSerializer(serializers.ModelSerializer):
+    image = serializers.SerializerMethodField()
+
     class Meta:
         model = Meal
         fields = ("id", "name", "description", "price", "image")
+
+    def get_image(self, meal):
+        if not meal.image:
+            return static("img/nullimage.png")
+        else:
+            return meal.image.url
 
 # Serialize customization object to JSON
 class CustomizationSerializer(serializers.ModelSerializer):
