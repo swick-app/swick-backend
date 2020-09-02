@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.forms import formset_factory, modelformset_factory
+from django.http import Http404
 from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
     CustomizationForm
 from swickapp.models import Meal, Customization, Order, Server
@@ -84,7 +85,12 @@ def restaurant_add_meal(request):
 # Restaurant edit meal page
 @login_required(login_url = '/accounts/login/')
 def restaurant_edit_meal(request, meal_id):
-    meal_form = MealForm(instance = Meal.objects.get(id = meal_id))
+    meal = Meal.objects.get(id = meal_id)
+    # Checks if requested meal belongs to user's restaurant
+    if request.user.restaurant != meal.restaurant:
+        raise Http404("Meal does not exist")
+
+    meal_form = MealForm(instance = meal)
     CustomizationFormset = modelformset_factory(Customization, form = CustomizationForm, extra = 0)
     customization_objects = Customization.objects.filter(meal__id = meal_id)
     customization_formset = CustomizationFormset(queryset = customization_objects)
@@ -92,7 +98,7 @@ def restaurant_edit_meal(request, meal_id):
     # Update meal
     if request.method == "POST" and "update" in request.POST:
         meal_form = MealForm(request.POST, request.FILES,
-            instance = Meal.objects.get(id = meal_id))
+            instance = meal)
         customization_formset = CustomizationFormset(request.POST)
 
         if meal_form.is_valid() and customization_formset.is_valid():
@@ -126,6 +132,10 @@ def restaurant_orders(request):
 @login_required(login_url = '/accounts/login/')
 def restaurant_view_order(request, order_id):
     order = Order.objects.get(id = order_id)
+    # Checks if requested order belongs to user's restaurant
+    if request.user.restaurant != order.restaurant:
+        raise Http404("Order does not exist")
+        
     return render(request, 'restaurant/view_order.html', {"order": order})
 
 # Restaurant servers page
