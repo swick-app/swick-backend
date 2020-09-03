@@ -1,4 +1,4 @@
-from swickapp.models import Customer, Server
+from .models import Customer, Server
 
 # Create either a customer or a server based on user_type parameter in request
 def create_user_by_type(backend, user, request, response, *args, **kwargs):

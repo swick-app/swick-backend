@@ -3,9 +3,9 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from oauth2_provider.models import AccessToken
-from swickapp.models import Restaurant, Meal, Customization, Order, OrderItem, \
+from .models import Restaurant, Meal, Customization, Order, OrderItem, \
     OrderItemCustomization, Server
-from swickapp.serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
+from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
     OrderSerializerForServer, OrderDetailsSerializerForServer
 import stripe
