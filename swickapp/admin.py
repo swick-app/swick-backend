@@ -1,5 +1,5 @@
 from django.contrib import admin
-from swickapp.models import Restaurant, Customer, Server, Meal, Customization, \
+from .models import Restaurant, Customer, Server, Meal, Customization, \
     Order, OrderItem, OrderItemCustomization
 
 # Display models on Django admin

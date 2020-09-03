@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.templatetags.static import static
-from swickapp.models import Restaurant, Customer, Server, Meal, Customization, \
+from .models import Restaurant, Customer, Server, Meal, Customization, \
     Order, OrderItem, OrderItemCustomization
 
 # Serialize restaurant object to JSON

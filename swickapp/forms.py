@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.models import User
-from swickapp.models import Restaurant, Meal, Customization
+from .models import Restaurant, Meal, Customization
 
 # Restaurant owner form
 class UserForm(forms.ModelForm):
@@ -22,7 +22,7 @@ class UserUpdateForm(forms.ModelForm):
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ("name", "address", "image")
+        fields = ("name", "address", "image", "timezone")
 
 # Meal form
 class MealForm(forms.ModelForm):

@@ -4,9 +4,11 @@ from django.contrib.auth import authenticate, login
 from django.contrib.auth.models import User
 from django.forms import formset_factory, modelformset_factory
 from django.http import Http404
-from swickapp.forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
+from django.utils import timezone
+from .forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
     CustomizationForm
-from swickapp.models import Meal, Customization, Order, Server
+from .models import Meal, Customization, Order, Server
+import pytz
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -135,7 +137,7 @@ def restaurant_view_order(request, order_id):
     # Checks if requested order belongs to user's restaurant
     if request.user.restaurant != order.restaurant:
         raise Http404("Order does not exist")
-        
+
     return render(request, 'restaurant/view_order.html', {"order": order})
 
 # Restaurant servers page
@@ -157,6 +159,7 @@ def restaurant_account(request):
         if user_form.is_valid() and restaurant_form.is_valid():
             user_form.save()
             restaurant_form.save()
+            timezone.activate(pytz.timezone(request.POST["timezone"]))
 
     return render(request, 'restaurant/account.html', {
         "user_form": user_form,

@@ -5,15 +5,33 @@ from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from .signals import *
 
 # Restaurant model
 class Restaurant(models.Model):
+    ALASKA = 'US/Alaska'
+    ARIZONA = 'US/Arizona'
+    CENTRAL = 'US/Central'
+    EASTERN = 'US/Eastern'
+    HAWAII = 'US/Hawaii'
+    MOUNTAIN = 'US/Mountain'
+    PACIFIC = 'US/Pacific'
+    TIMEZONE_CHOICES = [
+        (ALASKA, 'Alaska'),
+        (ARIZONA, 'Arizona'),
+        (EASTERN, 'Eastern'),
+        (HAWAII, 'Hawaii'),
+        (CENTRAL, 'Central'),
+        (MOUNTAIN, 'Mountain'),
+        (PACIFIC, 'Pacific'),
+    ]
     # One-to-one: one restaurant has one owner (user)
     user = models.OneToOneField(User, on_delete = models.CASCADE,
         related_name = 'restaurant')
     name = models.CharField(max_length = 256, verbose_name = "restaurant name")
     address = models.CharField(max_length = 256, verbose_name = "restaurant address")
     image = models.FileField(verbose_name = "restaurant image")
+    timezone = models.CharField(max_length = 16, choices = TIMEZONE_CHOICES)
 
     # For displaying name in Django dashboard
     def __str__(self):
@@ -75,12 +93,11 @@ class Order(models.Model):
     COOKING = 1
     SENDING = 2
     COMPLETE = 3
-
-    STATUS_CHOICES = (
+    STATUS_CHOICES = [
         (COOKING, "Cooking"),
         (SENDING, "Sending"),
-        (COMPLETE, "Complete")
-    )
+        (COMPLETE, "Complete"),
+    ]
 
     customer = models.ForeignKey(Customer, blank = True, null = True,
         on_delete = models.SET_NULL)
