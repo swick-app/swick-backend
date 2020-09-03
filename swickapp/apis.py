@@ -29,9 +29,9 @@ def customer_get_restaurants(request):
     """
     restaurants = RestaurantSerializer(
         Restaurant.objects.all().order_by("name"),
-        many = True,
+        many=True,
         # Needed to get absolute image url
-        context = {"request": request}
+        context={"request": request}
     ).data
 
     return JsonResponse({"restaurants": restaurants, "status": "success"})
@@ -49,12 +49,12 @@ def customer_get_restaurant(request, restaurant_id):
         status
     """
     try:
-        restaurant_object = Restaurant.objects.get(id = restaurant_id)
+        restaurant_object = Restaurant.objects.get(id=restaurant_id)
     except Restaurant.DoesNotExist:
         return JsonResponse({"status": "restaurant_does_not_exist"})
     restaurant = RestaurantSerializer(
         restaurant_object,
-        context = {"request": request}
+        context={"request": request}
     ).data
     return JsonResponse({"restaurant": restaurant, "status": "success"})
 
@@ -66,9 +66,9 @@ def customer_get_categories(request, restaurant_id):
         [categories]
     """
     categories = CategorySerializer(
-        Meal.objects.filter(restaurant_id = restaurant_id).order_by("category")
+        Meal.objects.filter(restaurant_id=restaurant_id).order_by("category")
             .distinct("category"),
-        many = True,
+        many=True,
     ).data
     return JsonResponse({"categories": categories, "status": "success"})
 
@@ -87,15 +87,15 @@ def customer_get_menu(request, restaurant_id, category):
     """
     if category == "All":
         meals = MealSerializer(
-            Meal.objects.filter(restaurant_id = restaurant_id).order_by("name"),
-            many = True,
-            context = {"request": request}
+            Meal.objects.filter(restaurant_id=restaurant_id).order_by("name"),
+            many=True,
+            context={"request": request}
         ).data
     else:
         meals = MealSerializer(
-            Meal.objects.filter(restaurant_id = restaurant_id, category = category).order_by("name"),
-            many = True,
-            context = {"request": request}
+            Meal.objects.filter(restaurant_id=restaurant_id, category=category).order_by("name"),
+            many=True,
+            context={"request": request}
         ).data
     return JsonResponse({"menu": meals, "status": "success"})
 
@@ -114,9 +114,9 @@ def customer_get_meal(request, meal_id):
         status
     """
     customizations = CustomizationSerializer(
-        Customization.objects.filter(meal_id = meal_id).order_by("name"),
-        many = True,
-        context = {"request": request}
+        Customization.objects.filter(meal_id=meal_id).order_by("name"),
+        many=True,
+        context={"request": request}
     ).data
     return JsonResponse({"customizations": customizations, "status": "success"})
 
@@ -144,15 +144,15 @@ def customer_place_order(request):
     if request.method == "POST":
         # Try to get unexpired Django access token object from database with
         # access token from POST request
-        access_token = AccessToken.objects.get(token = request.POST.get("access_token"),
-            expires__gt = timezone.now())
+        access_token = AccessToken.objects.get(token=request.POST.get("access_token"),
+            expires__gt=timezone.now())
 
         # Create order in database
         order = Order.objects.create(
-            customer = access_token.user.customer,
-            restaurant_id = request.POST["restaurant_id"],
-            table = request.POST["table"],
-            status = Order.COOKING
+            customer=access_token.user.customer,
+            restaurant_id=request.POST["restaurant_id"],
+            table=request.POST["table"],
+            status=Order.COOKING
         )
         # Variable for calculating order total
         order_total = 0
@@ -161,17 +161,17 @@ def customer_place_order(request):
         for item in order_items:
             # Create order item in database
             order_item = OrderItem.objects.create(
-                order = order,
-                meal_name = Meal.objects.get(id = item["meal_id"]).name,
-                meal_price = Meal.objects.get(id = item["meal_id"]).price,
-                quantity = item["quantity"]
+                order=order,
+                meal_name=Meal.objects.get(id=item["meal_id"]).name,
+                meal_price=Meal.objects.get(id=item["meal_id"]).price,
+                quantity=item["quantity"]
             )
             # Variable for calculating price of one meal in order item
             meal_total = order_item.meal_price
             # Loop through customizations of order items
             for cust in item["customizations"]:
                 cust_id = cust["customization_id"]
-                cust_object = Customization.objects.get(id = cust_id)
+                cust_object = Customization.objects.get(id=cust_id)
                 # Build options and price_additions arrays with option indices
                 options = []
                 price_additions = []
@@ -182,10 +182,10 @@ def customer_place_order(request):
 
                 # Create order item customization in database
                 order_item_customization = OrderItemCustomization.objects.create(
-                    order_item = order_item,
-                    customization_name = Customization.objects.get(id = cust_id).name,
-                    options = options,
-                    price_additions = price_additions
+                    order_item=order_item,
+                    customization_name=Customization.objects.get(id=cust_id).name,
+                    options=options,
+                    price_additions=price_additions
                 )
             # Calculate order item total and update field
             order_item.total = meal_total * order_item.quantity
@@ -198,10 +198,10 @@ def customer_place_order(request):
         # Create Stripe charge
         stripe_token = request.POST["stripe_token"]
         charge = stripe.Charge.create(
-            amount = int(order_total * 100), # Amount in cents
-            currency = "usd",
-            source = stripe_token,
-            description = "Swick order"
+            amount=int(order_total * 100), # Amount in cents
+            currency="usd",
+            source=stripe_token,
+            description="Swick order"
         )
         if charge.status == "failed":
             # Delete order if charge failed
@@ -225,12 +225,12 @@ def customer_get_orders(request):
             order_time
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
     customer = access_token.user.customer
     orders = OrderSerializerForCustomer(
-        Order.objects.filter(customer = customer, total__isnull = False).order_by("-id"),
-        many = True
+        Order.objects.filter(customer=customer, total__isnull=False).order_by("-id"),
+        many=True
     ).data
 
     return JsonResponse({"orders": orders, "status": "success"})
@@ -255,12 +255,12 @@ def customer_get_order_details(request, order_id):
                 total
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
-    order = Order.objects.get(id = order_id)
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
+    order = Order.objects.get(id=order_id)
     # Check if order's customer is the customer making the request
     if order.customer == access_token.user.customer:
-        order_details = OrderDetailsSerializerForCustomer(
+        order_details=OrderDetailsSerializerForCustomer(
             order
         ).data
         return JsonResponse({"order_details": order_details, "status": "success"})
@@ -276,8 +276,8 @@ def customer_get_info(request):
         email
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
     name = access_token.user.get_full_name()
     email = access_token.user.email
 
@@ -300,8 +300,8 @@ def server_get_orders(request, status):
             order_time
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
     restaurant = access_token.user.server.restaurant
     if restaurant is None:
         return JsonResponse({
@@ -310,15 +310,15 @@ def server_get_orders(request, status):
     # Reverse order if retrieving completed orders
     if status == Order.COMPLETE:
         orders = OrderSerializerForServer(
-            Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
+            Order.objects.filter(restaurant=restaurant, status=status, total__isnull=False)
                 .order_by("-id"),
-            many = True
+            many=True
         ).data
     else:
         orders = OrderSerializerForServer(
-            Order.objects.filter(restaurant = restaurant, status = status, total__isnull = False)
+            Order.objects.filter(restaurant=restaurant, status=status, total__isnull=False)
                 .order_by("id"),
-            many = True
+            many=True
         ).data
     return JsonResponse({"orders": orders, "status": "success"})
 
@@ -342,10 +342,10 @@ def server_get_order_details(request, order_id):
                 total
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
     restaurant = access_token.user.server.restaurant
-    order = Order.objects.get(id = order_id)
+    order = Order.objects.get(id=order_id)
     # Check if a restaurant's server is making the request
     if order.restaurant == restaurant:
         order_details = OrderDetailsSerializerForServer(
@@ -367,10 +367,10 @@ def server_update_order_status(request):
         status
     """
     if request.method == "POST":
-        access_token = AccessToken.objects.get(token = request.POST.get("access_token"),
-            expires__gt = timezone.now())
+        access_token = AccessToken.objects.get(token=request.POST.get("access_token"),
+            expires__gt=timezone.now())
         restaurant = access_token.user.server.restaurant
-        order = Order.objects.get(id = request.POST.get("order_id"))
+        order = Order.objects.get(id=request.POST.get("order_id"))
         # Check if a restaurant's server is making the request
         if order.restaurant == restaurant:
             status = request.POST.get("status")
@@ -394,8 +394,8 @@ def server_get_info(request):
         restaurant_name
         status
     """
-    access_token = AccessToken.objects.get(token = request.GET.get("access_token"),
-        expires__gt = timezone.now())
+    access_token = AccessToken.objects.get(token=request.GET.get("access_token"),
+        expires__gt=timezone.now())
     name = access_token.user.get_full_name()
     email = access_token.user.email
     restaurant = access_token.user.server.restaurant

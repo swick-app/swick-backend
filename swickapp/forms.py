@@ -47,8 +47,8 @@ class CustomizationForm(forms.ModelForm):
             # Display placeholder text and use text area instead of text input
             # for options and price additions fields
             'options': forms.Textarea(
-                attrs = {'placeholder': 'Example:\nSmall\nMedium\nLarge\n', 'rows': 6}),
+                attrs={'placeholder': 'Example:\nSmall\nMedium\nLarge\n', 'rows': 6}),
             'price_additions': forms.Textarea(
-                attrs = {'placeholder': 'Example:\n0\n1.25\n2.50', 'rows': 6}),
+                attrs={'placeholder': 'Example:\n0\n1.25\n2.50', 'rows': 6}),
         }
         exclude = ("meal",)

@@ -21,32 +21,32 @@ urlpatterns = [
     # accounts/reset/done/ [name='password_reset_complete']
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/sign_up/', views.restaurant_sign_up,
-        name = 'sign_up'),
+        name='sign_up'),
 
     ##### RESTAURANT URLS #####
     # Restaurant home page url
-    path('restaurant/', views.restaurant_home, name = 'restaurant_home'),
+    path('restaurant/', views.restaurant_home, name='restaurant_home'),
     # Restaurant menu page url
     path('restaurant/menu/', views.restaurant_menu,
-        name = 'restaurant_menu'),
+        name='restaurant_menu'),
     # Restaurant add meal page url
     path('restaurant/menu/add_meal/', views.restaurant_add_meal,
-        name = 'restaurant_add_meal'),
+        name='restaurant_add_meal'),
     # Restaurant edit meal page url
     path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
-        name = 'restaurant_edit_meal'),
+        name='restaurant_edit_meal'),
     # Restaurant orders page url
     path('restaurant/orders/', views.restaurant_orders,
-        name = 'restaurant_orders'),
+        name='restaurant_orders'),
     # Restaurant view order page url
     path('restaurant/view_order/<int:order_id>/', views.restaurant_view_order,
-        name = 'restaurant_view_order'),
+        name='restaurant_view_order'),
     # Restaurant servers page url
     path('restaurant/servers/', views.restaurant_servers,
-        name = 'restaurant_servers'),
+        name='restaurant_servers'),
     # Restaurant account page url
     path('restaurant/account/', views.restaurant_account,
-        name = 'restaurant_account'),
+        name='restaurant_account'),
 
     ##### AUTHENTICATION URLS #####
 
