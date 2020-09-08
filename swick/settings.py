@@ -117,7 +117,7 @@ USE_TZ = True
 
 # Send times through rest framework in this format
 REST_FRAMEWORK = {
-    'DATETIME_FORMAT': "%m/%d/%y %I:%M%P"
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%MZ"
 }
 
 # Static files (CSS, JavaScript, Images)
