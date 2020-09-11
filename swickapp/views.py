@@ -1,13 +1,12 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth import authenticate, login
-from django.contrib.auth.models import User
 from django.forms import formset_factory, modelformset_factory
 from django.http import Http404
 from django.utils import timezone
 from .forms import UserForm, RestaurantForm, UserUpdateForm, MealForm, \
     CustomizationForm
-from .models import Meal, Customization, Order, Server
+from .models import User, Meal, Customization, Order, Server
 import pytz
 
 # Home page: redirect to restaurant home page
@@ -33,7 +32,7 @@ def restaurant_sign_up(request):
 
             # Login with user form data
             login(request, authenticate(
-                username = user_form.cleaned_data["username"],
+                email = user_form.cleaned_data["email"],
                 password = user_form.cleaned_data["password"]
             ))
 
@@ -149,17 +148,23 @@ def restaurant_servers(request):
 # Restaurant account page
 @login_required(login_url='/accounts/login/')
 def restaurant_account(request):
-    user_form = UserUpdateForm(instance=request.user)
-    restaurant_form = RestaurantForm(instance=request.user.restaurant)
+    # Prefix required because both forms share a field with the same name
+    user_form = UserUpdateForm(prefix="user", instance=request.user)
+    restaurant_form = RestaurantForm(prefix="restaurant", instance=request.user.restaurant)
 
     # Update account info
     if request.method == "POST":
-        user_form = UserUpdateForm(request.POST, instance=request.user)
-        restaurant_form = RestaurantForm(request.POST, request.FILES, instance=request.user.restaurant)
+        user_form = UserUpdateForm(request.POST, prefix="user", instance=request.user)
+        restaurant_form = RestaurantForm(
+            request.POST,
+            request.FILES,
+            prefix="restaurant",
+            instance=request.user.restaurant
+        )
         if user_form.is_valid() and restaurant_form.is_valid():
             user_form.save()
             restaurant_form.save()
-            timezone.activate(pytz.timezone(request.POST["timezone"]))
+            timezone.activate(pytz.timezone(request.POST["restaurant-timezone"]))
 
     return render(request, 'restaurant/account.html', {
         "user_form": user_form,

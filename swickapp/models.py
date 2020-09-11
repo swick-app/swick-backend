@@ -1,11 +1,47 @@
 from decimal import Decimal
 from django.db import models
+from django.contrib.auth.base_user import BaseUserManager
+from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
-from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .signals import *
+
+# Custom user model manager where email is the unique identifiers
+# for authentication instead of usernames
+class UserManager(BaseUserManager):
+    def create_user(self, email, password, **extra_fields):
+        if not email:
+            raise ValueError(_('The Email must be set'))
+        email = self.normalize_email(email)
+        user = self.model(email=email, **extra_fields)
+        user.set_password(password)
+        user.save()
+        return user
+
+    def create_superuser(self, email, password, **extra_fields):
+        extra_fields.setdefault('is_staff', True)
+        extra_fields.setdefault('is_superuser', True)
+        extra_fields.setdefault('is_active', True)
+        return self.create_user(email, password, **extra_fields)
+
+# Custom user model with email as username
+# and name instead of separate first and last name fields
+class User(AbstractUser):
+    username = None
+    first_name = None
+    last_name = None
+    email = models.EmailField(unique=True)
+    name = models.CharField(max_length=256, null=True)
+
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = []
+
+    objects = UserManager()
+
+    def __str__(self):
+        return self.email
 
 # Restaurant model
 class Restaurant(models.Model):
@@ -43,7 +79,7 @@ class Customer(models.Model):
         related_name='customer')
 
     def __str__(self):
-        return self.user.get_full_name()
+        return self.user.email
 
 # Server model
 class Server(models.Model):
@@ -53,7 +89,7 @@ class Server(models.Model):
         blank=True, null=True)
 
     def __str__(self):
-        return self.user.get_full_name()
+        return self.user.email
 
 # Meal model
 class Meal(models.Model):

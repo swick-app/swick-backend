@@ -1,34 +1,30 @@
 from django import forms
-from django.contrib.auth.models import User
-from .models import Restaurant, Meal, Customization
+from .models import User, Restaurant, Meal, Customization
 
 # Restaurant owner form
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput())
 
     class Meta:
-        # Model imported from django
         model = User
-        fields = ("username", "password", "first_name", "last_name", "email")
+        fields = ("name", "email", "password")
 
 # Restaurant owner update form
 class UserUpdateForm(forms.ModelForm):
     class Meta:
-        # Model imported from django
         model = User
-        fields = ("username", "first_name", "last_name", "email")
+        fields = ("name", "email")
 
 # Restaurant form
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        fields = ("name", "address", "image", "timezone")
+        exclude = ("user",)
 
 # Meal form
 class MealForm(forms.ModelForm):
     class Meta:
         model = Meal
-        # Exlude restaurant form from meal form
         exclude = ("restaurant",)
 
 # Customization form

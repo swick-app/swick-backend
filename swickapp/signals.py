@@ -5,4 +5,5 @@ import pytz
 
 @receiver(user_logged_in)
 def post_login(sender, user, request, **kwargs):
-    timezone.activate(pytz.timezone(user.restaurant.timezone))
+    if hasattr(user, 'restaurant'):
+        timezone.activate(pytz.timezone(user.restaurant.timezone))

@@ -48,42 +48,11 @@ urlpatterns = [
     path('restaurant/account/', views.restaurant_account,
         name='restaurant_account'),
 
-    ##### AUTHENTICATION URLS #####
-
-    # /auth/convert-token POST request to get Django access token
-    # params:
-        # grant_type: convert-token
-        # client_id
-        # client_secret
-        # backend: facebook
-        # token (Facebook access token), get test user token from:
-        #   https://developers.facebook.com/tools/explorer
-        # user_type: [customer or server]
-    # return:
-        # access_token
-        # refresh_token
-        # expires_in (time till expiration)
-
-    # /auth/revoke-token POST request to delete Django access token
-    # params:
-        # client_id
-        # client_secret
-        # token (Django access token)
-
-    # /auth/token POST request to refresh Django access token
-    # params:
-        # grant_type: refresh-token
-        # client_id
-        # client_secret
-        # refresh_token
-    # return:
-        # access_token
-        # refresh_token
-        # expires_in
-
-    path('auth/', include('rest_framework_social_oauth2.urls')),
+    ##### DRFPASSWORDLESS AUTHENICATION URLS #####
+    path('', include('drfpasswordless.urls')),
 
     ##### CUSTOMER API URLS #####
+    path('api/customer/create_account/', apis.customer_create_account),
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_restaurant/<int:restaurant_id>/', apis.customer_get_restaurant),
     path('api/customer/get_categories/<int:restaurant_id>/', apis.customer_get_categories),
@@ -95,6 +64,7 @@ urlpatterns = [
     path('api/customer/get_info/', apis.customer_get_info),
 
     ##### SERVER API URLS #####
+    path('api/server/create_account/', apis.server_create_account),
     path('api/server/get_orders/<int:status>/', apis.server_get_orders),
     path('api/server/get_order_details/<int:order_id>/', apis.server_get_order_details),
     path('api/server/update_order_status/', apis.server_update_order_status),

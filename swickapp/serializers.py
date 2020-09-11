@@ -60,7 +60,7 @@ class OrderRestaurantSerializer(serializers.ModelSerializer):
 
 # Serialize customer object to JSON
 class OrderCustomerSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="user.get_full_name")
+    name = serializers.ReadOnlyField(source="user.name")
 
     class Meta:
         model = Customer
@@ -68,7 +68,7 @@ class OrderCustomerSerializer(serializers.ModelSerializer):
 
 # Serialize server object to JSON
 class OrderServerSerializer(serializers.ModelSerializer):
-    name = serializers.ReadOnlyField(source="user.get_full_name")
+    name = serializers.ReadOnlyField(source="user.name")
 
     class Meta:
         model = Server
