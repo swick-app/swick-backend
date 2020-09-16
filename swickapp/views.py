@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import authenticate, login
+from django.contrib.auth import login
 from django.forms import formset_factory, modelformset_factory
 from django.http import Http404
 from django.utils import timezone
@@ -15,26 +15,37 @@ def home(request):
 
 # Restaurant sign up page
 def restaurant_sign_up(request):
-    user_form = UserForm()
-    restaurant_form = RestaurantForm()
+    # Prefix required because both forms share a field with the same name
+    user_form = UserForm(prefix="user")
+    restaurant_form = RestaurantForm(prefix="restaurant")
 
     if request.method == "POST":
         # Get data from user and restaurant forms
-        user_form = UserForm(request.POST)
-        restaurant_form = RestaurantForm(request.POST, request.FILES)
+        user_form = UserForm(request.POST, prefix="user")
+        restaurant_form = RestaurantForm(request.POST, request.FILES, prefix="restaurant")
 
         # Create user and restaurant objects in database
         if user_form.is_valid() and restaurant_form.is_valid():
-            new_user = User.objects.create_user(**user_form.cleaned_data)
+            email = user_form.cleaned_data["email"]
+            users = User.objects.filter(email=email)
+            # If a user already exists from mobile app login
+            # Grab user and set name and password
+            if users:
+                user = users[0]
+                user.name = user_form.cleaned_data["name"]
+                user.set_password(user_form.cleaned_data["password"])
+                user.save()
+            # Otherwise create user
+            else:
+                user = User.objects.create_user(**user_form.cleaned_data)
+
+            # Create restaurant
             new_restaurant = restaurant_form.save(commit=False)
-            new_restaurant.user = new_user
+            new_restaurant.user = user
             new_restaurant.save()
 
             # Login with user form data
-            login(request, authenticate(
-                email = user_form.cleaned_data["email"],
-                password = user_form.cleaned_data["password"]
-            ))
+            login(request, user)
 
             return redirect(restaurant_home)
 

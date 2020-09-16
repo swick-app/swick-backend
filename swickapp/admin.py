@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
+from drfpasswordless.models import CallbackToken
 from .models import User, Restaurant, Customer, Server, Meal, Customization, \
     Order, OrderItem, OrderItemCustomization
 
@@ -23,7 +24,8 @@ class UserAdmin(DjangoUserAdmin):
     search_fields = ('email', 'name')
     ordering = ('email',)
 
-# Display models on Django admin
+# Display models on admin dashboard
+admin.site.register(CallbackToken)
 admin.site.register(Restaurant)
 admin.site.register(Customer)
 admin.site.register(Server)

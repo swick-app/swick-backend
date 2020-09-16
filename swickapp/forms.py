@@ -1,13 +1,19 @@
 from django import forms
+from django.core.exceptions import ValidationError
 from .models import User, Restaurant, Meal, Customization
 
-# Restaurant owner form
-class UserForm(forms.ModelForm):
-    password = forms.CharField(widget=forms.PasswordInput())
+# Validate that email does not already have restaurant account linked
+def validate_no_restaurant(value):
+    users = User.objects.filter(email=value)
+    if users:
+        if hasattr(users[0], 'restaurant'):
+            raise ValidationError('Account with this email already exists')
 
-    class Meta:
-        model = User
-        fields = ("name", "email", "password")
+# Restaurant owner form
+class UserForm(forms.Form):
+    name = forms.CharField(max_length=256)
+    email = forms.EmailField(validators=[validate_no_restaurant])
+    password = forms.CharField(widget=forms.PasswordInput())
 
 # Restaurant owner update form
 class UserUpdateForm(forms.ModelForm):

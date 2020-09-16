@@ -49,6 +49,13 @@ urlpatterns = [
         name='restaurant_account'),
 
     ##### DRFPASSWORDLESS AUTHENICATION URLS #####
+    # auth/email/ (send email with callback token)
+    # params:
+    #   email
+    # auth/token/ (receive auth token)
+    # params:
+    #   email
+    #   token (callback)
     path('', include('drfpasswordless.urls')),
 
     ##### CUSTOMER API URLS #####

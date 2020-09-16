@@ -25,11 +25,7 @@ def customer_create_account(request):
     return:
         status
     """
-    # If customer with user already created
-    if hasattr(request.user, 'customer'):
-        return JsonResponse({"status": "account_already_created"})
-    # Else create customer
-    customer = Customer.objects.create(user = request.user)
+    customer = Customer.objects.get_or_create(user = request.user)
     return JsonResponse({"status": "success"})
 
 # GET request
@@ -304,11 +300,7 @@ def server_create_account(request):
     return:
         status
     """
-    # If server with user already created
-    if hasattr(request.user, 'server'):
-        return JsonResponse({"status": "account_already_created"})
-    # Else create server
-    Server.objects.create(user = request.user)
+    Server.objects.get_or_create(user = request.user)
     return JsonResponse({"status": "success"})
 
 # GET request

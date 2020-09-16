@@ -133,10 +133,8 @@ REST_FRAMEWORK = {
 PASSWORDLESS_AUTH = {
    'PASSWORDLESS_AUTH_TYPES': ['EMAIL'],
    'PASSWORDLESS_EMAIL_NOREPLY_ADDRESS': 'swickappdev@gmail.com',
+   'PASSWORDLESS_EMAIL_SUBJECT': "Swick Login Token"
 }
-# Twilio configuration
-TWILIO_ACCOUNT_SID = os.environ.get('TWILIO_ACCOUNT_SID')
-TWILIO_AUTH_TOKEN = os.environ.get('TWILIO_AUTH_TOKEN')
 
 
 # AWS S3 configuration for static and media assets
