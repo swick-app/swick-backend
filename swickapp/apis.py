@@ -2,8 +2,8 @@ import json
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import Restaurant, Customer, Meal, Customization, Order, OrderItem, \
-    OrderItemCustomization, Server
+from .models import User, Restaurant, Customer, Meal, Customization, Order, \
+    OrderItem, OrderItemCustomization, Server
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
     OrderSerializerForServer, OrderDetailsSerializerForServer
@@ -12,6 +12,35 @@ import stripe
 from swick.settings import STRIPE_API_KEY
 
 stripe.api_key = STRIPE_API_KEY
+
+##### CUSTOMER AND SERVER SHARED API URLS #####
+
+# GET request
+# Update account information
+@api_view(['POST'])
+def update_info(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        name
+        email
+    return:
+        status
+    """
+    # Update name
+    request.user.name = request.POST["name"]
+    request.user.save()
+    # Update email if given
+    email = request.POST["email"]
+    if email != "":
+        email = request.POST["email"]
+        users = User.objects.filter(email=email)
+        if users and users[0] != request.user:
+            return JsonResponse({"status": "email_already_taken"})
+        request.user.email = email
+        request.user.save()
+    return JsonResponse({"status": "success"})
 
 ##### CUSTOMER APIS #####
 
@@ -280,13 +309,13 @@ def customer_get_info(request):
     header:
         Authorization: Token ...
     return:
-        email
         name
+        email
         status
     """
     name = request.user.name
     email = request.user.email
-    return JsonResponse({"email": email, "name": name, "status": "success"})
+    return JsonResponse({"name": name, "email": email, "status": "success"})
 
 ##### SERVER APIS #####
 

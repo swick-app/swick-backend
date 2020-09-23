@@ -58,6 +58,9 @@ urlpatterns = [
     #   token (callback)
     path('', include('drfpasswordless.urls')),
 
+    ##### CUSTOMER AND SERVER SHARED API URLS #####
+    path('api/update_info/', apis.update_info),
+
     ##### CUSTOMER API URLS #####
     path('api/customer/create_account/', apis.customer_create_account),
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
