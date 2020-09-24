@@ -25,7 +25,7 @@ class UserUpdateForm(forms.ModelForm):
 class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
-        exclude = ("user",)
+        exclude = ("user", "stripe_acct_id")
 
 # Meal form
 class MealForm(forms.ModelForm):

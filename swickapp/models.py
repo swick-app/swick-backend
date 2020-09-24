@@ -68,6 +68,9 @@ class Restaurant(models.Model):
     address = models.CharField(max_length=256, verbose_name="restaurant address")
     image = models.FileField(verbose_name="restaurant image")
     timezone = models.CharField(max_length=16, choices=TIMEZONE_CHOICES)
+    stripe_acct_id = models.CharField(max_length=255)
+    default_sales_tax = models.DecimalField(max_digits=4, decimal_places=3,
+        validators=[MinValueValidator(Decimal('0'))])
 
     # For displaying name in Django dashboard
     def __str__(self):
@@ -77,6 +80,7 @@ class Restaurant(models.Model):
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,
         related_name='customer')
+    stripe_cust_id = models.CharField(max_length=255)
 
     def __str__(self):
         return self.user.email
@@ -100,6 +104,8 @@ class Meal(models.Model):
         validators=[MinValueValidator(Decimal('0.01'))])
     category = models.CharField(max_length=256, verbose_name="category (ex. Appetizers)")
     image = models.FileField(blank=True, null=True)
+    tax = models.DecimalField(max_digits=4, decimal_places=3, verbose_name="sales tax", null=True,
+                                   validators=[MinValueValidator(Decimal('0'))])
 
     def __str__(self):
         return self.name
@@ -143,10 +149,17 @@ class Order(models.Model):
         on_delete=models.SET_NULL, related_name='server')
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     table = models.IntegerField()
-    total = models.DecimalField(max_digits=7, decimal_places=2,
-        blank=True, null=True)
     order_time = models.DateTimeField(default=timezone.now)
     status = models.IntegerField(choices=STATUS_CHOICES)
+    subtotal = models.DecimalField(max_digits=7, decimal_places=2,
+        blank=True, null=True)
+    tax = models.DecimalField(max_digits=7, decimal_places=2,
+        blank=True, null=True)
+    total = models.DecimalField(max_digits=7, decimal_places=2,
+        blank=True, null=True)
+    payment_completed = models.BooleanField(default=False)
+    # Need to couple paymentIntent and order together
+    stripe_payment_id = models.CharField(max_length=255, null=True)
 
     def __str__(self):
         return str(self.id)
@@ -158,6 +171,8 @@ class OrderItem(models.Model):
     meal_name = models.CharField(max_length=256)
     meal_price = models.DecimalField(max_digits=7, decimal_places=2)
     quantity = models.IntegerField()
+    tax = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    subtotal = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
 

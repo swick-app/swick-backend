@@ -23,6 +23,9 @@ urlpatterns = [
     path('accounts/sign_up/', views.restaurant_sign_up,
         name='sign_up'),
 
+    ##### STRIPE REDIRECT URLS #####
+    path('accounts/refresh_stripe_link/', views.refresh_stripe_link),
+
     ##### RESTAURANT URLS #####
     # Restaurant home page url
     path('restaurant/', views.restaurant_home, name='restaurant_home'),
@@ -69,9 +72,13 @@ urlpatterns = [
     path('api/customer/get_menu/<int:restaurant_id>/<str:category>/', apis.customer_get_menu),
     path('api/customer/get_meal/<int:meal_id>/', apis.customer_get_meal),
     path('api/customer/place_order/', apis.customer_place_order),
+    path('api/customer/retry_payment/', apis.customer_retry_payment),
     path('api/customer/get_orders/', apis.customer_get_orders),
     path('api/customer/get_order_details/<int:order_id>/', apis.customer_get_order_details),
     path('api/customer/get_info/', apis.customer_get_info),
+    path('api/customer/setup_card/', apis.customer_setup_card),
+    path('api/customer/get_cards/', apis.customer_get_cards),
+    path('api/customer/remove_card/', apis.customer_remove_card),
 
     ##### SERVER API URLS #####
     path('api/server/create_account/', apis.server_create_account),
