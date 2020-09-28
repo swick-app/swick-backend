@@ -1,3 +1,5 @@
+import os
+import binascii
 from decimal import Decimal
 from django.db import models
 from django.contrib.auth.base_user import BaseUserManager
@@ -7,6 +9,9 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .signals import *
+
+def generate_token():
+    return binascii.hexlify(os.urandom(20)).decode()
 
 # Custom user model manager where email is the unique identifiers
 # for authentication instead of usernames
@@ -90,6 +95,18 @@ class Server(models.Model):
 
     def __str__(self):
         return self.user.email
+
+# Temporary model for request to add server
+class ServerRequest(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256)
+    email = models.EmailField()
+    token = models.CharField(max_length=40, default=generate_token)
+    created_time = models.DateTimeField(default=timezone.now)
+    accepted = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.email
 
 # Meal model
 class Meal(models.Model):

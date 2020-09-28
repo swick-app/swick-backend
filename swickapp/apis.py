@@ -2,8 +2,8 @@ import json
 from django.utils import timezone
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import User, Restaurant, Customer, Meal, Customization, Order, \
-    OrderItem, OrderItemCustomization, Server
+from .models import User, Restaurant, Customer, Server, ServerRequest, Meal, \
+    Customization, Order, OrderItem, OrderItemCustomization
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
     OrderSerializerForServer, OrderDetailsSerializerForServer
@@ -35,11 +35,15 @@ def update_info(request):
     email = request.POST["email"]
     if email != "":
         email = request.POST["email"]
-        users = User.objects.filter(email=email)
-        if users and users[0] != request.user:
-            return JsonResponse({"status": "email_already_taken"})
-        request.user.email = email
-        request.user.save()
+        # Check if email is already taken
+        try:
+            user = User.objects.get(email=email)
+            if user != request.user:
+                return JsonResponse({"status": "email_already_taken"})
+        # If email is not taken
+        except User.DoesNotExist:
+            request.user.email = email
+            request.user.save()
     return JsonResponse({"status": "success"})
 
 ##### CUSTOMER APIS #####
@@ -329,7 +333,24 @@ def server_create_account(request):
     return:
         status
     """
-    Server.objects.get_or_create(user = request.user)
+    try:
+        Server.objects.get(user=request.user)
+    # Create server object if it does not exist
+    except Server.DoesNotExist:
+        server = Server.objects.create(user=request.user)
+        # Set server's restaurant if server has already accepted request
+        # from restaurant
+        try:
+            server_request = ServerRequest.objects.get(
+                email=request.user.email,
+                accepted=True
+            )
+            server.restaurant = server_request.restaurant
+            server.save()
+            server_request.delete()
+        except ServerRequest.DoesNotExist:
+            pass
+
     return JsonResponse({"status": "success"})
 
 # GET request
