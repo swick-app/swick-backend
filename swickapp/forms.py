@@ -1,13 +1,15 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import User, Restaurant, Meal, Customization
+from .models import User, Restaurant, ServerRequest, Meal, Customization
 
 # Validate that email does not already have restaurant account linked
 def validate_no_restaurant(value):
-    users = User.objects.filter(email=value)
-    if users:
-        if hasattr(users[0], 'restaurant'):
+    try:
+        user = User.objects.get(email=value)
+        if hasattr(user, 'restaurant'):
             raise ValidationError('Account with this email already exists')
+    except User.DoesNotExist:
+        pass
 
 # Restaurant owner form
 class UserForm(forms.Form):
@@ -26,6 +28,31 @@ class RestaurantForm(forms.ModelForm):
     class Meta:
         model = Restaurant
         exclude = ("user",)
+
+# Server request form
+class ServerRequestForm(forms.ModelForm):
+    class Meta:
+        model = ServerRequest
+        fields = ("name", "email")
+
+    # Pass in request and save as a parameter
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(ServerRequestForm, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        # Only allow one server request per email per restaurant
+        try:
+            ServerRequest.objects.get(
+                email=cleaned_data['email'],
+                restaurant=self.request.user.restaurant
+            )
+            raise ValidationError('Request has already been sent to this email')
+        except ServerRequest.DoesNotExist:
+            pass
+
+        return cleaned_data
 
 # Meal form
 class MealForm(forms.ModelForm):

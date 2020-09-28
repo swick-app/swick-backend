@@ -1,0 +1,2 @@
+{{ restaurant }} has requested to add you as a server. Please click the following link to confirm this request:
+{{ url }}
