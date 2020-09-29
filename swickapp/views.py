@@ -4,13 +4,18 @@ from django.contrib.auth import login
 from django.forms import formset_factory, modelformset_factory
 from django.http import Http404
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
+
 from .forms import UserForm, UserUpdateForm, RestaurantForm, ServerRequestForm, \
     MealForm, CustomizationForm
-from .models import User, Server, ServerRequest, Meal, Customization, Order
+from .models import User, Restaurant, Server, ServerRequest, Meal, Customization, Order
 import pytz
+import stripe
+import json
+from rest_framework.decorators import api_view
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -43,18 +48,56 @@ def restaurant_sign_up(request):
             # Create restaurant
             new_restaurant = restaurant_form.save(commit=False)
             new_restaurant.user = user
+            # Create Stripe account for new user
+            try:
+                new_restaurant.stripe_acct_id = stripe.Account.create(
+                                                    type="standard",
+                                                    email=user.email).id
+            except stripe.error.StripeError as e:
+                raise Http404("Unable to create account. Please try again")
+
             new_restaurant.save()
+
+            # redirect to resturant menu if stripe api fails
+            redirect_link = restaurant_menu
+
+            # Create a link for restaurant to setup Stripe account
+            try:
+                stripe_connect_redirect = stripe.AccountLink.create(
+                    account = new_restaurant.stripe_acct_id,
+                    type = "account_onboarding",
+                    refresh_url = request.build_absolute_uri('accounts/refresh_stripe_link/'),
+                    return_url = request.build_absolute_uri('/restaurant/')
+                    )
+                redirect_link = stripe_connect_redirect.url
+            except stripe.error.StripeError as e:
+                pass
 
             # Login with user form data
             login(request, user)
 
-            return redirect(restaurant_home)
+            # redirect user to stripe account creation
+            return redirect(redirect_link)
 
     # Display user form and restaurant form
     return render(request, 'registration/sign_up.html', {
         "user_form": user_form,
         "restaurant_form": restaurant_form,
     })
+
+# Redirect to refresh stripe link
+@login_required(login_url='/accounts/login/')
+def refresh_stripe_link(request):
+    try:
+        stripe_connect_redirect = stripe.AccountLink.create(
+            account =  Restaurant.objects.get(user=request.user).stripe_acct_id,
+            type = "account_onboarding",
+            refresh_url = request.build_absolute_uri('/refresh_stripe_link/'),
+            return_url = request.build_absolute_uri('/restaurant/')
+            )
+    except stripe.error.StripeError as e:
+        raise Http404("Unable to link stripe account. Please try again on dashboard")
+    return redirect(stripe_connect_redirect.url)
 
 # Restaurant home page
 @login_required(login_url='/accounts/login/')
@@ -138,7 +181,7 @@ def restaurant_edit_meal(request, meal_id):
 # Restaurant orders page
 @login_required(login_url='/accounts/login/')
 def restaurant_orders(request):
-    orders = Order.objects.filter(restaurant=request.user.restaurant).order_by("-id")
+    orders = Order.objects.filter(restaurant=request.user.restaurant, payment_completed=True).order_by("-id")
     return render(request, 'restaurant/orders.html', {"orders": orders})
 
 # Restaurant view order page
@@ -256,9 +299,25 @@ def restaurant_account(request):
             restaurant_form.save()
             timezone.activate(pytz.timezone(request.POST["restaurant-timezone"]))
 
+    # Create link for Stripe access
+    stripe_url = "https://dashboard.stripe.com"
+    try:
+        stripe_account = stripe.Account.retrieve(Restaurant.objects.get(user=request.user).stripe_acct_id)
+        if not stripe_account.details_submitted:
+            new_link = stripe.AccountLink.create(
+                account =  Restaurant.objects.get(user=request.user).stripe_acct_id,
+                type = "account_onboarding",
+                refresh_url = request.build_absolute_uri('accounts/refresh_stripe_link/'),
+                return_url = request.build_absolute_uri('/restaurant/')
+                )
+            stripe_url = new_link.url
+    except stripe.error.StripeError:
+        pass
+
     return render(request, 'restaurant/account.html', {
         "user_form": user_form,
         "restaurant_form": restaurant_form,
+        "stripe_link": stripe_url,
     })
 
 # When server clicks on url to link restaurant
