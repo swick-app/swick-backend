@@ -47,9 +47,22 @@ urlpatterns = [
     # Restaurant servers page url
     path('restaurant/servers/', views.restaurant_servers,
         name='restaurant_servers'),
+    # Restaurant add server page url
+    path('restaurant/servers/add_server/', views.restaurant_add_server,
+        name='restaurant_add_server'),
+    # Restaurant delete server url
+    path('restaurant/servers/delete/<int:id>', views.restaurant_delete_server,
+        name='restaurant_delete_server'),
+    # Restaurant delete server request url
+    path('restaurant/servers/delete_request/<int:id>', views.restaurant_delete_server_request,
+        name='restaurant_delete_server_request'),
     # Restaurant account page url
     path('restaurant/account/', views.restaurant_account,
         name='restaurant_account'),
+
+    ##### SERVER REGISTRATION URLS #####
+    path('server/link_restaurant/<str:token>/', views.server_link_restaurant,
+        name='server_link_restaurant'),
 
     ##### DRFPASSWORDLESS AUTHENICATION URLS #####
     # auth/email/ (send email with callback token)
