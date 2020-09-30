@@ -9,9 +9,10 @@ from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
 from .signals import *
+import stripe
+from swick.settings import STRIPE_API_KEY
 
-def generate_token():
-    return binascii.hexlify(os.urandom(20)).decode()
+stripe.api_key = STRIPE_API_KEY
 
 # Custom user model manager where email is the unique identifiers
 # for authentication instead of usernames
@@ -81,11 +82,15 @@ class Restaurant(models.Model):
     def __str__(self):
         return self.name
 
+# Create customer in Stripe and return id
+def create_stripe_customer():
+    return stripe.Customer.create().id
+
 # Customer model
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,
         related_name='customer')
-    stripe_cust_id = models.CharField(max_length=255)
+    stripe_cust_id = models.CharField(max_length=255, default=create_stripe_customer)
 
     def __str__(self):
         return self.user.email
@@ -99,6 +104,9 @@ class Server(models.Model):
 
     def __str__(self):
         return self.user.email
+
+def generate_token():
+    return binascii.hexlify(os.urandom(20)).decode()
 
 # Temporary model for request to add server
 class ServerRequest(models.Model):
@@ -149,32 +157,28 @@ class Customization(models.Model):
 
 # Order model
 class Order(models.Model):
-    COOKING = 1
-    SENDING = 2
-    COMPLETE = 3
+    PROCESSING = 'PROCESSING'
+    ACTIVE = 'ACTIVE'
+    COMPLETE = 'COMPLETE'
     STATUS_CHOICES = [
-        (COOKING, "Cooking"),
-        (SENDING, "Sending"),
+        (PROCESSING, "Payment processing"),
+        (ACTIVE, "Active"),
         (COMPLETE, "Complete"),
     ]
 
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, blank=True, null=True,
         on_delete=models.SET_NULL)
-    chef = models.ForeignKey(Server, blank=True, null=True,
-        on_delete=models.SET_NULL, related_name='chef')
-    server = models.ForeignKey(Server, blank=True, null=True,
-        on_delete=models.SET_NULL, related_name='server')
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
-    table = models.IntegerField()
     order_time = models.DateTimeField(default=timezone.now)
-    status = models.IntegerField(choices=STATUS_CHOICES)
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES,
+        default=PROCESSING)
+    table = models.IntegerField()
     subtotal = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     tax = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
-    payment_completed = models.BooleanField(default=False)
     # Need to couple paymentIntent and order together
     stripe_payment_id = models.CharField(max_length=255, null=True)
 
@@ -183,13 +187,24 @@ class Order(models.Model):
 
 # Order item model
 class OrderItem(models.Model):
+    COOKING = 'COOKING'
+    SENDING = 'SENDING'
+    COMPLETE = 'COMPLETE'
+    STATUS_CHOICES = [
+        (COOKING, "Cooking"),
+        (SENDING, "Sending"),
+        (COMPLETE, "Complete"),
+    ]
+
     order = models.ForeignKey(Order, on_delete=models.CASCADE,
         related_name='order_item')
+    status = models.CharField(max_length=16, choices=STATUS_CHOICES,
+        default=COOKING)
     meal_name = models.CharField(max_length=256)
     meal_price = models.DecimalField(max_digits=7, decimal_places=2)
     quantity = models.IntegerField()
-    tax = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     subtotal = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
+    tax = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
 
