@@ -95,8 +95,10 @@ urlpatterns = [
 
     ##### SERVER API URLS #####
     path('api/server/create_account/', apis.server_create_account),
-    path('api/server/get_orders/<int:status>/', apis.server_get_orders),
+    path('api/server/get_order_items_to_cook/', apis.server_get_order_items_to_cook),
+    path('api/server/get_order_items_to_send/', apis.server_get_order_items_to_send),
+    path('api/server/get_orders/', apis.server_get_orders),
     path('api/server/get_order_details/<int:order_id>/', apis.server_get_order_details),
-    path('api/server/update_order_status/', apis.server_update_order_status),
+    path('api/server/update_order_item_status/', apis.server_update_order_item_status),
     path('api/server/get_info/', apis.server_get_info),
 ]

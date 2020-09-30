@@ -181,7 +181,7 @@ def restaurant_edit_meal(request, meal_id):
 # Restaurant orders page
 @login_required(login_url='/accounts/login/')
 def restaurant_orders(request):
-    orders = Order.objects.filter(restaurant=request.user.restaurant, payment_completed=True).order_by("-id")
+    orders = Order.objects.filter(restaurant=request.user.restaurant).exclude(status=Order.PROCESSING).order_by("-id")
     return render(request, 'restaurant/orders.html', {"orders": orders})
 
 # Restaurant view order page

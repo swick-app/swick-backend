@@ -7,7 +7,8 @@ from .models import User, Restaurant, Customer, Server, ServerRequest, Meal, \
     Customization, Order, OrderItem, OrderItemCustomization
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
-    OrderSerializerForServer, OrderDetailsSerializerForServer
+    OrderItemToCookSerializer, OrderItemToSendSerializer, OrderSerializerForServer, \
+    OrderDetailsSerializerForServer
 from rest_framework.decorators import api_view
 import stripe
 from swick.settings import STRIPE_API_KEY
@@ -59,13 +60,7 @@ def customer_create_account(request):
     return:
         status
     """
-    customers = Customer.objects.filter(user=request.user)
-    if not customers:
-        try:
-            stripe_id = stripe.Customer.create().id
-        except stripe.error.StripeError:
-            return JsonResponse({"status" : "stripe_api_error"})
-        Customer.objects.create(user=request.user, stripe_cust_id=stripe_id)
+    Customer.objects.get_or_create(user=request.user)
 
     return JsonResponse({"status": "success"})
 
@@ -203,8 +198,7 @@ def customer_place_order(request):
     order = Order.objects.create(
         customer=request.user.customer,
         restaurant_id=request.POST["restaurant_id"],
-        table=request.POST["table"],
-        status=Order.COOKING
+        table=request.POST["table"]
     )
 
     # Variable for calculating order total
@@ -307,7 +301,7 @@ def customer_place_order(request):
     # Payment is succesful
     elif intent_status == 'succeeded':
         order.stripe_payment_id = payment_intent.id
-        order.payment_completed = True
+        order.status = Order.ACTIVE
         order.save()
         return JsonResponse({"intent_status" : intent_status, "status" : "success"})
 
@@ -350,7 +344,7 @@ def customer_retry_payment(request):
     # Payment is succesful
     elif intent_status == 'succeeded':
         order = Order.objects.get(id = payment_intent.metadata["order_id"])
-        order.payment_completed = True
+        order.status = Order.ACTIVE
         order.save()
         return JsonResponse({"intent_status" : "succeeded", "status" : "success"})
 
@@ -368,14 +362,13 @@ def customer_get_orders(request):
         [orders]
             id
             restaurant
-                name
-            status
             order_time
+            status
         status
     """
     orders = OrderSerializerForCustomer(
         Order.objects
-            .filter(customer=request.user.customer, total__isnull=False, payment_completed=True)
+            .filter(customer=request.user.customer).exclude(status=Order.PROCESSING)
             .order_by("-id"),
         many=True
     ).data
@@ -392,23 +385,21 @@ def customer_get_order_details(request, order_id):
     return:
         order_details
             status
-            table
-            server
-                name
             total
             [order_item]
-                meal
-                    name
+                meal_name
                 quantity
                 total
+                status
+                [order_item_cust]
+                    name
+                    [options]
         status
     """
     order = Order.objects.get(id=order_id)
     # Check if order's customer is the customer making the request
     if order.customer == request.user.customer:
-        order_details=OrderDetailsSerializerForCustomer(
-            order
-        ).data
+        order_details=OrderDetailsSerializerForCustomer(order).data
         return JsonResponse({"order_details": order_details, "status": "success"})
     else:
         return JsonResponse({"status": "invalid_order_id"})
@@ -510,10 +501,7 @@ def server_create_account(request):
     return:
         status
     """
-    try:
-        Server.objects.get(user=request.user)
-    # Create server object if it does not exist
-    except Server.DoesNotExist:
+    if not Server.objects.filter(user=request.user).exists():
         server = Server.objects.create(user=request.user)
         # Set server's restaurant if server has already accepted request
         # from restaurant
@@ -531,9 +519,67 @@ def server_create_account(request):
     return JsonResponse({"status": "success"})
 
 # GET request
+# Get list of restaurant's orders to cook
+@api_view()
+def server_get_order_items_to_cook(request):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        [order_items]
+            id
+            order_id
+            table
+            meal_name
+            quantity
+            [order_item_cust]
+                name
+                [options]
+    """
+    restaurant = request.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    order_items = OrderItemToCookSerializer(
+        OrderItem.objects.filter(order__restaurant=restaurant, status=OrderItem.COOKING)
+            .order_by("id"),
+        many=True
+    ).data
+    return JsonResponse({"order_items": order_items, "status": "success"})
+
+# GET request
+# Get list of restaurant's orders to send
+@api_view()
+def server_get_order_items_to_send(request):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        [order_items]
+            id
+            order_id
+            table
+            customer
+            meal_name
+        status
+    """
+    restaurant = request.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    order_items = OrderItemToSendSerializer(
+        OrderItem.objects.filter(order__restaurant=restaurant, status=OrderItem.SENDING)
+            .order_by("id"),
+        many=True
+    ).data
+    return JsonResponse({"order_items": order_items, "status": "success"})
+
+# GET request
 # Get list of restaurant's orders
 @api_view()
-def server_get_orders(request, status):
+def server_get_orders(request):
     """
     header:
         Authorization: Token ...
@@ -542,8 +588,8 @@ def server_get_orders(request, status):
             id
             customer
                 name
-            table
             order_time
+            status
         status
     """
     restaurant = request.user.server.restaurant
@@ -551,19 +597,11 @@ def server_get_orders(request, status):
         return JsonResponse({
             "status": "restaurant_not_set"
         })
-    # Reverse order if retrieving completed orders
-    if status == Order.COMPLETE:
-        orders = OrderSerializerForServer(
-            Order.objects.filter(restaurant=restaurant, status=status, total__isnull=False, payment_completed=True)
-                .order_by("-id"),
-            many=True
-        ).data
-    else:
-        orders = OrderSerializerForServer(
-            Order.objects.filter(restaurant=restaurant, status=status, total__isnull=False, payment_completed=True)
-                .order_by("id"),
-            many=True
-        ).data
+    orders = OrderSerializerForServer(
+        Order.objects.filter(restaurant=restaurant)
+            .order_by("-id"),
+        many=True
+    ).data
     return JsonResponse({"orders": orders, "status": "success"})
 
 # GET request
@@ -585,40 +623,58 @@ def server_get_order_details(request, order_id):
                     name
                 quantity
                 total
+                status
+                [order_item_cust]
+                    name
+                    [options]
         status
     """
     restaurant = request.user.server.restaurant
     order = Order.objects.get(id=order_id)
     # Check if a restaurant's server is making the request
-    if order.restaurant == restaurant:
-        order_details = OrderDetailsSerializerForServer(
-            order
-        ).data
-        return JsonResponse({"order_details": order_details, "status": "success"})
+    if order.restaurant != restaurant:
+        return JsonResponse({"status": "invalid_request"})
 
-# Update order status
+    order_details = OrderDetailsSerializerForServer(
+        order
+    ).data
+    return JsonResponse({"order_details": order_details, "status": "success"})
+
+# Update order item status
 @api_view(['POST'])
-def server_update_order_status(request):
+def server_update_order_item_status(request):
     """
     header:
         Authorization: Token ...
     params:
-        order_id
+        order_item_id
         status
     return:
         status
     """
-    order = Order.objects.get(id=request.POST.get("order_id"))
+    restaurant = request.user.server.restaurant
+    item = OrderItem.objects.get(id=request.POST.get("order_item_id"))
+
     # Check if a restaurant's server is making the request
-    if order.restaurant == request.user.server.restaurant:
-        status = request.POST.get("status")
-        order.status = status
-        if status == "2":
-            order.chef = request.user.server
-        elif status == "3":
-            order.server = request.user.server
-        order.save()
-        return JsonResponse({"status": "success"})
+    if item.order.restaurant != restaurant:
+        return JsonResponse({"status": "invalid_request"})
+
+    order = item.order
+    new_status = request.POST.get("status")
+
+    # Update item with new status
+    item.status = new_status
+    item.save()
+
+    # Check if order status needs to be updated
+    if new_status == OrderItem.COMPLETE:
+        if not OrderItem.objects.filter(order=order).exclude(status=OrderItem.COMPLETE).exists():
+            order.status = Order.COMPLETE
+            order.save()
+    else:
+        order.status = Order.ACTIVE
+
+    return JsonResponse({"status": "success"})
 
 # GET request
 # Get server's information

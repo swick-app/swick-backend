@@ -12,10 +12,8 @@
     <!--- Order information --->
     <div>Time: {{ order.order_time|date:"m/d/y g:iA" }}</div>
     <div>Status: {{ order.get_status_display }}</div>
-    <div>Customer: {{ order.customer }}</div>
     <div>Table: {{ order.table }}</div>
-    <div>Chef: {{ order.chef }}</div>
-    <div>Server: {{ order.server }}</div>
+    <div>Customer: {{ order.customer }}</div>
     <div>Total: ${{ order.total }}</div>
     <br>
 
@@ -28,6 +26,7 @@
           <th class="text-center">Customizations</th>
           <th class="text-center">Quantity</th>
           <th class="text-center">Total</th>
+          <th class="text-center">Status</th>
         </tr>
       </thead>
       <!--- Order items table body --->
@@ -46,6 +45,7 @@
             </td>
             <td>{{ item.quantity }}</td>
             <td>${{ item.total }}</td>
+            <td>{{ item.get_status_display }}</td>
           </tr>
         {% endfor %}
       </tbody>
