@@ -50,7 +50,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderItem
-        fields = ("meal_name", "quantity", "total", "status", "order_item_cust")
+        fields = ("id", "meal_name", "quantity", "total", "status", "order_item_cust")
 
 ##### ORDER SERIALIZERS #####
 
@@ -65,12 +65,40 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
 
 # Serialize order details to JSON for customer
 class OrderDetailsSerializerForCustomer(serializers.ModelSerializer):
-    status = serializers.ReadOnlyField(source="get_status_display")
-    order_item = OrderItemSerializer(many=True)
+    restaurant = serializers.ReadOnlyField(source="restaurant.name")
+    order_item = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ("total", "status", "order_item")
+        fields = ("restaurant", "order_time", "total", "order_item")
+
+    # Needed to order order items
+    def get_order_item(self, instance):
+        order_items = instance.order_item.all().order_by('id')
+        return OrderItemSerializer(order_items, many=True).data
+
+# Serialize orders to JSON for server
+class OrderSerializerForServer(serializers.ModelSerializer):
+    customer = serializers.ReadOnlyField(source="customer.user.name")
+    status = serializers.ReadOnlyField(source="get_status_display")
+
+    class Meta:
+        model = Order
+        fields = ("id", "customer", "order_time", "status")
+
+# Serialize order details to JSON for server
+class OrderDetailsSerializerForServer(serializers.ModelSerializer):
+    customer = serializers.ReadOnlyField(source="customer.user.name")
+    order_item = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Order
+        fields = ("customer", "table", "order_time", "total", "order_item")
+
+    # Needed to order order items
+    def get_order_item(self, instance):
+        order_items = instance.order_item.all().order_by('id')
+        return OrderItemSerializer(order_items, many=True).data
 
 # Serialize order item for "to cook" display to JSON for server
 class OrderItemToCookSerializer(serializers.ModelSerializer):
@@ -91,20 +119,3 @@ class OrderItemToSendSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItem
         fields = ("id", "order_id", "table", "customer", "meal_name")
-
-# Serialize orders to JSON for server
-class OrderSerializerForServer(serializers.ModelSerializer):
-    customer = serializers.ReadOnlyField(source="customer.user.name")
-    status = serializers.ReadOnlyField(source="get_status_display")
-
-    class Meta:
-        model = Order
-        fields = ("id", "customer", "order_time", "status")
-
-# Serialize order details to JSON for server
-class OrderDetailsSerializerForServer(serializers.ModelSerializer):
-    order_item = OrderItemSerializer(many=True)
-
-    class Meta:
-        model = Order
-        fields = ("table", "total", "order_item")

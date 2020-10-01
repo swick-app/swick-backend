@@ -6,9 +6,11 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import User, Restaurant, Customer, Server, ServerRequest, Meal, \
     Customization, Order, OrderItem, OrderItemCustomization
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
-    CustomizationSerializer, OrderSerializerForCustomer, OrderDetailsSerializerForCustomer, \
-    OrderItemToCookSerializer, OrderItemToSendSerializer, OrderSerializerForServer, \
-    OrderDetailsSerializerForServer
+    CustomizationSerializer, OrderSerializerForCustomer, \
+    OrderDetailsSerializerForCustomer, OrderSerializerForServer, \
+    OrderDetailsSerializerForServer, OrderItemToCookSerializer, \
+    OrderItemToSendSerializer
+
 from rest_framework.decorators import api_view
 import stripe
 from swick.settings import STRIPE_API_KEY
@@ -384,7 +386,8 @@ def customer_get_order_details(request, order_id):
         Authorization: Token ...
     return:
         order_details
-            status
+            restaurant
+            order_time
             total
             [order_item]
                 meal_name
@@ -519,7 +522,95 @@ def server_create_account(request):
     return JsonResponse({"status": "success"})
 
 # GET request
-# Get list of restaurant's orders to cook
+# Get list of restaurant's orders
+@api_view()
+def server_get_orders(request):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        [orders]
+            id
+            customer
+            order_time
+            status
+        status
+    """
+    restaurant = request.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    orders = OrderSerializerForServer(
+        Order.objects.filter(restaurant=restaurant)
+            .order_by("-id"),
+        many=True
+    ).data
+    return JsonResponse({"orders": orders, "status": "success"})
+
+# GET request
+# Get order associated with order id
+@api_view()
+def server_get_order(request, order_id):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        order
+            id
+            customer
+            order_time
+            status
+        status
+    """
+    restaurant = request.user.server.restaurant
+    if restaurant is None:
+        return JsonResponse({
+            "status": "restaurant_not_set"
+        })
+    try:
+        order_object = Order.objects.get(id=order_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "order_does_not_exist"})
+    order = OrderSerializerForServer(order_object).data
+    return JsonResponse({"order": order, "status": "success"})
+
+# GET request
+# Get order details associated with order id
+@api_view()
+def server_get_order_details(request, order_id):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        order_details
+            customer
+            table
+            order_time
+            total
+            [order_item]
+                meal_name
+                quantity
+                total
+                status
+                [order_item_cust]
+                    name
+                    [options]
+        status
+    """
+    restaurant = request.user.server.restaurant
+    order = Order.objects.get(id=order_id)
+    # Check if a restaurant's server is making the request
+    if order.restaurant != restaurant:
+        return JsonResponse({"status": "invalid_request"})
+
+    order_details = OrderDetailsSerializerForServer(
+        order
+    ).data
+    return JsonResponse({"order_details": order_details, "status": "success"})
+
+# GET request
+# Get list of restaurant's order items to cook
 @api_view()
 def server_get_order_items_to_cook(request):
     """
@@ -549,7 +640,7 @@ def server_get_order_items_to_cook(request):
     return JsonResponse({"order_items": order_items, "status": "success"})
 
 # GET request
-# Get list of restaurant's orders to send
+# Get list of restaurant's order items to send
 @api_view()
 def server_get_order_items_to_send(request):
     """
@@ -575,70 +666,6 @@ def server_get_order_items_to_send(request):
         many=True
     ).data
     return JsonResponse({"order_items": order_items, "status": "success"})
-
-# GET request
-# Get list of restaurant's orders
-@api_view()
-def server_get_orders(request):
-    """
-    header:
-        Authorization: Token ...
-    return:
-        [orders]
-            id
-            customer
-                name
-            order_time
-            status
-        status
-    """
-    restaurant = request.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
-    orders = OrderSerializerForServer(
-        Order.objects.filter(restaurant=restaurant)
-            .order_by("-id"),
-        many=True
-    ).data
-    return JsonResponse({"orders": orders, "status": "success"})
-
-# GET request
-# Get restaurant's order details
-@api_view()
-def server_get_order_details(request, order_id):
-    """
-    header:
-        Authorization: Token ...
-    return:
-        order_details
-            chef
-                name
-            server
-                name
-            total
-            [order_item]
-                meal
-                    name
-                quantity
-                total
-                status
-                [order_item_cust]
-                    name
-                    [options]
-        status
-    """
-    restaurant = request.user.server.restaurant
-    order = Order.objects.get(id=order_id)
-    # Check if a restaurant's server is making the request
-    if order.restaurant != restaurant:
-        return JsonResponse({"status": "invalid_request"})
-
-    order_details = OrderDetailsSerializerForServer(
-        order
-    ).data
-    return JsonResponse({"order_details": order_details, "status": "success"})
 
 # Update order item status
 @api_view(['POST'])
@@ -673,6 +700,7 @@ def server_update_order_item_status(request):
             order.save()
     else:
         order.status = Order.ACTIVE
+        order.save()
 
     return JsonResponse({"status": "success"})
 
