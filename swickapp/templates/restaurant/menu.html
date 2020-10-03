@@ -27,6 +27,7 @@
           <th class="text-center">Image</th>
           <th class="text-center">Customizations</th>
           <th class="text-center">Edit</th>
+          <th class="text-center">Enable/Disable</th>
         </tr>
       </thead>
       <!--- Menu table body --->
@@ -59,6 +60,16 @@
             <!--- Edit button --->
             <td class="text-center"><a href="{% url 'restaurant_edit_meal' meal.id %}"
               class="btn btn-blue">Edit</a>
+            </td>
+            <!--- Enable/disable button --->
+            <td class="text-center">
+            {% if meal.enabled %}
+            <a href="{% url 'restaurant_disable_meal' meal.id %}"
+              class="btn btn-danger">Disable</a>
+            {% else %}
+            <a href="{% url 'restaurant_enable_meal' meal.id %}"
+              class="btn btn-success">Enable</a>
+            {% endif %}
             </td>
           </tr>
         {% endfor %}

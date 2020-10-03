@@ -36,6 +36,10 @@ urlpatterns = [
         name='restaurant_add_meal'),
     path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
         name='restaurant_edit_meal'),
+    path('restaurant/menu/enable_meal/<int:meal_id>/', views.restaurant_enable_meal,
+        name='restaurant_enable_meal'),
+    path('restaurant/menu/disable_meal/<int:meal_id>/', views.restaurant_disable_meal,
+        name='restaurant_disable_meal'),
     # Orders
     path('restaurant/orders/', views.restaurant_orders,
         name='restaurant_orders'),

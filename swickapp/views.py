@@ -188,6 +188,28 @@ def restaurant_edit_meal(request, meal_id):
         "customization_formset": customization_formset
     })
 
+# Restaurant enable meal
+@login_required(login_url='/accounts/login/')
+def restaurant_enable_meal(request, meal_id):
+    meal = get_object_or_404(Meal, id=meal_id)
+    # Checks if requested meal belongs to user's restaurant
+    if request.user.restaurant != meal.restaurant:
+        raise Http404()
+    meal.enabled = True
+    meal.save()
+    return redirect(restaurant_menu)
+
+# Restaurant disable meal
+@login_required(login_url='/accounts/login/')
+def restaurant_disable_meal(request, meal_id):
+    meal = get_object_or_404(Meal, id=meal_id)
+    # Checks if requested meal belongs to user's restaurant
+    if request.user.restaurant != meal.restaurant:
+        raise Http404()
+    meal.enabled = False
+    meal.save()
+    return redirect(restaurant_menu)
+
 # Restaurant orders page
 @login_required(login_url='/accounts/login/')
 def restaurant_orders(request):

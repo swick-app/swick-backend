@@ -119,7 +119,7 @@ def customer_get_categories(request, restaurant_id):
         [categories]
     """
     categories = CategorySerializer(
-        Meal.objects.filter(restaurant_id=restaurant_id).order_by("category")
+        Meal.objects.filter(restaurant_id=restaurant_id, enabled=True).order_by("category")
             .distinct("category"),
         many=True,
     ).data
@@ -140,13 +140,20 @@ def customer_get_menu(request, restaurant_id, category):
     """
     if category == "All":
         meals = MealSerializer(
-            Meal.objects.filter(restaurant_id=restaurant_id).order_by("name"),
+            Meal.objects.filter(
+                restaurant_id=restaurant_id,
+                enabled=True
+            ).order_by("name"),
             many=True,
             context={"request": request}
         ).data
     else:
         meals = MealSerializer(
-            Meal.objects.filter(restaurant_id=restaurant_id, category=category).order_by("name"),
+            Meal.objects.filter(
+                restaurant_id=restaurant_id,
+                category=category,
+                enabled=True
+            ).order_by("name"),
             many=True,
             context={"request": request}
         ).data
@@ -166,6 +173,14 @@ def customer_get_meal(request, meal_id):
             max
         status
     """
+    try:
+        meal = Meal.objects.get(id=meal_id)
+    except Meal.DoesNotExist:
+        return JsonResponse({"status": "meal_does_not_exist"})
+    # Check if meal is disabled
+    if not meal.enabled:
+        return JsonResponse({"status": "meal_disabled"})
+
     customizations = CustomizationSerializer(
         Customization.objects.filter(meal_id=meal_id).order_by("name"),
         many=True,
@@ -195,8 +210,15 @@ def customer_place_order(request):
         card_error (optional)
         payment_intent_id (optional)
         client_secret (optional)
+        meal_name (if status == meal_disabled)
         status
     """
+    order_items = json.loads(request.POST["order_items"])
+    # Check if any meals are disabled
+    for item in order_items:
+        meal = Meal.objects.get(id=item["meal_id"])
+        if not meal.enabled:
+            return JsonResponse({"meal_name": meal.name, "status": "meal_disabled"})
 
     # Create order in database
     order = Order.objects.create(
@@ -208,7 +230,6 @@ def customer_place_order(request):
     # Variable for calculating order total
     order_total = 0
 
-    order_items = json.loads(request.POST["order_items"])
     # Loop through order items
     for item in order_items:
         # Create order item in database
