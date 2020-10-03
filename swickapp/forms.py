@@ -59,7 +59,7 @@ class ServerRequestForm(forms.ModelForm):
 class MealForm(forms.ModelForm):
     class Meta:
         model = Meal
-        exclude = ("restaurant",)
+        exclude = ("restaurant", "enabled")
 
 # Customization form
 class CustomizationForm(forms.ModelForm):
