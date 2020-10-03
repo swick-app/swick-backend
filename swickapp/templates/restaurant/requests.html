@@ -1,0 +1,45 @@
+{% extends 'restaurant/base.html' %}
+
+{% block content %}
+<div class="panel">
+  <!--- Order header --->
+  <div class="panel-heading bg-blue">
+    <h4 class="panel-title text-center">Requests</h4>
+  </div>
+
+  <div class="panel-body">
+    <p>Requests will show up in app in order listed below.</p>
+    <!--- Add request button --->
+    <a href="{% url 'restaurant_add_request' %}" class="btn btn-success pull-right">Add Request</a>
+    <br/>
+    <br/>
+
+    <!--- Requests table --->
+    <table class="table table-bordered">
+      <!--- Requests table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Name</th>
+          <th class="text-center">Edit</th>
+          <th class="text-center">Delete</th>
+        </tr>
+      </thead>
+      <!--- Requests table body --->
+      <tbody>
+        {% for request in requests %}
+          <tr>
+              <td>{{ request.name }}</td>
+              <!--- Edit button --->
+              <td class="text-center"><a href="{% url 'restaurant_edit_request' request.id %}"
+                class="btn btn-blue">Edit</a>
+                <!--- Delete button --->
+              <td class="text-center"><a href="{% url 'restaurant_delete_request' request.id %}"
+                class="btn btn-danger">Delete</a>
+              </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

@@ -4,16 +4,18 @@ from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from .models import User, Restaurant, Customer, Server, ServerRequest, Meal, \
-    Customization, Order, OrderItem, OrderItemCustomization
+    Customization, Order, OrderItem, OrderItemCustomization, RequestOption, Request
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, \
     OrderDetailsSerializerForCustomer, OrderSerializerForServer, \
     OrderDetailsSerializerForServer, OrderItemToCookSerializer, \
-    OrderItemToSendSerializer
+    OrderItemToSendSerializer, RequestOptionSerializer, RequestSerializer
 
 from rest_framework.decorators import api_view
+from rest_framework.generics import GenericAPIView
 import stripe
 from swick.settings import STRIPE_API_KEY
+from drf_multiple_model.mixins import FlatMultipleModelMixin
 
 stripe.api_key = STRIPE_API_KEY
 
@@ -408,6 +410,65 @@ def customer_get_order_details(request, order_id):
         return JsonResponse({"status": "invalid_order_id"})
 
 # GET request
+# Get request options
+def customer_get_request_options(request, restaurant_id):
+    """
+    return:
+        [request_options]
+            id
+            name
+        status
+    """
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
+
+    request_options = RequestOptionSerializer(
+        RequestOption.objects.filter(restaurant=restaurant),
+        many=True,
+    ).data
+    return JsonResponse({
+        "request_options": request_options,
+        "status": "success"
+    })
+
+# POST request
+# Make request
+@api_view(['POST'])
+def customer_make_request(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        request_option_id
+        table
+    return:
+        status
+    """
+    try:
+        request_option = RequestOption.objects.get(id=request.POST["request_option_id"])
+    except:
+        return JsonResponse({"status": "request_option_does_not_exist"})
+
+    # Check if customer already made this request
+    try:
+        Request.objects.get(
+            customer=request.user.customer,
+            request_option=request_option
+        )
+        return JsonResponse({"status": "request_in_progress"})
+    except Request.DoesNotExist:
+        pass
+
+    Request.objects.create(
+        customer=request.user.customer,
+        request_option=request_option,
+        table=request.POST["table"]
+    )
+    return JsonResponse({"status": "success"})
+
+# GET request
 # Get customer's information
 @api_view()
 def customer_get_info(request):
@@ -639,34 +700,51 @@ def server_get_order_items_to_cook(request):
     ).data
     return JsonResponse({"order_items": order_items, "status": "success"})
 
-# GET request
-# Get list of restaurant's order items to send
-@api_view()
-def server_get_order_items_to_send(request):
+# Get list of restaurant's order items to send and requests
+# Uses django-rest-multiple-models to sort and send different models together
+class ServerGetItemsToSend(FlatMultipleModelMixin, GenericAPIView):
     """
     header:
         Authorization: Token ...
     return:
-        [order_items]
+        [OrderItem or Request]
             id
-            order_id
+            order_id (only for OrderItem)
             table
             customer
-            meal_name
-        status
+            meal_name or request_name
+            time
+            type
     """
-    restaurant = request.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
-    order_items = OrderItemToSendSerializer(
-        OrderItem.objects.filter(order__restaurant=restaurant, status=OrderItem.SENDING)
-            .order_by("id"),
-        many=True
-    ).data
-    return JsonResponse({"order_items": order_items, "status": "success"})
 
+    # Sort combined query list by time
+    sorting_fields = ['time']
+
+    # Overrided function to build combined query list
+    def get_querylist(self):
+        restaurant = self.request.user.server.restaurant
+        order_items = OrderItem.objects.filter(
+            order__restaurant=restaurant,
+            status=OrderItem.SENDING
+        )
+        requests = Request.objects.filter(request_option__restaurant=restaurant)
+
+        querylist = [
+            {'queryset': order_items, 'serializer_class': OrderItemToSendSerializer},
+            {'queryset': requests, 'serializer_class': RequestSerializer}
+        ]
+        return querylist
+
+    # GET request
+    def get(self, request, *args, **kwargs):
+        restaurant = request.user.server.restaurant
+        if restaurant is None:
+            return JsonResponse({
+                "status": "restaurant_not_set"
+            })
+        return self.list(request, *args, **kwargs)
+
+# POST request
 # Update order item status
 @api_view(['POST'])
 def server_update_order_item_status(request):
@@ -701,6 +779,29 @@ def server_update_order_item_status(request):
     else:
         order.status = Order.ACTIVE
         order.save()
+
+    return JsonResponse({"status": "success"})
+
+# POST request
+# Delete request
+@api_view(['POST'])
+def server_delete_request(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        id
+    return:
+        status
+    """
+    restaurant = request.user.server.restaurant
+    request_object = Request.objects.get(id=request.POST.get("id"))
+
+    # Check if a restaurant's server is making the request
+    if request_object.request_option.restaurant != restaurant:
+        return JsonResponse({"status": "invalid_request"})
+
+    request_object.delete()
 
     return JsonResponse({"status": "success"})
 

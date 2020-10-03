@@ -13,6 +13,7 @@
   <!--- Aliases for navigation bar item active conditional --->
   {% url 'restaurant_menu' as menu_url %}
   {% url 'restaurant_orders' as orders_url %}
+  {% url 'restaurant_requests' as requests_url %}
   {% url 'restaurant_servers' as servers_url %}
   {% url 'restaurant_account' as account_url %}
 
@@ -35,6 +36,9 @@
             <a href="{% url 'restaurant_orders' %}"
               class="list-group-item {% if request.path == orders_url %} active {% endif %}">
               Orders</a>
+              <a href="{% url 'restaurant_requests' %}"
+                class="list-group-item {% if request.path == requests_url %} active {% endif %}">
+                Requests</a>
             <a href="{% url 'restaurant_servers' %}"
               class="list-group-item {% if request.path == servers_url %} active {% endif %}">
               Servers</a>

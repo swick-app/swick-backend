@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.templatetags.static import static
 from .models import Restaurant, Meal, Customization, Order, OrderItem, \
-    OrderItemCustomization
+    OrderItemCustomization, RequestOption, Request
 
 # Serialize restaurant object to JSON
 class RestaurantSerializer(serializers.ModelSerializer):
@@ -34,6 +34,22 @@ class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customization
         fields = ("id", "name", "options", "price_additions", "min", "max")
+
+# Serialize request option object to JSON
+class RequestOptionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RequestOption
+        exclude = ("restaurant",)
+
+# Serialize request object to JSON
+class RequestSerializer(serializers.ModelSerializer):
+    customer = serializers.ReadOnlyField(source="customer.user.name")
+    request_name = serializers.ReadOnlyField(source="request_option.name")
+    time = serializers.ReadOnlyField(source="request_time")
+
+    class Meta:
+        model = Request
+        fields = ("id", "table", "customer", "request_name", "time")
 
 ##### ORDER SERIALIZER HELPERS #####
 
@@ -115,7 +131,8 @@ class OrderItemToSendSerializer(serializers.ModelSerializer):
     order_id = serializers.ReadOnlyField(source="order.id")
     table = serializers.ReadOnlyField(source="order.table")
     customer = serializers.ReadOnlyField(source="order.customer.user.name")
+    time = serializers.ReadOnlyField(source="order.order_time")
 
     class Meta:
         model = OrderItem
-        fields = ("id", "order_id", "table", "customer", "meal_name")
+        fields = ("id", "order_id", "table", "customer", "meal_name", "time")

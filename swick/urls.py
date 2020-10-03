@@ -27,36 +27,39 @@ urlpatterns = [
     path('accounts/refresh_stripe_link/', views.refresh_stripe_link),
 
     ##### RESTAURANT URLS #####
-    # Restaurant home page url
+    # Home
     path('restaurant/', views.restaurant_home, name='restaurant_home'),
-    # Restaurant menu page url
+    # Menu
     path('restaurant/menu/', views.restaurant_menu,
         name='restaurant_menu'),
-    # Restaurant add meal page url
     path('restaurant/menu/add_meal/', views.restaurant_add_meal,
         name='restaurant_add_meal'),
-    # Restaurant edit meal page url
     path('restaurant/menu/edit_meal/<int:meal_id>/', views.restaurant_edit_meal,
         name='restaurant_edit_meal'),
-    # Restaurant orders page url
+    # Orders
     path('restaurant/orders/', views.restaurant_orders,
         name='restaurant_orders'),
-    # Restaurant view order page url
-    path('restaurant/view_order/<int:order_id>/', views.restaurant_view_order,
+    path('restaurant/orders/view/<int:order_id>/', views.restaurant_view_order,
         name='restaurant_view_order'),
-    # Restaurant servers page url
+    # Requests
+    path('restaurant/requests/', views.restaurant_requests,
+        name='restaurant_requests'),
+    path('restaurant/requests/add/', views.restaurant_add_request,
+        name='restaurant_add_request'),
+    path('restaurant/requests/edit/<int:id>', views.restaurant_edit_request,
+        name='restaurant_edit_request'),
+    path('restaurant/requests/delete/<int:id>', views.restaurant_delete_request,
+        name='restaurant_delete_request'),
+    # Servers
     path('restaurant/servers/', views.restaurant_servers,
         name='restaurant_servers'),
-    # Restaurant add server page url
-    path('restaurant/servers/add_server/', views.restaurant_add_server,
+    path('restaurant/servers/add/', views.restaurant_add_server,
         name='restaurant_add_server'),
-    # Restaurant delete server url
     path('restaurant/servers/delete/<int:id>', views.restaurant_delete_server,
         name='restaurant_delete_server'),
-    # Restaurant delete server request url
     path('restaurant/servers/delete_request/<int:id>', views.restaurant_delete_server_request,
         name='restaurant_delete_server_request'),
-    # Restaurant account page url
+    # Account
     path('restaurant/account/', views.restaurant_account,
         name='restaurant_account'),
 
@@ -88,6 +91,8 @@ urlpatterns = [
     path('api/customer/retry_payment/', apis.customer_retry_payment),
     path('api/customer/get_orders/', apis.customer_get_orders),
     path('api/customer/get_order_details/<int:order_id>/', apis.customer_get_order_details),
+    path('api/customer/get_request_options/<int:restaurant_id>/', apis.customer_get_request_options),
+    path('api/customer/make_request/', apis.customer_make_request),
     path('api/customer/get_info/', apis.customer_get_info),
     path('api/customer/setup_card/', apis.customer_setup_card),
     path('api/customer/get_cards/', apis.customer_get_cards),
@@ -99,7 +104,8 @@ urlpatterns = [
     path('api/server/get_order/<int:order_id>/', apis.server_get_order),
     path('api/server/get_order_details/<int:order_id>/', apis.server_get_order_details),
     path('api/server/get_order_items_to_cook/', apis.server_get_order_items_to_cook),
-    path('api/server/get_order_items_to_send/', apis.server_get_order_items_to_send),
+    path('api/server/get_items_to_send/', apis.ServerGetItemsToSend.as_view()),
     path('api/server/update_order_item_status/', apis.server_update_order_item_status),
+    path('api/server/delete_request/', apis.server_delete_request),
     path('api/server/get_info/', apis.server_get_info),
 ]

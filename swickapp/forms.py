@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
-from .models import User, Restaurant, ServerRequest, Meal, Customization
+from .models import User, Restaurant, ServerRequest, Meal, Customization, \
+    RequestOption
 
 # Validate that email does not already have restaurant account linked
 def validate_no_restaurant(value):
@@ -81,3 +82,9 @@ class CustomizationForm(forms.ModelForm):
                 attrs={'placeholder': 'Example:\n0\n1.25\n2.50', 'rows': 6}),
         }
         exclude = ("meal",)
+
+# Request form
+class RequestForm(forms.ModelForm):
+    class Meta:
+        model = RequestOption
+        exclude = ("restaurant",)
