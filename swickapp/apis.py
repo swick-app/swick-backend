@@ -396,7 +396,7 @@ def customer_get_orders(request):
             .filter(customer=request.user.customer).exclude(status=Order.PROCESSING)
             .order_by("-id"),
         many=True
-    ).data
+    ).data[:10]
 
     return JsonResponse({"orders": orders, "status": "success"})
 
@@ -625,7 +625,7 @@ def server_get_orders(request):
         })
     orders = OrderSerializerForServer(
         Order.objects.filter(restaurant=restaurant)
-            .order_by("-id"),
+            .order_by("-id")[:20],
         many=True
     ).data
     return JsonResponse({"orders": orders, "status": "success"})
