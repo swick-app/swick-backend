@@ -222,3 +222,21 @@ class OrderItemCustomization(models.Model):
 
     def __str__(self):
         return str(self.id)
+
+# Request option added by restaurant
+class RequestOption(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    name = models.CharField(max_length=32)
+
+    def __str__(self):
+        return self.name
+
+# Temporary model for request sent by customer
+class Request(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    request_option = models.ForeignKey(RequestOption, on_delete=models.CASCADE)
+    request_time = models.DateTimeField(default=timezone.now)
+    table = models.IntegerField()
+
+    def __str__(self):
+        return str(self.id)

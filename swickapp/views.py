@@ -8,14 +8,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
-
 from .forms import UserForm, UserUpdateForm, RestaurantForm, ServerRequestForm, \
-    MealForm, CustomizationForm
-from .models import User, Restaurant, Server, ServerRequest, Meal, Customization, Order
+    MealForm, CustomizationForm, RequestForm
+from .models import User, Restaurant, Server, ServerRequest, Meal, Customization, \
+    Order, RequestOption
 import pytz
 import stripe
 import json
 from rest_framework.decorators import api_view
+from operator import itemgetter
 
 # Home page: redirect to restaurant home page
 def home(request):
@@ -58,6 +59,9 @@ def restaurant_sign_up(request):
 
             new_restaurant.save()
 
+            # Create default request options
+            create_default_request_options(new_restaurant)
+
             # redirect to resturant menu if stripe api fails
             redirect_link = restaurant_menu
 
@@ -84,6 +88,12 @@ def restaurant_sign_up(request):
         "user_form": user_form,
         "restaurant_form": restaurant_form,
     })
+
+# Create default request options for a restaurant
+def create_default_request_options(restaurant):
+    default_options = ["Water", "Fork", "Knife", "Spoon", "Napkins", "Help"]
+    for o in default_options:
+        RequestOption.objects.create(restaurant=restaurant, name=o)
 
 # Redirect to refresh stripe link
 @login_required(login_url='/accounts/login/')
@@ -194,6 +204,63 @@ def restaurant_view_order(request, order_id):
 
     return render(request, 'restaurant/view_order.html', {"order": order})
 
+# Restaurant requests page
+@login_required(login_url='/accounts/login/')
+def restaurant_requests(request):
+    requests = RequestOption.objects.filter(restaurant=request.user.restaurant)
+    return render(request, 'restaurant/requests.html', {"requests": requests})
+
+# Restaurant add request page
+@login_required(login_url='/accounts/login/')
+def restaurant_add_request(request):
+    request_form = RequestForm()
+
+    if request.method == "POST":
+        request_form = RequestForm(request.POST)
+
+        if request_form.is_valid():
+            request_object = request_form.save(commit=False)
+            request_object.restaurant = request.user.restaurant
+            request_object.save()
+
+            return redirect(restaurant_requests)
+
+    return render(request, 'restaurant/add_request.html', {
+        "request_form": request_form,
+    })
+
+# Restaurant edit request page
+@login_required(login_url='/accounts/login/')
+def restaurant_edit_request(request, id):
+    request_object = get_object_or_404(RequestOption, id=id)
+    # Checks if request belongs to user's restaurant
+    if request_object.restaurant != request.user.restaurant:
+        raise Http404()
+
+    request_form = RequestForm(instance=request_object)
+
+    # Update request
+    if request.method == "POST":
+        request_form = RequestForm(request.POST, instance=request_object)
+
+        if request_form.is_valid():
+            request_form.save()
+            return redirect(restaurant_requests)
+
+    return render(request, 'restaurant/edit_request.html', {
+        "request_form": request_form,
+        "request_id": id,
+    })
+
+# Restaurant delete request page
+@login_required(login_url='/accounts/login/')
+def restaurant_delete_request(request, id):
+    request_object = get_object_or_404(RequestOption, id=id)
+    if request_object.restaurant != request.user.restaurant:
+        raise Http404()
+    request_object.delete()
+    return redirect(restaurant_requests)
+
 # Restaurant servers page
 @login_required(login_url='/accounts/login/')
 def restaurant_servers(request):
@@ -220,7 +287,7 @@ def restaurant_servers(request):
             new_server["status"] = "Pending"
         new_server["request"] = True
         all_servers.append(new_server)
-    all_servers = sorted(all_servers, key=lambda s: s["name"])
+    all_servers = sorted(all_servers, key=itemgetter("name"))
     return render(request, 'restaurant/servers.html', {"servers": all_servers})
 
 # Restaurant add server page

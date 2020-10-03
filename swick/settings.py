@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'drfpasswordless',
+    'drf_multiple_model',
 ]
 
 MIDDLEWARE = [
