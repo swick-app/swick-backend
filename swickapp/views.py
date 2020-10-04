@@ -9,9 +9,9 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.urls import reverse
 from .forms import UserForm, UserUpdateForm, RestaurantForm, ServerRequestForm, \
-    MealForm, CustomizationForm, RequestForm
-from .models import User, Restaurant, Server, ServerRequest, Meal, Customization, \
-    Order, RequestOption
+    CategoryForm, MealForm, CustomizationForm, RequestForm
+from .models import User, Restaurant, Server, ServerRequest, Category, Meal, \
+    Customization, Order, RequestOption
 import pytz
 import stripe
 import json
@@ -117,12 +117,45 @@ def restaurant_home(request):
 # Restaurant menu page
 @login_required(login_url='/accounts/login/')
 def restaurant_menu(request):
-    meals = Meal.objects.filter(restaurant=request.user.restaurant).order_by("name")
-    return render(request, 'restaurant/menu.html', {"meals": meals})
+    categories = Category.objects.filter(restaurant=request.user.restaurant).order_by("name")
+    return render(request, 'restaurant/menu.html', {"categories": categories})
+
+# Restaurant add category page
+@login_required(login_url='/accounts/login/')
+def restaurant_add_category(request):
+    category_form = CategoryForm()
+
+    if request.method == "POST":
+        category_form = CategoryForm(request.POST)
+
+        if category_form.is_valid():
+            category = category_form.save(commit=False)
+            category.restaurant = request.user.restaurant
+            category.save()
+
+            return redirect(restaurant_menu)
+
+    return render(request, 'restaurant/add_category.html', {
+        "category_form": category_form,
+    })
+
+# Restaurant add category page
+@login_required(login_url='/accounts/login/')
+def restaurant_delete_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if category.restaurant != request.user.restaurant:
+        raise Http404()
+    category.delete()
+    return redirect(restaurant_menu)
 
 # Restaurant add meal page
 @login_required(login_url='/accounts/login/')
-def restaurant_add_meal(request):
+def restaurant_add_meal(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    # Checks if requested category belongs to user's restaurant
+    if request.user.restaurant != category.restaurant:
+        raise Http404()
+
     meal_form = MealForm()
     CustomizationFormset = formset_factory(CustomizationForm, extra=0)
     customization_formset = CustomizationFormset()
@@ -134,14 +167,15 @@ def restaurant_add_meal(request):
 
         if meal_form.is_valid() and customization_formset.is_valid():
             new_meal = meal_form.save(commit=False)
-            new_meal.restaurant = request.user.restaurant
+            new_meal.category = category
             new_meal.save()
             # Loop through each form in customization formset
             for form in customization_formset:
                 new_customization = form.save(commit=False)
                 new_customization.meal = new_meal
                 new_customization.save()
-            return redirect(restaurant_menu)
+            # Redirect to category fragment identifier
+            return redirect(reverse(restaurant_menu) + '#' + category.name)
 
     return render(request, 'restaurant/add_meal.html', {
         "meal_form": meal_form,
@@ -153,7 +187,7 @@ def restaurant_add_meal(request):
 def restaurant_edit_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
-    if request.user.restaurant != meal.restaurant:
+    if request.user.restaurant != meal.category.restaurant:
         raise Http404()
 
     meal_form = MealForm(instance=meal)
@@ -162,7 +196,7 @@ def restaurant_edit_meal(request, meal_id):
     customization_formset = CustomizationFormset(queryset=customization_objects)
 
     # Update meal
-    if request.method == "POST" and "update" in request.POST:
+    if request.method == "POST":
         meal_form = MealForm(request.POST, request.FILES,
             instance=meal)
         customization_formset = CustomizationFormset(request.POST)
@@ -176,39 +210,49 @@ def restaurant_edit_meal(request, meal_id):
                 new_customization = form.save(commit=False)
                 new_customization.meal_id = meal_id
                 new_customization.save()
-            return redirect(restaurant_menu)
-
-    # Delete meal
-    if request.method == "POST" and "delete" in request.POST:
-        Meal.objects.filter(id=meal_id).delete()
-        return redirect(restaurant_menu)
+            # Redirect to category fragment identifier
+            return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
     return render(request, 'restaurant/edit_meal.html', {
         "meal_form": meal_form,
-        "customization_formset": customization_formset
+        "customization_formset": customization_formset,
+        "meal_id": meal_id
     })
+
+# Restaurant edit meal page
+@login_required(login_url='/accounts/login/')
+def restaurant_delete_meal(request, meal_id):
+    meal = get_object_or_404(Meal, id=meal_id)
+    # Checks if requested meal belongs to user's restaurant
+    if request.user.restaurant != meal.category.restaurant:
+        raise Http404()
+    meal.delete()
+    # Redirect to category fragment identifier
+    return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 # Restaurant enable meal
 @login_required(login_url='/accounts/login/')
 def restaurant_enable_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
-    if request.user.restaurant != meal.restaurant:
+    if request.user.restaurant != meal.category.restaurant:
         raise Http404()
     meal.enabled = True
     meal.save()
-    return redirect(restaurant_menu)
+    # Redirect to category fragment identifier
+    return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 # Restaurant disable meal
 @login_required(login_url='/accounts/login/')
 def restaurant_disable_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
-    if request.user.restaurant != meal.restaurant:
+    if request.user.restaurant != meal.category.restaurant:
         raise Http404()
     meal.enabled = False
     meal.save()
-    return redirect(restaurant_menu)
+    # Redirect to category fragment identifier
+    return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 # Restaurant orders page
 @login_required(login_url='/accounts/login/')

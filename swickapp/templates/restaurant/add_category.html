@@ -6,23 +6,18 @@
   <div class="panel">
     <div class="panel-heading bg-blue">
       <h4 class="panel-title text-center">
-        Edit Request
+        Add Category
       </h4>
     </div>
     <div class="panel-body">
       <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <!--- Request form --->
-        {% bootstrap_form request_form %}
-        <!--- Update button --->
-        <button type="submit" class="btn btn-blue">Update</button>
-
-        <!--- Delete request button --->
-        <a href="{% url 'restaurant_delete_request' request_id %}"
-          class="btn btn-danger">Delete</a>
+        {% bootstrap_form category_form %}
+        <!--- Add request button --->
+        <button type="submit" class="btn btn-success">Add category</button>
       </form>
     </div>
   </div>
 </div>
-
 {% endblock %}

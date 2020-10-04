@@ -3,8 +3,9 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
-from .models import User, Restaurant, Customer, Server, ServerRequest, Meal, \
-    Customization, Order, OrderItem, OrderItemCustomization, RequestOption, Request
+from .models import User, Restaurant, Customer, Server, ServerRequest, Category, \
+    Meal, Customization, Order, OrderItem, OrderItemCustomization, \
+    RequestOption, Request
 from .serializers import RestaurantSerializer, CategorySerializer, MealSerializer, \
     CustomizationSerializer, OrderSerializerForCustomer, \
     OrderDetailsSerializerForCustomer, OrderSerializerForServer, \
@@ -119,15 +120,14 @@ def customer_get_categories(request, restaurant_id):
         [categories]
     """
     categories = CategorySerializer(
-        Meal.objects.filter(restaurant_id=restaurant_id, enabled=True).order_by("category")
-            .distinct("category"),
+        Category.objects.filter(restaurant_id=restaurant_id).order_by("name"),
         many=True,
     ).data
     return JsonResponse({"categories": categories, "status": "success"})
 
 # GET request
 # Get menu associated with category
-def customer_get_menu(request, restaurant_id, category):
+def customer_get_menu(request, restaurant_id, category_id):
     """
     return:
         [menu]
@@ -138,10 +138,11 @@ def customer_get_menu(request, restaurant_id, category):
             image
         status
     """
-    if category == "All":
+    # Get all meals if category_id is 0
+    if category_id == 0:
         meals = MealSerializer(
             Meal.objects.filter(
-                restaurant_id=restaurant_id,
+                category__restaurant_id=restaurant_id,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -150,8 +151,7 @@ def customer_get_menu(request, restaurant_id, category):
     else:
         meals = MealSerializer(
             Meal.objects.filter(
-                restaurant_id=restaurant_id,
-                category=category,
+                category_id=category_id,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -377,7 +377,7 @@ def customer_retry_payment(request):
     return JsonResponse({"status": "unhandled_status"})
 
 # GET request
-# Get list of customer's orders
+# Get list of customer's last 10 orders
 @api_view()
 def customer_get_orders(request):
     """
@@ -604,7 +604,7 @@ def server_create_account(request):
     return JsonResponse({"status": "success"})
 
 # GET request
-# Get list of restaurant's orders
+# Get list of restaurant's last 20 orders
 @api_view()
 def server_get_orders(request):
     """
