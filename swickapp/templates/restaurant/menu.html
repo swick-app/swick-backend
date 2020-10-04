@@ -18,19 +18,15 @@
 
     <!--- Create a table for each category --->
     {% for category in categories %}
-      <h4 id="{{ category.name }}" class="pull-left">{{ category.name }}</h4>
-
-      <span class="pull-right">
-      <!--- Delete category button --->
-      <a href="{% url 'restaurant_delete_category' category.id %}" class="btn btn-danger confirm-delete">
-        Delete Category
+      <!--- Click category name to edit --->
+      <a id="{{ category.name }}" class="pull-left" href="{% url 'restaurant_edit_category' category.id %}">
+        <h4>{{ category.name }}</h4>
       </a>
 
       <!--- Add meal button --->
-      <a href="{% url 'restaurant_add_meal' category.id %}" class="btn btn-success">
+      <a href="{% url 'restaurant_add_meal' category.id %}" class="btn btn-success pull-right">
         Add Meal
       </a>
-      </span>
 
       <!--- Menu table --->
       <table class="table table-bordered">
@@ -42,7 +38,6 @@
             <th class="text-center">Price</th>
             <th class="text-center">Image</th>
             <th class="text-center">Customizations</th>
-            <th class="text-center">Edit</th>
             <th class="text-center">Enable/Disable</th>
           </tr>
         </thead>
@@ -50,7 +45,10 @@
         <tbody>
           {% for meal in category.meal.all|dictsort:"name" %}
             <tr>
-              <td>{{ meal.name }}</td>
+              <!--- Click meal name to edit --->
+              <td><a href="{% url 'restaurant_edit_meal' meal.id %}">
+                {{ meal.name }}
+              </a></td>
               <td>{{ meal.description }}</td>
               <td>${{ meal.price }}</td>
               <!--- Meal image --->
@@ -71,10 +69,6 @@
                 <div>Min: {{ cust.min}} </div>
                 <div>Max: {{ cust.max}} </div>
               {% endfor %}
-              </td>
-              <!--- Edit button --->
-              <td class="text-center"><a href="{% url 'restaurant_edit_meal' meal.id %}"
-                class="btn btn-blue">Edit</a>
               </td>
               <!--- Enable/disable button --->
               <td class="text-center">

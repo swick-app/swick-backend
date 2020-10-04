@@ -133,10 +133,34 @@ def restaurant_add_category(request):
             category.restaurant = request.user.restaurant
             category.save()
 
-            return redirect(restaurant_menu)
+            # Redirect to category fragment identifier
+            return redirect(reverse(restaurant_menu) + '#' + category.name)
 
     return render(request, 'restaurant/add_category.html', {
         "category_form": category_form,
+    })
+
+# Restaurant edit category page
+@login_required(login_url='/accounts/login/')
+def restaurant_edit_category(request, category_id):
+    category = get_object_or_404(Category, id=category_id)
+    if category.restaurant != request.user.restaurant:
+        raise Http404()
+
+    category_form = CategoryForm(instance=category)
+
+    # Update request
+    if request.method == "POST":
+        category_form = CategoryForm(request.POST, instance=category)
+
+        if category_form.is_valid():
+            category_form.save()
+            # Redirect to category fragment identifier
+            return redirect(reverse(restaurant_menu) + '#' + category.name)
+
+    return render(request, 'restaurant/edit_category.html', {
+        "category_form": category_form,
+        "category_id": category.id,
     })
 
 # Restaurant add category page
