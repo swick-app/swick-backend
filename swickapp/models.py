@@ -72,7 +72,7 @@ class Restaurant(models.Model):
         related_name='restaurant')
     name = models.CharField(max_length=256, verbose_name="restaurant name")
     address = models.CharField(max_length=256, verbose_name="restaurant address")
-    image = models.FileField(verbose_name="restaurant image")
+    image = models.ImageField(verbose_name="restaurant image")
     timezone = models.CharField(max_length=16, choices=TIMEZONE_CHOICES)
     stripe_acct_id = models.CharField(max_length=255)
     default_sales_tax = models.DecimalField(max_digits=4, decimal_places=3,
@@ -135,7 +135,7 @@ class Meal(models.Model):
     description = models.CharField(max_length=512, blank=True, null=True)
     price = models.DecimalField(max_digits=7, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))])
-    image = models.FileField(blank=True, null=True)
+    image = models.ImageField(blank=True, null=True)
     tax = models.DecimalField(max_digits=4, decimal_places=3, verbose_name="sales tax", null=True,
                                    validators=[MinValueValidator(Decimal('0'))])
     enabled = models.BooleanField(default=True)

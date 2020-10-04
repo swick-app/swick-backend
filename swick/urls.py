@@ -120,4 +120,4 @@ urlpatterns = [
     path('api/server/update_order_item_status/', apis.server_update_order_item_status),
     path('api/server/delete_request/', apis.server_delete_request),
     path('api/server/get_info/', apis.server_get_info),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
