@@ -32,14 +32,11 @@
         <br>
 
         <!--- Update meal button --->
-        <button type="submit" class="btn btn-blue" name="update">Update meal</button>
-      </form>
-      <br>
+        <button type="submit" class="btn btn-blue">Update meal</button>
 
-      <!--- Delete meal button --->
-      <form method="POST">
-        {% csrf_token %}
-        <button type="submit" class="btn btn-danger" name="delete">Delete meal</button>
+        <!--- Delete meal button --->
+        <a href="{% url 'restaurant_delete_meal' meal_id %}"
+          class="btn btn-danger">Delete meal</a>
       </form>
     </div>
   </div>

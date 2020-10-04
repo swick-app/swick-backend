@@ -120,14 +120,21 @@ class ServerRequest(models.Model):
     def __str__(self):
         return self.email
 
+# Category for meal model
+class Category(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    name = models.CharField(max_length=256)
+
+    def __str__(self):
+        return self.name
+
 # Meal model
 class Meal(models.Model):
-    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
+    category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name="meal")
     name = models.CharField(max_length=256, verbose_name="meal name")
     description = models.CharField(max_length=512, blank=True, null=True)
     price = models.DecimalField(max_digits=7, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))])
-    category = models.CharField(max_length=256, verbose_name="category (ex. Appetizers)")
     image = models.FileField(blank=True, null=True)
     tax = models.DecimalField(max_digits=4, decimal_places=3, verbose_name="sales tax", null=True,
                                    validators=[MinValueValidator(Decimal('0'))])

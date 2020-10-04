@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.templatetags.static import static
-from .models import Restaurant, Meal, Customization, Order, OrderItem, \
+from .models import Restaurant, Category, Meal, Customization, Order, OrderItem, \
     OrderItemCustomization, RequestOption, Request
 
 # Serialize restaurant object to JSON
@@ -12,8 +12,8 @@ class RestaurantSerializer(serializers.ModelSerializer):
 # Serialize meal category to JSON
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
-        model = Meal
-        fields = ("category",)
+        model = Category
+        exclude = ("restaurant",)
 
 # Serialize meal object to JSON
 class MealSerializer(serializers.ModelSerializer):
