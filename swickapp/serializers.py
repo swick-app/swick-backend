@@ -17,11 +17,11 @@ class CategorySerializer(serializers.ModelSerializer):
 
 # Serialize meal object to JSON
 class MealSerializer(serializers.ModelSerializer):
+    tax = serializers.ReadOnlyField(source="tax_category.tax")
     image = serializers.SerializerMethodField()
-
     class Meta:
         model = Meal
-        fields = ("id", "name", "description", "price", "image")
+        fields = ("id", "name", "description", "price", "tax", "image")
 
     def get_image(self, meal):
         if not meal.image:
@@ -70,6 +70,7 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ("id", "meal_name", "quantity", "total", "status", "order_item_cust")
 
+
 ##### ORDER SERIALIZERS #####
 
 # Serialize order object to JSON for customer
@@ -88,7 +89,7 @@ class OrderDetailsSerializerForCustomer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("restaurant", "order_time", "total", "order_item")
+        fields = ("restaurant", "order_time", "subtotal", "tax", "total", "order_item")
 
     # Needed to order order items
     def get_order_item(self, instance):
@@ -111,7 +112,7 @@ class OrderDetailsSerializerForServer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("customer", "table", "order_time", "total", "order_item")
+        fields = ("customer", "table", "order_time", "subtotal", "tax", "total", "order_item")
 
     # Needed to order order items
     def get_order_item(self, instance):

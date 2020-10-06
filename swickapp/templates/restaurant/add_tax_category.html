@@ -1,0 +1,23 @@
+{% extends 'restaurant/base.html' %}
+{% load bootstrap3 %}
+
+{% block content %}
+<div class="col-lg-offset-2 col-lg-8">
+  <div class="panel">
+    <div class="panel-heading bg-blue">
+      <h4 class="panel-title text-center">
+        Add Sales Tax Category
+      </h4>
+    </div>
+    <div class="panel-body">
+      <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <!--- Request form --->
+        {% bootstrap_form tax_category_form %}
+        <!--- Add request button --->
+        <button type="submit" class="btn btn-success">Add</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

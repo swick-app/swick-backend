@@ -1,5 +1,6 @@
 {% extends 'restaurant/base.html' %}
 {% load bootstrap3 %}
+{% load static %}
 
 {% block content %}
 <div class="col-lg-offset-2 col-lg-8">
@@ -10,10 +11,14 @@
       </h4>
     </div>
     <div class="panel-body">
-      <form method="POST" enctype="multipart/form-data">
+      <form id="add_meal_form" method="POST" enctype="multipart/form-data">
         {% csrf_token %}
         <!--- Meal form --->
         {% bootstrap_form meal_form %}
+        <!--- Tax categories selector --->
+        <label class="control-label">Sales tax category</label>
+        <select name="Tax Categories" id="tax_categories" class="form-control"></select>
+        <br>
         <!--- Customization formset --->
         {{ customization_formset.management_form }}
         <div id="form_set">
@@ -45,7 +50,23 @@
   </div>
 </div>
 
+<!--- Modal form wrapper -->
+<div class="modal fade" tabindex="-1" role="dialog" id="modal">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content"></div>
+  </div>
+</div>
+
+<!--- load popup bootstrap helper script --->
+<script src="{% static 'js/configure-tax-modal-bootstrap.js' %}"}></script>
+
 <script>
+    $(document).ready(function(){
+      // Prepares tax category popup using popup trigger, popup formURL, async dataURL, category names, category values, submit-button id
+      ready_popup("tax_categories", "{% url 'popup_tax_category' %}", "{% url 'get_tax_categories' %}",
+                                     {{ tax_categories | safe }}, {{ tax_percentages | safe}}, 0, "add_meal_form");
+    });
+
     // Add customization form
     $('#add_form').click(function() {
         var form_idx = $('#id_form-TOTAL_FORMS').val();
@@ -59,7 +80,7 @@
         if (form_idx > 0) {
           $('#id_form-TOTAL_FORMS').val(parseInt(form_idx) - 1);
           var form_idx = form_idx - 1;
-          $("#form-" + form_idx).remove()
+          $("#form-" + form_idx).remove();
         }
     });
 </script>

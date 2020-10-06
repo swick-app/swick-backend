@@ -75,7 +75,7 @@ class Restaurant(models.Model):
     image = models.ImageField(verbose_name="restaurant image")
     timezone = models.CharField(max_length=16, choices=TIMEZONE_CHOICES)
     stripe_acct_id = models.CharField(max_length=255)
-    default_sales_tax = models.DecimalField(max_digits=4, decimal_places=3,
+    default_sales_tax = models.DecimalField(max_digits=5, decimal_places=3, verbose_name="default sales tax (%)",
         validators=[MinValueValidator(Decimal('0'))])
 
     # For displaying name in Django dashboard
@@ -120,6 +120,18 @@ class ServerRequest(models.Model):
     def __str__(self):
         return self.email
 
+# Tax Category model
+class TaxCategory(models.Model):
+    restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE, null=True)
+    name = models.CharField(max_length=256)
+    tax = models.DecimalField(max_digits=5, decimal_places=3, validators=[MinValueValidator(Decimal('0'))], verbose_name="Sales tax (%)")
+
+    def __str__(self):
+        return self.name
+
+    class Meta:
+        unique_together = ('restaurant', 'name')
+
 # Category for meal model
 class Category(models.Model):
     restaurant = models.ForeignKey(Restaurant, on_delete=models.CASCADE)
@@ -136,8 +148,7 @@ class Meal(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2,
         validators=[MinValueValidator(Decimal('0.01'))])
     image = models.ImageField(blank=True, null=True)
-    tax = models.DecimalField(max_digits=4, decimal_places=3, verbose_name="sales tax", null=True,
-                                   validators=[MinValueValidator(Decimal('0'))])
+    tax_category = models.ForeignKey(TaxCategory, on_delete=models.SET_NULL, null=True, verbose_name="Sales tax category")
     enabled = models.BooleanField(default=True)
 
     def __str__(self):
@@ -211,8 +222,6 @@ class OrderItem(models.Model):
     meal_name = models.CharField(max_length=256)
     meal_price = models.DecimalField(max_digits=7, decimal_places=2)
     quantity = models.IntegerField()
-    subtotal = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
-    tax = models.DecimalField(max_digits=7, decimal_places=2, blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
 

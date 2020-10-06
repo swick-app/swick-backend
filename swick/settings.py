@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'storages',
     'bootstrap3',
+    'bootstrap_modal_forms',
     'rest_framework',
     'rest_framework.authtoken',
     'drfpasswordless',
@@ -166,7 +167,7 @@ else:
     DEFAULT_FILE_STORAGE = 'swick.storage_backends.MediaStorage'
 
 # collectstatic command will collect static files from here to upload to S3
-STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
+STATICFILES_DIRS = [os.path.join(BASE_DIR, 'swickapp/static')]
 
 
 # STMP email configuration

@@ -3,7 +3,7 @@ from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from drfpasswordless.models import CallbackToken
 from .models import User, Restaurant, Customer, Server, ServerRequest, \
     Category, Meal, Customization, Order, OrderItem, OrderItemCustomization, \
-    RequestOption, Request
+    RequestOption, Request, TaxCategory
 
 # Custom user model display on admin dashboard
 @admin.register(User)
@@ -37,5 +37,6 @@ admin.site.register(Customization)
 admin.site.register(Order)
 admin.site.register(OrderItem)
 admin.site.register(OrderItemCustomization)
+admin.site.register(TaxCategory)
 admin.site.register(RequestOption)
 admin.site.register(Request)
