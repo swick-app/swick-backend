@@ -11,9 +11,9 @@ from .serializers import RestaurantSerializer, CategorySerializer, MealSerialize
     OrderDetailsSerializerForCustomer, OrderSerializerForServer, \
     OrderDetailsSerializerForServer, OrderItemToCookSerializer, \
     OrderItemToSendSerializer, RequestOptionSerializer, RequestSerializer
-
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
+from decimal import Decimal, ROUND_HALF_UP
 import stripe
 from swick.settings import STRIPE_API_KEY
 from drf_multiple_model.mixins import FlatMultipleModelMixin
@@ -135,6 +135,7 @@ def customer_get_menu(request, restaurant_id, category_id):
             name
             description
             price
+            tax
             image
         status
     """
@@ -229,15 +230,18 @@ def customer_place_order(request):
 
     # Variable for calculating order total
     order_total = 0
+    order_subtotal = 0
+    order_tax = 0
 
     # Loop through order items
     for item in order_items:
         # Create order item in database
+        meal = Meal.objects.get(id=item["meal_id"])
         order_item = OrderItem.objects.create(
             order=order,
-            meal_name=Meal.objects.get(id=item["meal_id"]).name,
-            meal_price=Meal.objects.get(id=item["meal_id"]).price,
-            quantity=item["quantity"]
+            meal_name=meal.name,
+            meal_price=meal.price,
+            quantity=item["quantity"],
         )
         # Variable for calculating price of one meal in order item
         meal_total = order_item.meal_price
@@ -264,9 +268,14 @@ def customer_place_order(request):
         order_item.total = meal_total * order_item.quantity
         order_item.save()
 
-        order_total += order_item.total
+        meal_tax = meal.tax_category.tax
+        order_subtotal += order_item.total
+        order_tax += (meal_tax / 100) * order_item.total
+        order_total += (order_item.total * meal_tax / 100)
     # Update order total field
-    order.total = order_total
+    order.subtotal = order_subtotal
+    order.tax = Decimal(order_tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    order.total = order.subtotal + order.tax
 
     # STRIPE PAYMENT PROCESSING
     # Note: Return value 'intent_status: String' can be refactored to boolean values
@@ -303,7 +312,6 @@ def customer_place_order(request):
         order.delete()
         return JsonResponse({"intent_status" : "card_error", "error" : error, "status" : "success"})
     except stripe.error.StripeError as e:
-        print(e)
         return JsonResponse({"status" : "stripe_api_error"})
 
     intent_status = payment_intent.status
@@ -351,7 +359,10 @@ def customer_retry_payment(request):
         payment_intent = stripe.PaymentIntent.retrieve(
             request.POST["payment_intent_id"]
         )
-        payment_intent = stripe.PaymentIntent.confirm(payment_intent.id)
+        if payment_intent.customer == request.user.customer.stripe_cust_id:
+            payment_intent = stripe.PaymentIntent.confirm(payment_intent.id)
+        else:
+            return JsonResponse({"status" : "invalid_stripe_id"})
     except stripe.error.CardError as e:
         order = Order.objects.get(id = payment_intent.metadata["order_id"])
         order.delete()
@@ -411,6 +422,8 @@ def customer_get_order_details(request, order_id):
         order_details
             restaurant
             order_time
+            subtotal
+            tax
             total
             [order_item]
                 meal_name
@@ -532,7 +545,11 @@ def customer_remove_card(request):
         payment_method_id
     """
     try:
-        stripe.PaymentMethod.detach(request.POST["payment_method_id"])
+        payment_method = stripe.PaymentMethod.retrieve(request.POST["payment_method_id"])
+        if payment_method.customer == request.user.customer.stripe_cust_id:
+            stripe.PaymentMethod.detach(request.POST["payment_method_id"])
+        else:
+            return JsonResponse({"status" : "invalid_stripe_id"})
     except stripe.error.StripeError as e:
         return JsonResponse({"status" : "stripe_api_error"})
 

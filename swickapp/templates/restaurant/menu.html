@@ -38,6 +38,7 @@
             <th class="text-center">Price</th>
             <th class="text-center">Image</th>
             <th class="text-center">Customizations</th>
+            <th class="text-center">Sales Tax Category</th>
             <th class="text-center">Enable/Disable</th>
           </tr>
         </thead>
@@ -70,6 +71,15 @@
                 <div>Max: {{ cust.max}} </div>
               {% endfor %}
               </td>
+              <td id="{{ meal.id }}" class="text-center"></td>
+              <script>
+                function formatTax(){
+                  // remove trailing "0" and "."
+                  var formatted = "{{ meal.tax_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
+                  document.getElementById("{{ meal.id }}").innerHTML = "{{ meal.tax_category.name}} (" + formatted + "%)"
+                }
+                formatTax()
+              </script>
               <!--- Enable/disable button --->
               <td class="text-center">
               {% if meal.enabled %}

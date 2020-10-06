@@ -1,7 +1,8 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from .models import User, Restaurant, ServerRequest, Category, Meal, \
-    Customization, RequestOption
+    Customization, RequestOption, TaxCategory
+from bootstrap_modal_forms.forms import BSModalModelForm
 
 # Validate that email does not already have restaurant account linked
 def validate_no_restaurant(value):
@@ -65,7 +66,53 @@ class CategoryForm(forms.ModelForm):
 class MealForm(forms.ModelForm):
     class Meta:
         model = Meal
-        exclude = ("category", "enabled")
+        exclude = ("category", "enabled", "tax_category")
+
+class TaxCategoryFormBase(forms.ModelForm):
+    class Meta:
+        model = TaxCategory
+        fields =  ('name', 'tax')
+
+    # Pass in request and save as a parameter
+    def __init__(self, *args, **kwargs):
+        self.request = kwargs.pop('request', None)
+        super(TaxCategoryFormBase, self).__init__(*args, **kwargs)
+
+    def clean(self):
+        cleaned_data = super().clean()
+        try:
+            matching_category = TaxCategory.objects.get(restaurant=self.request.user.restaurant,
+                                                        name=cleaned_data.get("name"))
+            if self.instance.pk != matching_category.pk:
+                raise ValidationError({'name' : ["Duplicate category name",]})
+
+        except TaxCategory.DoesNotExist:
+            pass
+
+# Tax Category form
+class TaxCategoryForm(BSModalModelForm):
+    def clean(self):
+        cleaned_data = super().clean()
+        # Check if combination of restaurant and name exists in database
+        try:
+            TaxCategory.objects.get(restaurant=self.request.user.restaurant,
+                                        name=cleaned_data.get("name"))
+            raise ValidationError({'name' : ["Duplicate category name",]})
+        except TaxCategory.DoesNotExist:
+            pass
+
+    class Meta:
+        model = TaxCategory
+        fields = ('name', 'tax',)
+        error_messages = {
+                    'name': {
+                        'max_length': "Name is too long.",
+                        'required' : "Please input a name"
+                    },
+                    'tax' : {
+                        'required' : 'Please input a number'
+                    }
+                }
 
 # Customization form
 class CustomizationForm(forms.ModelForm):

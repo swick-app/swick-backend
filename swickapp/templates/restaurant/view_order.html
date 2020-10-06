@@ -13,6 +13,8 @@
     <div>Time: {{ order.order_time|date:"m/d/y g:iA" }}</div>
     <div>Customer: {{ order.customer }}</div>
     <div>Table: {{ order.table }}</div>
+    <div>Subtotal: ${{ order.subtotal }}</div>
+    <div>Sales tax: ${{ order.tax }}</div>
     <div>Total: ${{ order.total }}</div>
     <div>Status: {{ order.get_status_display }}</div>
     <br>

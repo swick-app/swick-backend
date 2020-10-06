@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'storages',
     'bootstrap3',
+    'bootstrap_modal_forms',
     'rest_framework',
     'rest_framework.authtoken',
     'drfpasswordless',

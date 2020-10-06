@@ -16,6 +16,8 @@
           <th class="text-center">Time</th>
           <th class="text-center">Customer</th>
           <th class="text-center">Table</th>
+          <th class="text-center">Subtotal</th>
+          <th class="text-center">Sales tax</th>
           <th class="text-center">Total</th>
           <th class="text-center">Status</th>
           <th class="text-center">View</th>
@@ -28,6 +30,8 @@
               <td>{{ order.order_time|date:"m/d/y g:iA" }}</td>
               <td>{{ order.customer }}</td>
               <td>{{ order.table }}</td>
+              <td>${{ order.subtotal }}</td>
+              <td>${{ order.tax }}</td>
               <td>${{ order.total }}</td>
               <td>{{ order.get_status_display }}</td>
               <!--- View button --->
