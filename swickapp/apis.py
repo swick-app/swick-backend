@@ -189,6 +189,29 @@ def customer_get_meal(request, meal_id):
     ).data
     return JsonResponse({"customizations": customizations, "status": "success"})
 
+def set_stripe_fee(order):
+        try:
+            # Try determing stripe fee for order
+            charge_data = stripe.PaymentIntent.retrieve(order.stripe_payment_id).charges.data
+            if not charge_data:
+                # If should never reach since all succesful payments must have a charge attached
+                raise AssertionError("Unable to find charge attached to payment_intent")
+            expanded_charge = stripe.Charge.retrieve(charge_data[0].id, expand=['balance_transaction'])
+            #balance_transaction = stripe.BalanceTransaction.retrieve(expanded_charge.balance_transaction)
+            for fee in expanded_charge.balance_transaction.fee_details:
+                if fee.type == 'stripe_fee':
+                    print(fee.amount)
+                    order.stripe_fee = Decimal((Decimal(fee.amount) / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+        except stripe.error.StripeError as e:
+            # Even if there is an error, the payment still has gone through and order should be completed
+            print(e)
+            pass
+        except AssertionError as e:
+            # Should never occur yet still should check and pass
+            # TODO: Perhaps create a log for fatal-esque errors
+            print(e)
+            pass
+
 # POST request
 # Create order in database
 @api_view(['POST'])
@@ -335,6 +358,7 @@ def customer_place_order(request):
     elif intent_status == 'succeeded':
         order.stripe_payment_id = payment_intent.id
         order.status = Order.ACTIVE
+        set_stripe_fee(order)
         order.save()
         return JsonResponse({"intent_status" : intent_status, "status" : "success"})
 
@@ -381,6 +405,7 @@ def customer_retry_payment(request):
     elif intent_status == 'succeeded':
         order = Order.objects.get(id = payment_intent.metadata["order_id"])
         order.status = Order.ACTIVE
+        set_stripe_fee(order)
         order.save()
         return JsonResponse({"intent_status" : "succeeded", "status" : "success"})
 

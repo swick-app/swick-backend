@@ -1,0 +1,16 @@
+<script src="https://code.jquery.com/jquery-3.3.1.slim.min.js" integrity="sha384-q8i/X+965DzO0rT7abK41JStQIAqVgRVzpbzo5smXKp4YfRvH+8abtTE1Pi6jizo" crossorigin="anonymous"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.3.0/jquery.datetimepicker.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-datetimepicker/2.3.0/jquery.datetimepicker.js"></script>
+{% include "django/forms/widgets/input.html" %}
+
+<script>
+  $(function () {
+    $("input[name='{{ widget.name }}']").datetimepicker({
+      format:"m/d/Y g:i A",
+      formatTime: "g:i A",
+      validateOnBlur: false,
+      step:15
+    });
+
+  });
+</script>
