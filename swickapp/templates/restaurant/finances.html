@@ -1,6 +1,6 @@
 {% extends 'restaurant/base.html' %}
-
 {% block content %}
+{% load bootstrap3 %}
 <div class="panel">
   <!--- Order header --->
   <div class="panel-heading bg-blue">
@@ -8,11 +8,61 @@
   </div>
 
   <div class="panel-body">
-    <!--- Add tax category button --->
-    <a href="{% url 'restaurant_add_tax_category' %}" class="btn btn-success pull-right">Add Tax Category</a>
-    <br/>
-    <br/>
-
+     <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row no-pad" >
+           <div class="col-sm-2"> <label> Start Date </label> </div>
+           <div class="col-sm-2"> <label> End Date </label> </div>
+      </div>
+        <div class="row no-pad" >
+           <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
+           <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
+        <div class="col-sm-2"><button type="submit" class="btn btn-blue">Refresh orders</button></div>
+      </div>
+      <div class="row no-pad" >
+         <div class="col-sm-2"> {{ start_time_error }} </div>
+         <div class="col-sm-2"> {{ end_time_error }} </div>
+    </div>
+     </form>
+  </div>
+  <div class="panel-body">
+    <table class="table table-bordered">
+      <!--- Tax table header --->
+      <thead>
+        <tr class="bg-light-blue">
+          <th class="text-center">Type</th>
+          <th class="text-center">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr>
+              <td class="text-left"> Gross revenue </td>
+              <td class="text-left"> ${{ gross_revenue }} </td>
+          </tr>
+          <tr>
+              <td class="text-left"> Collected sales tax </td>
+              <td class="text-left"> - ${{ total_tax }} </td>
+          </tr>
+          <tr>
+              <td class="text-left"> Collected tip </td>
+              <td class="text-left"> - ${{ total_tip }} </td>
+          </tr>
+          <tr>
+              <td class="text-left"> Stripe processing fees </td>
+              <td class="text-left"> - ${{ stripe_fees }} </td>
+          </tr>
+          <tr>
+              <th class="text-left"> Revenue </th>
+              <th class="text-left"> ${{ revenue }} </th>
+          </tr>
+      </tbody>
+      </table>
+</div>
+<div class="panel-body">
+  <!--- Add tax category button --->
+  <a href="{% url 'restaurant_add_tax_category' %}" class="btn btn-success pull-right">Add Tax Category</a>
+  <br/>
+  <br/>
     <!--- Tax table --->
     <table class="table table-bordered">
       <!--- Tax table header --->

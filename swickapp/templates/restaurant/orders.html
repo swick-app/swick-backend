@@ -6,7 +6,24 @@
   <div class="panel-heading bg-blue">
     <h4 class="panel-title text-center">Orders</h4>
   </div>
-
+  <div class="panel-body">
+     <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row no-pad" >
+           <div class="col-sm-2"> <label> Start Date </label> </div>
+           <div class="col-sm-2"> <label> End Date </label> </div>
+      </div>
+        <div class="row no-pad" >
+           <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
+           <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
+        <div class="col-sm-2"><button type="submit" class="btn btn-blue">Refresh orders</button></div>
+      </div>
+      <div class="row no-pad" >
+          <div class="col-sm-2"> {{ start_time_error }} </div>
+          <div class="col-sm-2"> {{ end_time_error }} </div>
+    </div>
+     </form>
+  </div>
   <div class="panel-body">
     <!--- Orders table --->
     <table class="table table-bordered">

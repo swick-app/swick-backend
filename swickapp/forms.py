@@ -2,6 +2,7 @@ from django import forms
 from django.core.exceptions import ValidationError
 from .models import User, Restaurant, ServerRequest, Category, Meal, \
     Customization, RequestOption, TaxCategory
+from .widgets import DateTimePickerInput
 from bootstrap_modal_forms.forms import BSModalModelForm
 
 # Validate that email does not already have restaurant account linked
@@ -141,3 +142,13 @@ class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestOption
         exclude = ("restaurant",)
+
+class DateTimeRangeForm(forms.Form):
+    start_time = forms.DateTimeField(
+        input_formats=['%m/%d/%Y %I:%M %p'],
+        widget=DateTimePickerInput()
+    )
+    end_time = forms.DateTimeField(
+        input_formats=['%m/%d/%Y %I:%M %p'],
+        widget=DateTimePickerInput()
+    )

@@ -4,6 +4,7 @@ from django.contrib.auth import login
 from django.forms import formset_factory, modelformset_factory
 from django.http import Http404, JsonResponse
 from django.utils import timezone
+from django.utils.timezone import localtime
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 from django.core.mail import send_mail
@@ -11,7 +12,7 @@ from django.template.loader import render_to_string
 from django.urls import reverse, reverse_lazy
 from .forms import UserForm, UserUpdateForm, RestaurantForm, ServerRequestForm, \
     CategoryForm, MealForm, CustomizationForm, TaxCategoryForm, TaxCategoryFormBase, \
-    RequestForm
+    RequestForm, DateTimeRangeForm
 from .models import User, Restaurant, Server, ServerRequest, Category, Meal, \
     Customization, TaxCategory, Order, RequestOption
 import pytz
@@ -319,11 +320,50 @@ def restaurant_disable_meal(request, meal_id):
     # Redirect to category fragment identifier
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
+# Initalizes datetime_range_form and orders queryset and returns map containing objects along with any error messages
+def initalize_datetime_range_orders(request):
+    timezone.activate(pytz.timezone(request.user.restaurant.timezone))
+    curr_day_start = localtime().replace(hour=0, minute=0, second=0, microsecond=0)
+    curr_day_end = localtime().replace(hour=23, minute=59, second=59, microsecond=999999)
+    datetime_range_form = DateTimeRangeForm(initial={'start_time' : curr_day_start.strftime("%m/%d/%Y %I:%M %p"),
+                                                      'end_time' : curr_day_end.strftime("%m/%d/%Y %I:%M %p")})
+    start_time_error = ""
+    end_time_error = ""
+
+    orders_in_range = Order.objects.filter(
+        restaurant=request.user.restaurant,
+        order_time__range=(curr_day_start, curr_day_end)
+    ).exclude(status=Order.PROCESSING).order_by("id")
+    if request.method == 'POST':
+        datetime_range_form = DateTimeRangeForm(request.POST)
+        if datetime_range_form.is_valid():
+            orders_in_range = Order.objects.filter(
+                restaurant=request.user.restaurant,
+                order_time__range=(
+                    datetime_range_form.cleaned_data['start_time'],
+                    datetime_range_form.cleaned_data['end_time']
+                )
+            ).exclude(status=Order.PROCESSING).order_by("id")
+        else:
+            if datetime_range_form.has_error("start_time", "invalid") :
+                start_time_error = datetime_range_form.errors["start_time"][0]
+            if datetime_range_form.has_error("end_time", "invalid") :
+                end_time_error = datetime_range_form.errors["end_time"][0]
+            orders_in_range = Order.objects.none()
+
+    return {"datetime_range_form" : datetime_range_form,
+            "orders_in_range" : orders_in_range,
+            "start_time_error" : start_time_error,
+            "end_time_error" : end_time_error}
+
 # Restaurant orders page
 @login_required(login_url='/accounts/login/')
 def restaurant_orders(request):
-    orders = Order.objects.filter(restaurant=request.user.restaurant).exclude(status=Order.PROCESSING).order_by("-id")
-    return render(request, 'restaurant/orders.html', {"orders": orders})
+    data = initalize_datetime_range_orders(request)
+    return render(request, 'restaurant/orders.html', {"orders": data["orders_in_range"],
+                                                      "datetime_range_form" : data["datetime_range_form"],
+                                                      "start_time_error" : data["start_time_error"],
+                                                      "end_time_error" : data["end_time_error"]})
 
 # Restaurant view order page
 @login_required(login_url='/accounts/login/')
@@ -496,7 +536,6 @@ def restaurant_account(request):
         if user_form.is_valid() and restaurant_form.is_valid():
             user_form.save()
             restaurant_form.save()
-            timezone.activate(pytz.timezone(request.POST["restaurant-timezone"]))
 
         # Update default sales tax model for this Restaurant
         # INVARIANT: Default should only be destroyed (thus invalid) when restaurant is deleted:
@@ -562,9 +601,36 @@ def get_tax_categories(request):
 def restaurant_finances(request):
     default_category = TaxCategory.objects.get(restaurant=request.user.restaurant, name="Default")
     tax_categories = TaxCategory.objects.filter(restaurant=request.user.restaurant).exclude(name="Default").order_by("name")
+    data = initalize_datetime_range_orders(request)
+
+    gross_revenue = 0
+    total_tax = 0
+    total_tip = 0
+    stripe_fees = 0
+
+    for order in data["orders_in_range"]:
+        try:
+            gross_revenue += order.total
+            total_tax += order.tax
+            #TODO: Add tip summation
+            stripe_fees += order.stripe_fee
+        except TypeError:
+            # Critical Error: Catching TypeError means null field was accessed
+            # error would be raised by improper handling of dead orders
+            pass
+
+    revenue = gross_revenue - total_tax - total_tip - stripe_fees
 
     return render(request, 'restaurant/finances.html', {"default_category" : default_category,
-                                                        "tax_categories": tax_categories})
+                                                        "tax_categories": tax_categories,
+                                                        "datetime_range_form" : data["datetime_range_form"],
+                                                        "start_time_error" : data["start_time_error"],
+                                                        "end_time_error" : data["end_time_error"],
+                                                        "gross_revenue" : gross_revenue,
+                                                        "total_tax" : total_tax,
+                                                        "total_tip" : total_tip,
+                                                        "stripe_fees" : stripe_fees,
+                                                        "revenue" : revenue})
 
 # Restaurant add tax category page
 @login_required(login_url='/accounts/login/')

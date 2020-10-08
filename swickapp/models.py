@@ -8,7 +8,6 @@ from django.contrib.postgres.fields import ArrayField
 from django.core.validators import MinValueValidator
 from django.core.exceptions import ValidationError
 from django.utils import timezone
-from .signals import *
 import stripe
 from swick.settings import STRIPE_API_KEY
 
@@ -197,6 +196,8 @@ class Order(models.Model):
     tax = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
+        blank=True, null=True)
+    stripe_fee = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     # Need to couple paymentIntent and order together
     stripe_payment_id = models.CharField(max_length=255, null=True)
