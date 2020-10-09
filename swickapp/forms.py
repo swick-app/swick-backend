@@ -145,10 +145,10 @@ class RequestForm(forms.ModelForm):
 
 class DateTimeRangeForm(forms.Form):
     start_time = forms.DateTimeField(
-        input_formats=['%m/%d/%Y %I:%M %p'],
+        input_formats=['%m/%d/%Y %I:%M%p'],
         widget=DateTimePickerInput()
     )
     end_time = forms.DateTimeField(
-        input_formats=['%m/%d/%Y %I:%M %p'],
+        input_formats=['%m/%d/%Y %I:%M%p'],
         widget=DateTimePickerInput()
     )

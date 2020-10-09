@@ -15,7 +15,6 @@ from .forms import UserForm, UserUpdateForm, RestaurantForm, ServerRequestForm, 
     RequestForm, DateTimeRangeForm
 from .models import User, Restaurant, Server, ServerRequest, Category, Meal, \
     Customization, TaxCategory, Order, RequestOption
-import pytz
 import stripe
 import json
 from rest_framework.decorators import api_view
@@ -322,11 +321,10 @@ def restaurant_disable_meal(request, meal_id):
 
 # Initalizes datetime_range_form and orders queryset and returns map containing objects along with any error messages
 def initalize_datetime_range_orders(request):
-    timezone.activate(pytz.timezone(request.user.restaurant.timezone))
     curr_day_start = localtime().replace(hour=0, minute=0, second=0, microsecond=0)
     curr_day_end = localtime().replace(hour=23, minute=59, second=59, microsecond=999999)
-    datetime_range_form = DateTimeRangeForm(initial={'start_time' : curr_day_start.strftime("%m/%d/%Y %I:%M %p"),
-                                                      'end_time' : curr_day_end.strftime("%m/%d/%Y %I:%M %p")})
+    datetime_range_form = DateTimeRangeForm(initial={'start_time' : curr_day_start.strftime("%m/%d/%Y %I:%M%p"),
+                                                      'end_time' : curr_day_end.strftime("%m/%d/%Y %I:%M%p")})
     start_time_error = ""
     end_time_error = ""
 
