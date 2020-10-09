@@ -118,6 +118,8 @@ def customer_get_categories(request, restaurant_id):
     """
     return:
         [categories]
+            id
+            name
     """
     categories = CategorySerializer(
         Category.objects.filter(restaurant_id=restaurant_id).order_by("name"),
@@ -445,17 +447,20 @@ def customer_get_order_details(request, order_id):
         Authorization: Token ...
     return:
         order_details
+            id
             restaurant
             order_time
             subtotal
             tax
             total
             [order_item]
+                id
                 meal_name
                 quantity
                 total
                 status
                 [order_item_cust]
+                    id
                     name
                     [options]
         status
@@ -708,16 +713,19 @@ def server_get_order_details(request, order_id):
         Authorization: Token ...
     return:
         order_details
+            id
             customer
             table
             order_time
             total
             [order_item]
+                id
                 meal_name
                 quantity
                 total
                 status
                 [order_item_cust]
+                    id
                     name
                     [options]
         status
@@ -748,6 +756,7 @@ def server_get_order_items_to_cook(request):
             meal_name
             quantity
             [order_item_cust]
+                id
                 name
                 [options]
     """

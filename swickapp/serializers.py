@@ -59,7 +59,7 @@ class RequestSerializer(serializers.ModelSerializer):
 class OrderItemCustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = OrderItemCustomization
-        fields = ("customization_name", "options")
+        fields = ("id", "customization_name", "options")
 
 # Serialize order item objects to JSON
 class OrderItemSerializer(serializers.ModelSerializer):
@@ -89,7 +89,7 @@ class OrderDetailsSerializerForCustomer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("restaurant", "order_time", "subtotal", "tax", "total", "order_item")
+        fields = ("id", "restaurant", "order_time", "subtotal", "tax", "total", "order_item")
 
     # Needed to order order items
     def get_order_item(self, instance):
@@ -112,7 +112,7 @@ class OrderDetailsSerializerForServer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("customer", "table", "order_time", "subtotal", "tax", "total", "order_item")
+        fields = ("id", "customer", "table", "order_time", "subtotal", "tax", "total", "order_item")
 
     # Needed to order order items
     def get_order_item(self, instance):
