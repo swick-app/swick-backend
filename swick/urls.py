@@ -110,7 +110,7 @@ urlpatterns = [
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_restaurant/<int:restaurant_id>/', apis.customer_get_restaurant),
     path('api/customer/get_categories/<int:restaurant_id>/', apis.customer_get_categories),
-    path('api/customer/get_menu/<int:restaurant_id>/<int:category_id>/', apis.customer_get_menu),
+    path('api/customer/get_meals/<int:restaurant_id>/<int:category_id>/', apis.customer_get_meals),
     path('api/customer/get_meal/<int:meal_id>/', apis.customer_get_meal),
     path('api/customer/place_order/', apis.customer_place_order),
     path('api/customer/retry_payment/', apis.customer_retry_payment),
