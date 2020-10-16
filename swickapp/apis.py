@@ -55,18 +55,34 @@ def update_info(request):
 
 ##### CUSTOMER APIS #####
 
-# POST request
-# Create customer account if not created
-@api_view(['POST'])
-def customer_create_account(request):
+@api_view()
+def login(request):
     """
     header:
         Authorization: Token ...
     return:
         status
     """
-    Customer.objects.get_or_create(user=request.user)
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
+    else:
+        return JsonResponse({"status": "success"})
 
+# POST request
+# Customer login
+@api_view(['POST'])
+def customer_login(request):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        status
+    """
+    # Create customer account if not created
+    Customer.objects.get_or_create(user=request.user)
+    # Check that user's name is set
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
     return JsonResponse({"status": "success"})
 
 # GET request
@@ -624,15 +640,16 @@ def customer_get_cards(request):
 ##### SERVER APIS #####
 
 # POST request
-# Create server account if not created
+# Server login
 @api_view(['POST'])
-def server_create_account(request):
+def server_login(request):
     """
     header:
         Authorization: Token ...
     return:
         status
     """
+    # Create server account if not created
     if not Server.objects.filter(user=request.user).exists():
         server = Server.objects.create(user=request.user)
         # Set server's restaurant if server has already accepted request
@@ -648,6 +665,9 @@ def server_create_account(request):
         except ServerRequest.DoesNotExist:
             pass
 
+    # Check that user's name is set
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
     return JsonResponse({"status": "success"})
 
 # GET request

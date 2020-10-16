@@ -106,7 +106,7 @@ urlpatterns = [
     path('api/update_info/', apis.update_info),
 
     ##### CUSTOMER API URLS #####
-    path('api/customer/create_account/', apis.customer_create_account),
+    path('api/customer/login/', apis.customer_login),
     path('api/customer/get_restaurants/', apis.customer_get_restaurants),
     path('api/customer/get_restaurant/<int:restaurant_id>/', apis.customer_get_restaurant),
     path('api/customer/get_categories/<int:restaurant_id>/', apis.customer_get_categories),
@@ -124,7 +124,7 @@ urlpatterns = [
     path('api/customer/remove_card/', apis.customer_remove_card),
 
     ##### SERVER API URLS #####
-    path('api/server/create_account/', apis.server_create_account),
+    path('api/server/login/', apis.server_login),
     path('api/server/get_orders/', apis.server_get_orders),
     path('api/server/get_order/<int:order_id>/', apis.server_get_order),
     path('api/server/get_order_details/<int:order_id>/', apis.server_get_order_details),
