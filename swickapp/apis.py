@@ -55,18 +55,34 @@ def update_info(request):
 
 ##### CUSTOMER APIS #####
 
-# POST request
-# Create customer account if not created
-@api_view(['POST'])
-def customer_create_account(request):
+@api_view()
+def login(request):
     """
     header:
         Authorization: Token ...
     return:
         status
     """
-    Customer.objects.get_or_create(user=request.user)
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
+    else:
+        return JsonResponse({"status": "success"})
 
+# POST request
+# Customer login
+@api_view(['POST'])
+def customer_login(request):
+    """
+    header:
+        Authorization: Token ...
+    return:
+        status
+    """
+    # Create customer account if not created
+    Customer.objects.get_or_create(user=request.user)
+    # Check that user's name is set
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
     return JsonResponse({"status": "success"})
 
 # GET request
@@ -128,8 +144,8 @@ def customer_get_categories(request, restaurant_id):
     return JsonResponse({"categories": categories, "status": "success"})
 
 # GET request
-# Get menu associated with category
-def customer_get_menu(request, restaurant_id, category_id):
+# Get meals associated with category
+def customer_get_meals(request, restaurant_id, category_id):
     """
     return:
         [menu]
@@ -160,7 +176,7 @@ def customer_get_menu(request, restaurant_id, category_id):
             many=True,
             context={"request": request}
         ).data
-    return JsonResponse({"menu": meals, "status": "success"})
+    return JsonResponse({"meals": meals, "status": "success"})
 
 # GET request
 # Get meal associated with meal_id
@@ -424,7 +440,7 @@ def customer_get_orders(request):
     return:
         [orders]
             id
-            restaurant
+            restaurant_name
             order_time
             status
         status
@@ -448,7 +464,7 @@ def customer_get_order_details(request, order_id):
     return:
         order_details
             id
-            restaurant
+            restaurant_name
             order_time
             subtotal
             tax
@@ -624,15 +640,16 @@ def customer_get_cards(request):
 ##### SERVER APIS #####
 
 # POST request
-# Create server account if not created
+# Server login
 @api_view(['POST'])
-def server_create_account(request):
+def server_login(request):
     """
     header:
         Authorization: Token ...
     return:
         status
     """
+    # Create server account if not created
     if not Server.objects.filter(user=request.user).exists():
         server = Server.objects.create(user=request.user)
         # Set server's restaurant if server has already accepted request
@@ -648,6 +665,9 @@ def server_create_account(request):
         except ServerRequest.DoesNotExist:
             pass
 
+    # Check that user's name is set
+    if not request.user.name:
+        return JsonResponse({"status": "name_not_set"})
     return JsonResponse({"status": "success"})
 
 # GET request
@@ -660,7 +680,7 @@ def server_get_orders(request):
     return:
         [orders]
             id
-            customer
+            customer_name
             order_time
             status
         status
@@ -687,7 +707,7 @@ def server_get_order(request, order_id):
     return:
         order
             id
-            customer
+            customer_name
             order_time
             status
         status
@@ -714,7 +734,7 @@ def server_get_order_details(request, order_id):
     return:
         order_details
             id
-            customer
+            customer_name
             table
             order_time
             total
@@ -783,7 +803,7 @@ class ServerGetItemsToSend(FlatMultipleModelMixin, GenericAPIView):
             id
             order_id (only for OrderItem)
             table
-            customer
+            customer_name
             meal_name or request_name
             time
             type
