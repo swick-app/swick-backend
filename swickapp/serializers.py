@@ -70,6 +70,11 @@ class OrderItemSerializer(serializers.ModelSerializer):
         model = OrderItem
         fields = ("id", "meal_name", "quantity", "total", "status", "order_item_cust")
 
+# Get order items by status
+def get_order_items(order, status):
+    order_items = order.order_item.filter(status=status).order_by('id')
+    return OrderItemSerializer(order_items, many=True).data
+
 
 ##### ORDER SERIALIZERS #####
 
@@ -85,16 +90,23 @@ class OrderSerializerForCustomer(serializers.ModelSerializer):
 # Serialize order details to JSON for customer
 class OrderDetailsSerializerForCustomer(serializers.ModelSerializer):
     restaurant_name = serializers.ReadOnlyField(source="restaurant.name")
-    order_item = serializers.SerializerMethodField()
+    cooking_order_items = serializers.SerializerMethodField()
+    sending_order_items = serializers.SerializerMethodField()
+    complete_order_items = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ("id", "restaurant_name", "order_time", "subtotal", "tax", "total", "order_item")
+        fields = ("id", "restaurant_name", "order_time", "subtotal", "tax", "total",
+            "cooking_order_items", "sending_order_items", "complete_order_items")
 
-    # Needed to order order items
-    def get_order_item(self, instance):
-        order_items = instance.order_item.all().order_by('id')
-        return OrderItemSerializer(order_items, many=True).data
+    def get_cooking_order_items(self, instance):
+        return get_order_items(instance, OrderItem.COOKING)
+
+    def get_sending_order_items(self, instance):
+        return get_order_items(instance, OrderItem.SENDING)
+
+    def get_complete_order_items(self, instance):
+        return get_order_items(instance, OrderItem.COMPLETE)
 
 # Serialize orders to JSON for server
 class OrderSerializerForServer(serializers.ModelSerializer):
@@ -108,16 +120,23 @@ class OrderSerializerForServer(serializers.ModelSerializer):
 # Serialize order details to JSON for server
 class OrderDetailsSerializerForServer(serializers.ModelSerializer):
     customer_name = serializers.ReadOnlyField(source="customer.user.name")
-    order_item = serializers.SerializerMethodField()
+    cooking_order_items = serializers.SerializerMethodField()
+    sending_order_items = serializers.SerializerMethodField()
+    complete_order_items = serializers.SerializerMethodField()
 
     class Meta:
         model = Order
-        fields = ("id", "customer_name", "table", "order_time", "subtotal", "tax", "total", "order_item")
+        fields = ("id", "customer_name", "table", "order_time", "subtotal", "tax", "total",
+            "cooking_order_items", "sending_order_items", "complete_order_items")
 
-    # Needed to order order items
-    def get_order_item(self, instance):
-        order_items = instance.order_item.all().order_by('id')
-        return OrderItemSerializer(order_items, many=True).data
+    def get_cooking_order_items(self, instance):
+        return get_order_items(instance, OrderItem.COOKING)
+
+    def get_sending_order_items(self, instance):
+        return get_order_items(instance, OrderItem.SENDING)
+
+    def get_complete_order_items(self, instance):
+        return get_order_items(instance, OrderItem.COMPLETE)
 
 # Serialize order item for "to cook" display to JSON for server
 class OrderItemToCookSerializer(serializers.ModelSerializer):

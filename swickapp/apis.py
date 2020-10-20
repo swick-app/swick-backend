@@ -469,7 +469,7 @@ def customer_get_order_details(request, order_id):
             subtotal
             tax
             total
-            [order_item]
+            [cooking_order_items] / [sending_order_items] / [complete_order_items]
                 id
                 meal_name
                 quantity
@@ -738,7 +738,7 @@ def server_get_order_details(request, order_id):
             table
             order_time
             total
-            [order_item]
+            [cooking_order_items] / [sending_order_items] / [complete_order_items]
                 id
                 meal_name
                 quantity
