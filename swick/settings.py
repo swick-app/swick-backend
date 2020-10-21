@@ -122,6 +122,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+
+# Force redirect to HTTPS in production
+if not DEVELOPMENT:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
+
 # Redirect to home page after sign in
 LOGIN_REDIRECT_URL = '/'
 
