@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOPMENT
 
-ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com']
+ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com', 'swickapp.com', 'www.swickapp.com']
 
 
 # Application definition
@@ -121,6 +121,12 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
+
+
+# Force redirect to HTTPS in production
+if not DEVELOPMENT:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SECURE_SSL_REDIRECT = True
 
 # Redirect to home page after sign in
 LOGIN_REDIRECT_URL = '/'
