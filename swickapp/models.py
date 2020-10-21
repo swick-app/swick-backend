@@ -195,12 +195,15 @@ class Order(models.Model):
         blank=True, null=True)
     tax = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
+    tip = models.DecimalField(max_digits=7, decimal_places=2,
+        blank=True, null=True)
     total = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     stripe_fee = models.DecimalField(max_digits=7, decimal_places=2,
         blank=True, null=True)
     # Need to couple paymentIntent and order together
     stripe_payment_id = models.CharField(max_length=255, null=True)
+    tip_stripe_payment_id = models.CharField(max_length=255, null=True)
 
     def __str__(self):
         return str(self.id)

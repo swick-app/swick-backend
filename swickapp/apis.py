@@ -3,6 +3,7 @@ from django.utils import timezone
 from django.http import JsonResponse
 from django.http import HttpResponse
 from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
 from .models import User, Restaurant, Customer, Server, ServerRequest, Category, \
     Meal, Customization, Order, OrderItem, OrderItemCustomization, \
     RequestOption, Request
@@ -207,19 +208,18 @@ def customer_get_meal(request, meal_id):
     ).data
     return JsonResponse({"customizations": customizations, "status": "success"})
 
-def set_stripe_fee(order):
+def get_stripe_fee(payment_intent_id):
         try:
             # Try determing stripe fee for order
-            charge_data = stripe.PaymentIntent.retrieve(order.stripe_payment_id).charges.data
+            charge_data = stripe.PaymentIntent.retrieve(payment_intent_id).charges.data
             if not charge_data:
                 # If should never reach since all succesful payments must have a charge attached
                 raise AssertionError("Unable to find charge attached to payment_intent")
             expanded_charge = stripe.Charge.retrieve(charge_data[0].id, expand=['balance_transaction'])
-            #balance_transaction = stripe.BalanceTransaction.retrieve(expanded_charge.balance_transaction)
             for fee in expanded_charge.balance_transaction.fee_details:
                 if fee.type == 'stripe_fee':
-                    print(fee.amount)
-                    order.stripe_fee = Decimal((Decimal(fee.amount) / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+                    return Decimal((Decimal(fee.amount) / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+
         except stripe.error.StripeError as e:
             # Even if there is an error, the payment still has gone through and order should be completed
             print(e)
@@ -246,6 +246,7 @@ def customer_place_order(request):
             [customizations]
                 customization_id
                 [options]
+        tip
         payment_method_id
     return:
         intent_status
@@ -316,51 +317,135 @@ def customer_place_order(request):
     # Update order total field
     order.subtotal = order_subtotal
     order.tax = Decimal(order_tax.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
-    order.total = order.subtotal + order.tax
+    order.tip = Decimal(Decimal(request.POST["tip"]).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)) if request.POST["tip"] != "nil" else None
+    order.total = order.subtotal + order.tax + (order.tip or 0)
 
+    response = attempt_stripe_payment(request.POST["restaurant_id"],
+                                    request.user.customer.stripe_cust_id,
+                                    request.user.email,
+                                    request.POST["payment_method_id"],
+                                    int(order.total * 100),
+                                    {'order_id': order.id})
+
+    content = json.loads(response.content)
+    if content["status"] == "success":
+        intent_status = content["intent_status"]
+        if intent_status == "card_error" or intent_status == "requires_payment_method":
+            order.delete()
+        elif intent_status == "requires_action" or intent_status == "requires_source_action":
+            order.stripe_payment_id = content["payment_intent"]
+            order.save()
+        elif intent_status == "succeeded":
+            order.stripe_payment_id = content["payment_intent"]
+            order.stripe_fee = get_stripe_fee(content["payment_intent"])
+            order.status = Order.ACTIVE
+            order.save()
+    return response
+
+@api_view(['POST'])
+def customer_add_tip(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        order_id
+        tip
+    return:
+        status
+        intent_status
+        card_error (optional)
+        payment_intent_id (optional)
+        client_secret (optional)
+    """
+    order_object = Order.objects.get(id=request.POST["order_id"])
+    if request.user.customer != order_object.customer:
+        return JsonResponse({"status" : "invalid_request"})
+
+    try:
+        tip = Decimal(Decimal(request.POST["tip"]).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))
+    except ValueError:
+        return JsonResponse({"status" : "invalid_request"})
+
+    try:
+        payment_intent = stripe.PaymentIntent.retrieve(order_object.stripe_payment_id,
+                                                       expand=['payment_method'])
+    except stripe.error.StripeError as e:
+        return JsonResponse({"status" : "stripe_api_error"})
+
+    # Check if user has deleted card
+    if payment_intent.payment_method is not None and request.user.customer.stripe_cust_id != payment_intent.payment_method.customer:
+        return JsonResponse({"intent_status" : "card_error",
+                             "error" : "Card used for this order no longer exists",
+                             "status" : "success"})
+
+    response = attempt_stripe_payment(order_object.restaurant.id,
+                                    request.user.customer.stripe_cust_id,
+                                    request.user.email,
+                                    payment_intent.payment_method,
+                                    int(tip * 100),
+                                    {'order_id': order_object.id})
+
+    content = json.loads(response.content)
+    if content["status"] == "success":
+        intent_status = content["intent_status"]
+        if intent_status == "requires_action" or intent_status == "requires_source_action":
+            order_object.tip_stripe_payment_id = content["payment_intent"]
+            order_object.save()
+        elif intent_status == "succeeded":
+            order_object.tip = Decimal(request.POST["tip"])
+            order_object.tip_stripe_payment_id = content["payment_intent"]
+            order_object.stripe_fee += get_stripe_fee(content["payment_intent"])
+            order_object.total += order_object.tip
+            order_object.save()
+
+    return response
+
+def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_method_id, amount, payment_intent_metadata):
     # STRIPE PAYMENT PROCESSING
     # Note: Return value 'intent_status: String' can be refactored to boolean values
     # at the cost of readability
+    # Note: Seems like stripe API allows payment_method to be either id or object
+    if amount < 50:
+        return JsonResponse({"status" : "invalid_charge_amount"})
+
     try:
         # Direct payments to stripe connected account if in production
-        if request.is_secure():
-            stripe_acct_id = Restaurant.objects.get(id=request.POST["restaurant_id"]).stripe_acct_id
-            payment_intent = stripe.PaymentIntent.create(amount = int(order.total * 100),
+        if not settings.DEVELOPMENT:
+            stripe_acct_id = Restaurant.objects.get(id=restaurant_id).stripe_acct_id
+            payment_intent = stripe.PaymentIntent.create(amount = amount,
                                                     currency="usd",
-                                                    customer=request.user.customer.stripe_cust_id,
-                                                    payment_method=request.POST["payment_method_id"],
-                                                    receipt_email=request.user.email,
+                                                    customer=cust_stripe_id,
+                                                    payment_method=payment_method_id,
+                                                    receipt_email=cust_email,
                                                     use_stripe_sdk=True,
                                                     confirmation_method='manual',
                                                     confirm=True,
                                                     transfer_data={
                                                         'destination' : stripe_acct_id
                                                     },
-                                                    metadata={'order_id': order.id})
+                                                    metadata=payment_intent_metadata)
         # Direct payments to developer Stripe account if in development
         else:
-            payment_intent = stripe.PaymentIntent.create(amount = int(order.total * 100),
+            payment_intent = stripe.PaymentIntent.create(amount = amount,
                                                      currency="usd",
-                                                     customer=request.user.customer.stripe_cust_id,
-                                                     payment_method=request.POST["payment_method_id"],
-                                                     receipt_email=request.user.email,
+                                                     customer=cust_stripe_id,
+                                                     payment_method=payment_method_id,
+                                                     receipt_email=cust_email,
                                                      use_stripe_sdk=True,
                                                      confirmation_method='manual',
                                                      confirm=True,
-                                                     metadata={'order_id': order.id})
+                                                     metadata=payment_intent_metadata)
     except stripe.error.CardError as e:
         error = e.user_message
-        order.delete()
         return JsonResponse({"intent_status" : "card_error", "error" : error, "status" : "success"})
     except stripe.error.StripeError as e:
+        print(e)
         return JsonResponse({"status" : "stripe_api_error"})
 
     intent_status = payment_intent.status
     # Card requires further action
     if intent_status == 'requires_action' or intent_status == 'requires_source_action':
         # Card requires more action
-        order.stripe_payment_id = payment_intent.id
-        order.save()
         return JsonResponse({"intent_status" : intent_status,
                              "payment_intent" : payment_intent.id,
                              "client_secret": payment_intent.client_secret,
@@ -369,16 +454,16 @@ def customer_place_order(request):
     # Card is invalid (this 'elif' branch should never occur due to previous card setup validation)
     elif intent_status == 'requires_payment_method':
         error = payment_intent.last_payment_error.message if payment_intent.get('last_payment_error') else None
-        order.delete()
-        return JsonResponse({"intent_status" : intent_status, "error" : error, "status" : "success"})
+        return JsonResponse({"intent_status" : intent_status,
+                             "error" : error,
+                             "payment_intent" : payment_intent.id,
+                             "status" : "success"})
 
     # Payment is succesful
     elif intent_status == 'succeeded':
-        order.stripe_payment_id = payment_intent.id
-        order.status = Order.ACTIVE
-        set_stripe_fee(order)
-        order.save()
-        return JsonResponse({"intent_status" : intent_status, "status" : "success"})
+        return JsonResponse({"intent_status" : intent_status,
+                             "payment_intent" : payment_intent.id,
+                             "status" : "success"})
 
     # should never reach this return
     return JsonResponse({"status": "unhandled_status"})
@@ -386,7 +471,7 @@ def customer_place_order(request):
 # POST requires_action
 # Retry payment after client completes nextAction request on payment SetupIntent
 @api_view(['POST'])
-def customer_retry_payment(request):
+def customer_retry_order_payment(request):
     """
     header:
         Authorization: Token ...
@@ -395,37 +480,72 @@ def customer_retry_payment(request):
         return:
             intent_status
             error
+            order_id
             status
     """
+    response = retry_stripe_payment(request.user.customer, request.POST["payment_intent_id"])
+    content = json.loads(response.content)
+    if content["status"] == "success":
+        if content["intent_status"] == "card_error" or content["intent_status"] == 'requires_payment_method' or content["intent_status"] == 'requires_source':
+                order = Order.objects.get(id = payment_intent.metadata["order_id"])
+                order.delete()
+        elif content["intent_status"] == "succeeded":
+            order = Order.objects.get(id = content["order_id"])
+            order.status = Order.ACTIVE
+            order.stripe_fee = get_stripe_fee(order.stripe_payment_id)
+            order.save()
+
+    return response
+    
+@api_view(['POST'])
+def customer_retry_tip_payment(request):
+    """
+    header:
+        Authorization: Token ...
+        params:
+            payment_intent_id
+        return:
+            intent_status
+            error
+            order_id
+            status
+    """
+    response = retry_stripe_payment(request.user.customer, request.POST["payment_intent_id"])
+    content = json.loads(response.content)
+    if content["status"] == "success":
+        if content["intent_status"] == "succeeded":
+            try:
+                payment_intent = stripe.PaymentIntent.retrieve(request.POST["payment_intent_id"])
+                order = Order.objects.get(id = content["order_id"])
+                order.tip = Decimal(payment_intent.amount/100)
+                order.total += order.tip
+                order.stripe_fee += get_stripe_fee(request.POST["payment_intent_id"])
+                order.save()
+            except stripe.error.StripeError:
+                return JsonResponse({"status" : "stripe_api_error"})
+    return response
+
+def retry_stripe_payment(customer, payment_intent_id):
     try:
         payment_intent = stripe.PaymentIntent.retrieve(
-            request.POST["payment_intent_id"]
+            payment_intent_id
         )
-        if payment_intent.customer == request.user.customer.stripe_cust_id:
+        if payment_intent.customer == customer.stripe_cust_id:
             payment_intent = stripe.PaymentIntent.confirm(payment_intent.id)
         else:
             return JsonResponse({"status" : "invalid_stripe_id"})
     except stripe.error.CardError as e:
-        order = Order.objects.get(id = payment_intent.metadata["order_id"])
-        order.delete()
         return JsonResponse({"intent_status" : "card_error", "error" : e.user_message, "status" : "success"})
     except stripe.error.StripeError:
         return JsonResponse({"status" : "stripe_api_error"})
-
     intent_status = payment_intent.status
-
     # Card is invalid (this 'elif' branch should never occur due to previous card setup validation)
     if intent_status == 'requires_payment_method' or intent_status == 'requires_source':
         error = payment_intent.last_payment_error.message if payment_intent.get('last_payment_error') else None
-        order.delete()
         return JsonResponse({"intent_status" : intent_status, "error" : error, "status" : "success"})
     # Payment is succesful
     elif intent_status == 'succeeded':
-        order = Order.objects.get(id = payment_intent.metadata["order_id"])
-        order.status = Order.ACTIVE
-        set_stripe_fee(order)
-        order.save()
-        return JsonResponse({"intent_status" : "succeeded", "status" : "success"})
+        return JsonResponse({"intent_status" : "succeeded", "order_id" : payment_intent.metadata["order_id"], "status" : "success"})
 
     # should never reach this return
     return JsonResponse({"status": "unhandled_status"})
@@ -468,6 +588,7 @@ def customer_get_order_details(request, order_id):
             order_time
             subtotal
             tax
+            tip
             total
             [cooking_order_items] / [sending_order_items] / [complete_order_items]
                 id

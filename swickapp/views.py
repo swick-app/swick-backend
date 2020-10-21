@@ -358,7 +358,7 @@ def initalize_datetime_range_orders(request):
 @login_required(login_url='/accounts/login/')
 def restaurant_orders(request):
     data = initalize_datetime_range_orders(request)
-    return render(request, 'restaurant/orders.html', {"orders": data["orders_in_range"],
+    return render(request, 'restaurant/orders.html', {"orders" : data["orders_in_range"],
                                                       "datetime_range_form" : data["datetime_range_form"],
                                                       "start_time_error" : data["start_time_error"],
                                                       "end_time_error" : data["end_time_error"]})
@@ -610,7 +610,7 @@ def restaurant_finances(request):
         try:
             gross_revenue += order.total
             total_tax += order.tax
-            #TODO: Add tip summation
+            total_tip += order.tip
             stripe_fees += order.stripe_fee
         except TypeError:
             # Critical Error: Catching TypeError means null field was accessed

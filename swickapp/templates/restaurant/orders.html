@@ -35,6 +35,7 @@
           <th class="text-center">Table</th>
           <th class="text-center">Subtotal</th>
           <th class="text-center">Sales tax</th>
+          <th class="text-center">Tip</th>
           <th class="text-center">Total</th>
           <th class="text-center">Status</th>
           <th class="text-center">View</th>
@@ -49,6 +50,13 @@
               <td>{{ order.table }}</td>
               <td>${{ order.subtotal }}</td>
               <td>${{ order.tax }}</td>
+              <td>
+                {% if not order.tip %}
+                  $0.00
+                {% else %}
+                  ${{ order.tip }}
+                {% endif %}
+              </td>
               <td>${{ order.total }}</td>
               <td>{{ order.get_status_display }}</td>
               <!--- View button --->
