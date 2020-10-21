@@ -28,7 +28,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOPMENT
 
-ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com', 'swickapp.com']
+ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com', 'swickapp.com', 'www.swickapp.com']
 
 
 # Application definition
