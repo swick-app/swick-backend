@@ -96,7 +96,7 @@ class OrderDetailsSerializerForCustomer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("id", "restaurant_name", "order_time", "subtotal", "tax", "total",
+        fields = ("id", "restaurant_name", "order_time", "subtotal", "tax", "tip", "total",
             "cooking_order_items", "sending_order_items", "complete_order_items")
 
     def get_cooking_order_items(self, instance):
@@ -126,7 +126,7 @@ class OrderDetailsSerializerForServer(serializers.ModelSerializer):
 
     class Meta:
         model = Order
-        fields = ("id", "customer_name", "table", "order_time", "subtotal", "tax", "total",
+        fields = ("id", "customer_name", "table", "order_time", "subtotal", "tax", "tip", "total",
             "cooking_order_items", "sending_order_items", "complete_order_items")
 
     def get_cooking_order_items(self, instance):

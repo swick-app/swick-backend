@@ -15,6 +15,13 @@
     <div>Table: {{ order.table }}</div>
     <div>Subtotal: ${{ order.subtotal }}</div>
     <div>Sales tax: ${{ order.tax }}</div>
+    <div>
+      Tip: {% if not order.tip %}
+        $0.00
+      {% else %}
+        ${{ order.tip }}
+      {% endif %}
+    </div>
     <div>Total: ${{ order.total }}</div>
     <div>Status: {{ order.get_status_display }}</div>
     <br>
