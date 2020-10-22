@@ -3,7 +3,7 @@
 {% load bootstrap3 %}
 <div class="panel">
   <!--- Order header --->
-  <div class="panel-heading bg-blue">
+  <div class="panel-heading">
     <h4 class="panel-title text-center">Finances</h4>
   </div>
 
@@ -17,7 +17,7 @@
         <div class="row no-pad" >
            <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
            <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
-        <div class="col-sm-2"><button type="submit" class="btn btn-blue">Refresh orders</button></div>
+        <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
       </div>
       <div class="row no-pad" >
          <div class="col-sm-2"> {{ start_time_error }} </div>
@@ -29,7 +29,7 @@
     <table class="table table-bordered">
       <!--- Tax table header --->
       <thead>
-        <tr class="bg-light-blue">
+        <tr class="bg-gray">
           <th class="text-center">Type</th>
           <th class="text-center">Total</th>
         </tr>
@@ -67,7 +67,7 @@
     <table class="table table-bordered">
       <!--- Tax table header --->
       <thead>
-        <tr class="bg-light-blue">
+        <tr class="bg-gray">
           <th class="text-center">Sales Tax Category</th>
           <th class="text-center">Delete</th>
         </tr>

@@ -4,7 +4,7 @@
 {% block content %}
 <div class="col-lg-offset-2 col-lg-8">
   <div class="panel">
-    <div class="panel-heading bg-blue">
+    <div class="panel-heading">
       <h4 class="panel-title text-center">
         Edit Request
       </h4>
@@ -15,7 +15,7 @@
         <!--- Request form --->
         {% bootstrap_form request_form %}
         <!--- Update button --->
-        <button type="submit" class="btn btn-blue">Update</button>
+        <button type="submit" class="btn btn-primary">Update</button>
 
         <!--- Delete request button --->
         <a href="{% url 'restaurant_delete_request' request_id %}"

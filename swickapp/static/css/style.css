@@ -1,17 +1,22 @@
+/* Custom fonts */
+@font-face {
+    font-family: 'forma';
+    src: url('forma-webfont.woff2') format('woff2'),
+         url('forma-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+}
+
 /* Color variables */
 :root {
-  --lightest-blue: #ebf4fa;
-  --lighter-blue: #bad9f5;
-  --light-blue: #96cafa;
-  --blue: #0867d4;
-  --dark-blue: #063f80;
-  --grey: #474747;
+  --red: #E63946;
+  --light-gray: #f7f7f7;
 }
 
 body {
   padding-top: 50px;
   /* Background color */
-  background-color: var(--lightest-blue);
+  background-color: var(--light-gray);
   overflow: auto;
 }
 
@@ -20,28 +25,14 @@ img {
   object-fit: cover;
 }
 
-/* Lighter blue color */
-.bg-blue {
-  background-color: var(--lighter-blue);
+/* Red color */
+.bg-red {
+  background-color: var(--red);
 }
 
-/* Lightest blue color */
-.bg-light-blue {
-  background-color: var(--lightest-blue);
-}
-
-/* Dark blue button color */
-.btn-blue {
-  color: white;
-  background-color: var(--dark-blue);
-}
-.btn-blue:hover {
-  color: white;
-  background-color: var(--blue);
-}
-.btn-blue:focus {
-  color: white;
-  background-color: var(--dark-blue);
+/* Gray color */
+.bg-gray {
+  background-color: var(--light-gray);
 }
 
 /* Sidebar */
@@ -50,43 +41,88 @@ img {
   position: fixed;
   top: 0;
   padding: 0;
-  background-color: var(--lighter-blue);
+  background-color: var(--red);
   overflow: auto;
 }
 
 /* Sidebar header */
 .sidebar > div:first-child {
   padding: 20px;
-  background-color: var(--light-blue);
+
 }
-.sidebar > div:first-child > h3 {
-  padding-bottom: 15px;
+.sidebar > div:first-child > h1 {
+  color: white;
+  font-family: 'forma';
 }
 
 /* Sidebar list */
 .sidebar .list-group .list-group-item,
 .sidebar .list-group .list-group-item:focus {
-  background-color: var(--lighter-blue);
-  color:var(--grey);
+  background-color: var(--red);
+  color: white;
   border: 0;
   padding-top: 15px;
   padding-bottom: 15px;
 }
 .sidebar .list-group .list-group-item.active,
 .sidebar .list-group .list-group-item:hover {
-  background-color: var(--light-blue);
-  color: black;
+  background-color: white;
+  color: var(--red);
 }
 
 /* Sidebar logout button */
 .sidebar > div:last-child .btn {
+  color: var(--red);
+  background-color: white;
   width: 80%;
 }
+.sidebar > div:last-child .btn:hover {
+  background-color: var(--light-gray);
+}
 
-/* Content */
+/* Panel */
 .content {
   padding: 0 40px;
 }
 .content .panel {
   border: none;
+}
+.panel-heading {
+  color: white;
+  background-color: var(--red);
+}
+
+/* Bootstrap 3 outline buttons add-on */
+.btn-outline {
+    background-color: transparent;
+    color: inherit;
+    transition: all .5s;
+}
+
+.btn-primary.btn-outline {
+    color: #428bca;
+}
+
+.btn-success.btn-outline {
+    color: #5cb85c;
+}
+
+.btn-info.btn-outline {
+    color: #5bc0de;
+}
+
+.btn-warning.btn-outline {
+    color: #f0ad4e;
+}
+
+.btn-danger.btn-outline {
+    color: #d9534f;
+}
+
+.btn-primary.btn-outline:hover,
+.btn-success.btn-outline:hover,
+.btn-info.btn-outline:hover,
+.btn-warning.btn-outline:hover,
+.btn-danger.btn-outline:hover {
+    color: #fff;
 }

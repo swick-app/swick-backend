@@ -23,11 +23,10 @@
     <div class="row">
 
       <!--- Navigation sidebar --->
-      <div class="col-lg-2 col-md-2 col-sm-2 sidebar">
+      <div class="col-sm-2 sidebar">
           <!--- Display name and restaurant name --->
           <div class="text-center">
-            <h3><i>SWICK</i></h3>
-            <h5>{{ request.user.restaurant.name }}</h5>
+            <h1>swick</h1>
           </div>
           <br>
           <!--- Navigation bar items --->
@@ -54,12 +53,12 @@
           <!--- Logout button --->
           <div class="text-center">
             <a href="{% url 'logout' %}?next={{ request.path }}"
-                class="btn btn-blue">Logout</a>
+                class="btn">Logout</a>
           </div>
       </div>
 
       <!--- Page content --->
-      <div class="col-lg-10 col-lg-offset-2 col-md-10 col-md-offset-2 col-sm-10 col-sm-offset-2 content">
+      <div class="col-sm-10 col-sm-offset-2 content">
           {% block content %}{% endblock %}
       </div>
     </div>

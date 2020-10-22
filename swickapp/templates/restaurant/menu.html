@@ -5,13 +5,13 @@
 {% block content %}
 <div class="panel">
   <!--- Menu header --->
-  <div class="panel-heading bg-blue">
+  <div class="panel-heading">
     <h4 class="panel-title text-center">Menu</h4>
   </div>
 
   <div class="panel-body">
 
-    <!--- Add meal button --->
+    <!--- Add category button --->
     <a href="{% url 'restaurant_add_category' %}" class="btn btn-success">Add Category</a>
     <br>
     <br>
@@ -32,7 +32,7 @@
       <table class="table table-bordered">
         <!--- Menu table header --->
         <thead>
-          <tr class="bg-light-blue">
+          <tr class="bg-gray">
             <th class="text-center">Name</th>
             <th class="text-center">Description</th>
             <th class="text-center">Price</th>
@@ -84,10 +84,10 @@
               <td class="text-center">
               {% if meal.enabled %}
               <a href="{% url 'restaurant_disable_meal' meal.id %}"
-                class="btn btn-danger">Disable</a>
+                class="btn btn-danger btn-outline">Disable</a>
               {% else %}
               <a href="{% url 'restaurant_enable_meal' meal.id %}"
-                class="btn btn-success">Enable</a>
+                class="btn btn-success btn-outline">Enable</a>
               {% endif %}
               </td>
             </tr>

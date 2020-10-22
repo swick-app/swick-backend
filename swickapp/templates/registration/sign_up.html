@@ -8,7 +8,7 @@
   {% csrf_token %}
   {% bootstrap_form user_form %}
   {% bootstrap_form restaurant_form %}
-  <button type="submit" class="btn btn-blue">Sign up</button>
+  <button type="submit" class="btn btn-primary">Sign up</button>
   <a href="{% url 'login'%}" class="pull-right">Already have an account?</a>
 </form>
 {% endblock %}

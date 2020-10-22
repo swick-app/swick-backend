@@ -3,7 +3,7 @@
 {% block content %}
 <div class="panel">
   <!--- Servers header --->
-  <div class="panel-heading bg-blue">
+  <div class="panel-heading">
     <h4 class="panel-title text-center">Servers</h4>
   </div>
 
@@ -17,7 +17,7 @@
     <table class="table table-bordered">
       <!--- Server table header --->
       <thead>
-        <tr class="bg-light-blue">
+        <tr class="bg-gray">
           <th class="text-center">Name</th>
           <th class="text-center">Email</th>
           <th class="text-center">Status</th>
@@ -39,7 +39,7 @@
                 {% else %}
                   {% url 'restaurant_delete_server' server.id %}
                 {% endif %}"
-                class="btn btn-danger">
+                class="btn btn-danger btn-outline">
                 Delete
               </a>
             </td>

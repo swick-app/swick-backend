@@ -3,7 +3,7 @@
 {% block content %}
 <div class="panel">
   <!--- Order header --->
-  <div class="panel-heading bg-blue">
+  <div class="panel-heading">
     <h4 class="panel-title text-center">Requests</h4>
   </div>
 
@@ -18,7 +18,7 @@
     <table class="table table-bordered">
       <!--- Requests table header --->
       <thead>
-        <tr class="bg-light-blue">
+        <tr class="bg-gray">
           <!--- Click name to edit --->
           <th class="text-center">Name</th>
           <th class="text-center">Delete</th>
@@ -33,7 +33,7 @@
               </a></td>
                 <!--- Delete button --->
               <td class="text-center"><a href="{% url 'restaurant_delete_request' request.id %}"
-                class="btn btn-danger">Delete</a>
+                class="btn btn-danger btn-outline">Delete</a>
               </td>
           </tr>
         {% endfor %}

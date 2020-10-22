@@ -3,7 +3,7 @@
 {% block content %}
 <div class="panel">
   <!--- Order header --->
-  <div class="panel-heading bg-blue">
+  <div class="panel-heading">
     <h4 class="panel-title text-center">Orders</h4>
   </div>
   <div class="panel-body">
@@ -16,7 +16,7 @@
         <div class="row no-pad" >
            <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
            <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
-        <div class="col-sm-2"><button type="submit" class="btn btn-blue">Refresh orders</button></div>
+        <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
       </div>
       <div class="row no-pad" >
           <div class="col-sm-2"> {{ start_time_error }} </div>
@@ -29,7 +29,7 @@
     <table class="table table-bordered">
       <!--- Orders table header --->
       <thead>
-        <tr class="bg-light-blue">
+        <tr class="bg-gray">
           <th class="text-center">Time</th>
           <th class="text-center">Customer</th>
           <th class="text-center">Table</th>
@@ -61,7 +61,7 @@
               <td>{{ order.get_status_display }}</td>
               <!--- View button --->
               <td class="text-center"><a href="{% url 'restaurant_view_order' order.id %}"
-                class="btn btn-blue">View</a>
+                class="btn btn-primary">View</a>
               </td>
           </tr>
         {% endfor %}
