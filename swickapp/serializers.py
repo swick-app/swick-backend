@@ -25,11 +25,9 @@ class MealSerializer(serializers.ModelSerializer):
 
     def get_image(self, meal):
         if not meal.image:
-            image_url = static("img/nullimage.png")
-        else:
-            image_url = meal.image.url
+            return
         request = self.context.get('request')
-        return request.build_absolute_uri(image_url)
+        return request.build_absolute_uri(meal.image.url)
 
 # Serialize customization object to JSON
 class CustomizationSerializer(serializers.ModelSerializer):

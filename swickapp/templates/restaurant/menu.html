@@ -54,11 +54,11 @@
               <td>${{ meal.price }}</td>
               <!--- Meal image --->
               <td class="text-center">
+                {% if meal.image %}
                 <img class="img-square"
-                  src="{% if not meal.image %} {% static 'img/nullimage.png' %}
-                      {% else %} {{ meal.image.url }}
-                      {% endif %}"
-                  width="60" height="60"
+                  src="{{ meal.image.url }}"
+                  width="60" height="60">
+                {% endif %}
               </td>
               <!--- Customizations --->
               <td>
