@@ -183,6 +183,16 @@ class CustomizationForm(forms.ModelForm):
         self.fields['options'].delimiter = '\n'
         self.fields['price_additions'].delimiter = '\n'
 
+    def clean(self):
+        cleaned_data = self.cleaned_data
+        if len(cleaned_data.get('options') or []) != len(cleaned_data.get('price_additions') or []):
+            raise ValidationError('The number of options and price additions must be equal')
+        if (cleaned_data.get('max') or 0) > len(cleaned_data.get('options') or []):
+            raise ValidationError('Maximum number of selectable options cannot be greater than the number of options')
+        if (cleaned_data.get('min') or 0) > (cleaned_data.get('max') or 0):
+            raise ValidationError('Minimum number of options cannot be greater than maximum number of options')
+        return cleaned_data
+
     class Meta:
         model = Customization
         widgets = {
