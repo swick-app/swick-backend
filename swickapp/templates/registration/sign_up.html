@@ -4,7 +4,7 @@
 {% block heading %}Restaurant sign up{% endblock %}
 
 {% block content %}
-{% include "helper/popup_image_cropper.html" %}
+{% include "helpers/popup_image_cropper.html" %}
 <form method="POST" enctype="multipart/form-data">
   {% csrf_token %}
   {% bootstrap_form user_form %}
