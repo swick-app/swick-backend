@@ -1,9 +1,12 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.core.files import File
 from .models import User, Restaurant, ServerRequest, Category, Meal, \
     Customization, RequestOption, TaxCategory
 from .widgets import DateTimePickerInput
 from bootstrap_modal_forms.forms import BSModalModelForm
+from PIL import Image
+from io import BytesIO
 
 # Validate that email does not already have restaurant account linked
 def validate_no_restaurant(value):
@@ -26,11 +29,50 @@ class UserUpdateForm(forms.ModelForm):
         model = User
         fields = ("name", "email")
 
+# Formats original form image to 1080p and 5/3 ratio and returns in byte blob
+def formatted_image_blob(image, x, y, w, h):
+    im = Image.open(image)
+    if x is None:
+        if im.width/im.height > 5/3:
+            w = im.height * (5/3)
+            h = im.height
+            x = (im.width - w)/2
+            y = 0
+        else:
+            w = im.width
+            h = im.width * 3/5
+            x = 0
+            y = (im.height - h)/2
+
+    cropped_image = im.crop((x, y, w+x, h+y))
+    cropped_image.thumbnail((1920,1152), Image.ANTIALIAS)
+
+    blob = BytesIO()
+    cropped_image.save(blob, im.format)
+    return blob
+
 # Restaurant form
 class RestaurantForm(forms.ModelForm):
+    # Image cropping fields
+    x = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    y = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    width = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    height = forms.FloatField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Restaurant
         exclude = ("user", "stripe_acct_id")
+
+    def save(self, commit=True):
+        restaurant = super(RestaurantForm, self).save(commit=commit)
+        blob = formatted_image_blob(restaurant.image,
+                                    self.cleaned_data.get('x'),
+                                    self.cleaned_data.get('y'),
+                                    self.cleaned_data.get('width'),
+                                    self.cleaned_data.get('height'))
+        restaurant.image.save(name=restaurant.image.name, content=File(blob), save=commit)
+
+        return restaurant
 
 # Server request form
 class ServerRequestForm(forms.ModelForm):
@@ -65,9 +107,25 @@ class CategoryForm(forms.ModelForm):
 
 # Meal form
 class MealForm(forms.ModelForm):
+    # Image cropping fields
+    x = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    y = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    width = forms.FloatField(widget=forms.HiddenInput(), required=False)
+    height = forms.FloatField(widget=forms.HiddenInput(), required=False)
+
     class Meta:
         model = Meal
         exclude = ("category", "enabled", "tax_category")
+
+    def save(self, commit=True):
+        meal = super(MealForm, self).save(commit=commit)
+        blob = formatted_image_blob(meal.image,
+                                    self.cleaned_data.get('x'),
+                                    self.cleaned_data.get('y'),
+                                    self.cleaned_data.get('width'),
+                                    self.cleaned_data.get('height'))
+        meal.image.save(name=meal.image.name, content=File(blob), save=False)
+        return meal
 
 class TaxCategoryFormBase(forms.ModelForm):
     class Meta:
