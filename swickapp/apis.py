@@ -108,7 +108,7 @@ def customer_get_restaurants(request):
     return JsonResponse({"restaurants": restaurants, "status": "success"})
 
 # GET request
-# Get restaurant associated with restaurant_id
+# Get restaurant and request options associated with restaurant_id
 def customer_get_restaurant(request, restaurant_id):
     """
     return:
@@ -117,6 +117,9 @@ def customer_get_restaurant(request, restaurant_id):
             name
             address
             image
+        [request_options]
+            id
+            name
         status
     """
     try:
@@ -127,7 +130,15 @@ def customer_get_restaurant(request, restaurant_id):
         restaurant_object,
         context={"request": request}
     ).data
-    return JsonResponse({"restaurant": restaurant, "status": "success"})
+    request_options = RequestOptionSerializer(
+        RequestOption.objects.filter(restaurant=restaurant_object),
+        many=True,
+    ).data
+    return JsonResponse({
+        "restaurant": restaurant,
+        "request_options": request_options,
+        "status": "success"
+    })
 
 # GET request
 # Get categories associated with restaurant_id
@@ -496,7 +507,7 @@ def customer_retry_order_payment(request):
             order.save()
 
     return response
-    
+
 @api_view(['POST'])
 def customer_retry_tip_payment(request):
     """
@@ -610,30 +621,6 @@ def customer_get_order_details(request, order_id):
     else:
         return JsonResponse({"status": "invalid_order_id"})
 
-# GET request
-# Get request options
-def customer_get_request_options(request, restaurant_id):
-    """
-    return:
-        [request_options]
-            id
-            name
-        status
-    """
-    try:
-        restaurant = Restaurant.objects.get(id=restaurant_id)
-    except Restaurant.DoesNotExist:
-        return JsonResponse({"status": "restaurant_does_not_exist"})
-
-    request_options = RequestOptionSerializer(
-        RequestOption.objects.filter(restaurant=restaurant),
-        many=True,
-    ).data
-    return JsonResponse({
-        "request_options": request_options,
-        "status": "success"
-    })
-
 # POST request
 # Make request
 @api_view(['POST'])
@@ -685,7 +672,7 @@ def customer_get_info(request):
     email = request.user.email
     return JsonResponse({"name": name, "email": email, "status": "success"})
 
-@api_view()
+@api_view(['POST'])
 def customer_setup_card(request):
     """
     header:

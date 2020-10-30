@@ -118,7 +118,6 @@ urlpatterns = [
     path('api/customer/retry_tip_payment/', apis.customer_retry_tip_payment),
     path('api/customer/get_orders/', apis.customer_get_orders),
     path('api/customer/get_order_details/<int:order_id>/', apis.customer_get_order_details),
-    path('api/customer/get_request_options/<int:restaurant_id>/', apis.customer_get_request_options),
     path('api/customer/make_request/', apis.customer_make_request),
     path('api/customer/get_info/', apis.customer_get_info),
     path('api/customer/setup_card/', apis.customer_setup_card),
