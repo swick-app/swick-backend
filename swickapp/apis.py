@@ -56,19 +56,6 @@ def update_info(request):
 
 ##### CUSTOMER APIS #####
 
-@api_view()
-def login(request):
-    """
-    header:
-        Authorization: Token ...
-    return:
-        status
-    """
-    if not request.user.name:
-        return JsonResponse({"status": "name_not_set"})
-    else:
-        return JsonResponse({"status": "success"})
-
 # POST request
 # Customer login
 @api_view(['POST'])
