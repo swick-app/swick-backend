@@ -1,52 +1,44 @@
 {% extends 'restaurant/base.html' %}
 
 {% block content %}
-<div class="panel">
-  <!--- Servers header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">Servers</h4>
-  </div>
+<!--- Servers header --->
+<div class="page-title">Servers</div>
 
-  <div class="panel-body">
-    <!--- Add server button --->
-    <a href="{% url 'restaurant_add_server' %}" class="btn btn-success pull-right">Add server</a>
-    <br/>
-    <br/>
+<!--- Add server button --->
+<a href="{% url 'restaurant_add_server' %}" class="btn btn-success pull-right">Add server</a>
+<br />
+<br />
 
-    <!--- Server table --->
-    <table class="table table-bordered">
-      <!--- Server table header --->
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-center">Name</th>
-          <th class="text-center">Email</th>
-          <th class="text-center">Status</th>
-          <th class="text-center">Delete</th>
-        </tr>
-      </thead>
-      <!--- Server table body --->
-      <tbody>
-        {% for server in servers %}
-          <tr>
-            <td>{{ server.name }}</td>
-            <td>{{ server.email }}</td>
-            <td>{{ server.status }}</td>
-            <!--- Delete button --->
-            <td class="text-center">
-              <a href=
-                "{% if server.request %}
+<!--- Server table --->
+<table class="table table-bordered">
+  <!--- Server table header --->
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Name</th>
+      <th class="text-center">Email</th>
+      <th class="text-center">Status</th>
+      <th class="text-center">Delete</th>
+    </tr>
+  </thead>
+  <!--- Server table body --->
+  <tbody>
+    {% for server in servers %}
+    <tr>
+      <td>{{ server.name }}</td>
+      <td>{{ server.email }}</td>
+      <td>{{ server.status }}</td>
+      <!--- Delete button --->
+      <td class="text-center">
+        <a href="{% if server.request %}
                   {% url 'restaurant_delete_server_request' server.id %}
                 {% else %}
                   {% url 'restaurant_delete_server' server.id %}
-                {% endif %}"
-                class="btn btn-danger btn-outline">
-                Delete
-              </a>
-            </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+                {% endif %}" class="btn btn-danger btn-outline">
+          Delete
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

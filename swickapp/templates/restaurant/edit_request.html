@@ -2,27 +2,18 @@
 {% load bootstrap3 %}
 
 {% block content %}
-<div class="col-lg-offset-2 col-lg-8">
-  <div class="panel">
-    <div class="panel-heading">
-      <h4 class="panel-title text-center">
-        Edit Request
-      </h4>
-    </div>
-    <div class="panel-body">
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!--- Request form --->
-        {% bootstrap_form request_form %}
-        <!--- Update button --->
-        <button type="submit" class="btn btn-primary">Update</button>
+<div class="col-sm-8">
+  <div class="page-title">Edit Request</div>
+  <br>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--- Request form --->
+    {% bootstrap_form request_form %}
+    <!--- Update button --->
+    <button type="submit" class="btn btn-primary">Update</button>
 
-        <!--- Delete request button --->
-        <a href="{% url 'restaurant_delete_request' request_id %}"
-          class="btn btn-danger">Delete</a>
-      </form>
-    </div>
-  </div>
+    <!--- Delete request button --->
+    <a href="{% url 'restaurant_delete_request' request_id %}" class="btn btn-danger">Delete</a>
+  </form>
 </div>
-
 {% endblock %}

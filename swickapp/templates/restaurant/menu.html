@@ -3,104 +3,95 @@
 {% load static %}
 
 {% block content %}
-<div class="panel">
-  <!--- Menu header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">Menu</h4>
-  </div>
+<!--- Menu header --->
+<div class="page-title">Menu</div>
 
-  <div class="panel-body">
+<!--- Add category button --->
+<a href="{% url 'restaurant_add_category' %}"
+  class="btn btn-success pull-right">Add category</a>
+<br>
+<br>
 
-    <!--- Add category button --->
-    <a href="{% url 'restaurant_add_category' %}" class="btn btn-success">Add Category</a>
-    <br>
-    <br>
+<!--- Create a table for each category --->
+{% for category in categories %}
+<h4 class="pull-left" id="{{ category.name }}">{{ category.name }}</h4>
 
-    <!--- Create a table for each category --->
-    {% for category in categories %}
-      <!--- Click category name to edit --->
-      <a id="{{ category.name }}" class="pull-left" href="{% url 'restaurant_edit_category' category.id %}">
-        <h4>{{ category.name }}</h4>
-      </a>
+<!--- Add meal button --->
+<a href="{% url 'restaurant_add_meal' category.id %}"
+  class="btn btn-success btn-outline pull-right">
+  Add meal
+</a>
 
-      <!--- Add meal button --->
-      <a href="{% url 'restaurant_add_meal' category.id %}" class="btn btn-success pull-right">
-        Add Meal
-      </a>
+<!--- Edit category button --->
+<a href="{% url 'restaurant_edit_category' category.id %}"
+  class="btn btn-primary btn-outline pull-right" style="margin-right:8px">
+  Edit category
+</a>
 
-      <!--- Menu table --->
-      <table class="table table-bordered">
-        <!--- Menu table header --->
-        <thead>
-          <tr class="bg-gray">
-            <th class="text-center">Name</th>
-            <th class="text-center">Description</th>
-            <th class="text-center">Price</th>
-            <th class="text-center">Image</th>
-            <th class="text-center">Customizations</th>
-            <th class="text-center">Sales Tax Category</th>
-            <th class="text-center">Enable/Disable</th>
-          </tr>
-        </thead>
-        <!--- Menu table body --->
-        <tbody>
-          {% for meal in category.meal.all|dictsort:"name" %}
-            <tr>
-              <!--- Click meal name to edit --->
-              <td><a href="{% url 'restaurant_edit_meal' meal.id %}">
-                {{ meal.name }}
-              </a></td>
-              <td>{{ meal.description }}</td>
-              <td>${{ meal.price }}</td>
-              <!--- Meal image --->
-              <td class="text-center">
-                {% if meal.image %}
-                <img class="img-square"
-                  src="{{ meal.image.url }}"
-                  width="60" height="60">
-                {% endif %}
-              </td>
-              <!--- Customizations --->
-              <td>
-              {% for cust in meal.customization.all %}
-                <div><b>{{ cust.name }}</b></div>
-                {% for option, addition in cust.options|zip:cust.price_additions %}
-                  <div>- {{ option }} (+${{ addition }})</div>
-                {% endfor %}
-                <div>Min: {{ cust.min}} </div>
-                <div>Max: {{ cust.max}} </div>
-              {% endfor %}
-              </td>
-              <td id="{{ meal.id }}" class="text-center"></td>
-              <script>
-                function formatTax(){
-                  // remove trailing "0" and "."
-                  var formatted = "{{ meal.tax_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
-                  document.getElementById("{{ meal.id }}").innerHTML = "{{ meal.tax_category.name}} (" + formatted + "%)"
-                }
-                formatTax()
-              </script>
-              <!--- Enable/disable button --->
-              <td class="text-center">
-              {% if meal.enabled %}
-              <a href="{% url 'restaurant_disable_meal' meal.id %}"
-                class="btn btn-danger btn-outline">Disable</a>
-              {% else %}
-              <a href="{% url 'restaurant_enable_meal' meal.id %}"
-                class="btn btn-success btn-outline">Enable</a>
-              {% endif %}
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
+<!--- Menu table --->
+<table class="table table-bordered">
+  <!--- Menu table header --->
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Name</th>
+      <th class="text-center">Description</th>
+      <th class="text-center">Price</th>
+      <th class="text-center">Image</th>
+      <th class="text-center">Customizations</th>
+      <th class="text-center">Tax Category</th>
+      <th class="text-center">Edit</th>
+      <th class="text-center">Enable/Disable</th>
+    </tr>
+  </thead>
+  <!--- Menu table body --->
+  <tbody>
+    {% for meal in category.meal.all|dictsort:"name" %}
+    <tr>
+      <td>{{ meal.name }}</td>
+      <td>{{ meal.description }}</td>
+      <td>${{ meal.price }}</td>
+      <!--- Meal image --->
+      <td class="text-center">
+        {% if meal.image %}
+        <img class="img-square" src="{{ meal.image.url }}" width="60" height="60">
+        {% endif %}
+      </td>
+      <!--- Customizations --->
+      <td>
+        {% for cust in meal.customization.all %}
+        <div><b>{{ cust.name }}</b></div>
+        {% for option, addition in cust.options|zip:cust.price_additions %}
+        <div>- {{ option }} (+${{ addition }})</div>
+        {% endfor %}
+        <div>Min: {{ cust.min}} </div>
+        <div>Max: {{ cust.max}} </div>
+        {% endfor %}
+      </td>
+      <td id="{{ meal.id }}" class="text-center"></td>
+      <script>
+        function formatTax() {
+          // remove trailing "0" and "."
+          var formatted = "{{ meal.tax_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
+          document.getElementById("{{ meal.id }}").innerHTML = "{{ meal.tax_category.name}} (" + formatted + "%)"
+        }
+        formatTax()
+      </script>
+      <!--- Edit button --->
+      <td class="text-center">
+        <a href="{% url 'restaurant_edit_meal' meal.id %}" class="btn btn-primary btn-outline">Edit</a>
+      </td>
+      <!--- Enable/disable button --->
+      <td class="text-center">
+        {% if meal.enabled %}
+        <a href="{% url 'restaurant_disable_meal' meal.id %}" class="btn btn-danger btn-outline">Disable</a>
+        {% else %}
+        <a href="{% url 'restaurant_enable_meal' meal.id %}" class="btn btn-success btn-outline">Enable</a>
+        {% endif %}
+      </td>
+    </tr>
     {% endfor %}
-  </div>
-</div>
+  </tbody>
+</table>
+{% endfor %}
 
-<script>
-  $(document).on('click', '.confirm-delete', function() {
-    return confirm('Are you sure? This will delete all meals in the category.');
-})
-</script>
 {% endblock %}

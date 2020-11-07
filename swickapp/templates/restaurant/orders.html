@@ -1,72 +1,68 @@
 {% extends 'restaurant/base.html' %}
 
 {% block content %}
-<div class="panel">
-  <!--- Order header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">Orders</h4>
+<!--- Order header --->
+<div class="page-title">Orders</div>
+<br>
+
+<!--- Datetime form --->
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="row no-pad">
+    <div class="col-sm-2"><label>Start Date</label></div>
+    <div class="col-sm-2"><label>End Date</label></div>
   </div>
-  <div class="panel-body">
-     <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="row no-pad" >
-           <div class="col-sm-2"> <label> Start Date </label> </div>
-           <div class="col-sm-2"> <label> End Date </label> </div>
-      </div>
-        <div class="row no-pad" >
-           <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
-           <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
-        <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
-      </div>
-      <div class="row no-pad" >
-          <div class="col-sm-2"> {{ start_time_error }} </div>
-          <div class="col-sm-2"> {{ end_time_error }} </div>
-    </div>
-     </form>
+  <div class="row no-pad">
+    <div class="col-sm-2">{{ datetime_range_form.start_time }}</div>
+    <div class="col-sm-2">{{ datetime_range_form.end_time }}</div>
+    <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
   </div>
-  <div class="panel-body">
-    <!--- Orders table --->
-    <table class="table table-bordered">
-      <!--- Orders table header --->
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-center">Time</th>
-          <th class="text-center">Customer</th>
-          <th class="text-center">Table</th>
-          <th class="text-center">Subtotal</th>
-          <th class="text-center">Sales tax</th>
-          <th class="text-center">Tip</th>
-          <th class="text-center">Total</th>
-          <th class="text-center">Status</th>
-          <th class="text-center">View</th>
-        </tr>
-      </thead>
-      <!--- Orders table body --->
-      <tbody>
-        {% for order in orders %}
-          <tr>
-              <td>{{ order.order_time|date:"m/d/y g:iA" }}</td>
-              <td>{{ order.customer }}</td>
-              <td>{{ order.table }}</td>
-              <td>${{ order.subtotal }}</td>
-              <td>${{ order.tax }}</td>
-              <td>
-                {% if not order.tip %}
-                  $0.00
-                {% else %}
-                  ${{ order.tip }}
-                {% endif %}
-              </td>
-              <td>${{ order.total }}</td>
-              <td>{{ order.get_status_display }}</td>
-              <!--- View button --->
-              <td class="text-center"><a href="{% url 'restaurant_view_order' order.id %}"
-                class="btn btn-primary">View</a>
-              </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="row no-pad">
+    <div class="col-sm-2"> {{ start_time_error }} </div>
+    <div class="col-sm-2"> {{ end_time_error }} </div>
   </div>
-</div>
+</form>
+<br>
+
+<!--- Orders table --->
+<table class="table table-bordered">
+  <!--- Orders table header --->
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Time</th>
+      <th class="text-center">Customer</th>
+      <th class="text-center">Table</th>
+      <th class="text-center">Subtotal</th>
+      <th class="text-center">Tax</th>
+      <th class="text-center">Tip</th>
+      <th class="text-center">Total</th>
+      <th class="text-center">Status</th>
+      <th class="text-center">View</th>
+    </tr>
+  </thead>
+  <!--- Orders table body --->
+  <tbody>
+    {% for order in orders %}
+    <tr>
+      <td>{{ order.order_time|date:"m/d/y g:iA" }}</td>
+      <td>{{ order.customer }}</td>
+      <td>{{ order.table }}</td>
+      <td>${{ order.subtotal }}</td>
+      <td>${{ order.tax }}</td>
+      <td>
+        {% if not order.tip %}
+        $0.00
+        {% else %}
+        ${{ order.tip }}
+        {% endif %}
+      </td>
+      <td>${{ order.total }}</td>
+      <td>{{ order.get_status_display }}</td>
+      <!--- View button --->
+      <td class="text-center"><a href="{% url 'restaurant_view_order' order.id %}" class="btn btn-primary btn-outline">View</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

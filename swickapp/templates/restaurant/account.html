@@ -3,29 +3,24 @@
 
 {% block content %}
 {% include "helpers/popup_image_cropper.html" %}
-<div class="col-lg-offset-2 col-lg-8">
-  <div class="panel">
-    <!--- Account header --->
-    <div class="panel-heading">
-      <h4 class="panel-title text-center">Account</h4>
-    </div>
+<div class="col-sm-8">
+  <!--- Account header --->
+  <div class="page-title">Account</div>
+  <br>
 
-    <div class="panel-body">
-      <!--- User and restaurant forms --->
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        {% bootstrap_form user_form %}
-        {% bootstrap_form restaurant_form %}
-        <button type="submit" class="btn btn-primary">Update</button>
-      </form>
-      <br>
+  <!--- User and restaurant forms --->
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    {% bootstrap_form user_form %}
+    {% bootstrap_form restaurant_form %}
+    <button type="submit" class="btn btn-primary">Update</button>
+  </form>
+  <br>
 
-      <!--- Change password link --->
-      <a href="{% url 'password_change' %}">Change password</a>
-      <br>
-      <!--- Link to Stripe dashboard -->
-      <a href={{ stripe_link }}>Access Stripe Dashboard</a>
-    </div>
-  </div>
+  <!--- Change password link --->
+  <a href="{% url 'password_change' %}">Change password</a>
+  <br>
+  <br>
+  <br>
 </div>
 {% endblock %}

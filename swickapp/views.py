@@ -538,25 +538,10 @@ def restaurant_account(request):
         # Update default sales tax model for this Restaurant
         # INVARIANT: Default should only be destroyed (thus invalid) when restaurant is deleted:
         TaxCategory.objects.filter(restaurant=request.user.restaurant, name="Default").update(tax=request.user.restaurant.default_sales_tax)
-    # Create link for Stripe access
-    stripe_url = "https://dashboard.stripe.com"
-    try:
-        stripe_account = stripe.Account.retrieve(Restaurant.objects.get(user=request.user).stripe_acct_id)
-        if not stripe_account.details_submitted:
-            new_link = stripe.AccountLink.create(
-                account =  Restaurant.objects.get(user=request.user).stripe_acct_id,
-                type = "account_onboarding",
-                refresh_url = request.build_absolute_uri('accounts/refresh_stripe_link/'),
-                return_url = request.build_absolute_uri('/restaurant/')
-                )
-            stripe_url = new_link.url
-    except stripe.error.StripeError:
-        pass
 
     return render(request, 'restaurant/account.html', {
         "user_form": user_form,
-        "restaurant_form": restaurant_form,
-        "stripe_link": stripe_url,
+        "restaurant_form": restaurant_form
     })
 
 # When server clicks on url to link restaurant
@@ -619,6 +604,21 @@ def restaurant_finances(request):
 
     revenue = gross_revenue - total_tax - total_tip - stripe_fees
 
+    # Create link for Stripe access
+    stripe_url = "https://dashboard.stripe.com"
+    try:
+        stripe_account = stripe.Account.retrieve(Restaurant.objects.get(user=request.user).stripe_acct_id)
+        if not stripe_account.details_submitted:
+            new_link = stripe.AccountLink.create(
+                account =  Restaurant.objects.get(user=request.user).stripe_acct_id,
+                type = "account_onboarding",
+                refresh_url = request.build_absolute_uri('accounts/refresh_stripe_link/'),
+                return_url = request.build_absolute_uri('/restaurant/')
+                )
+            stripe_url = new_link.url
+    except stripe.error.StripeError:
+        pass
+
     return render(request, 'restaurant/finances.html', {"default_category" : default_category,
                                                         "tax_categories": tax_categories,
                                                         "datetime_range_form" : data["datetime_range_form"],
@@ -628,7 +628,8 @@ def restaurant_finances(request):
                                                         "total_tax" : total_tax,
                                                         "total_tip" : total_tip,
                                                         "stripe_fees" : stripe_fees,
-                                                        "revenue" : revenue})
+                                                        "revenue" : revenue,
+                                                        "stripe_link" : stripe_url})
 
 # Restaurant add tax category page
 @login_required(login_url='/accounts/login/')
@@ -651,7 +652,7 @@ def restaurant_add_tax_category(request):
 class TaxCategoryCreateView(BSModalCreateView):
     # BSModalCreateView inherits CreateUpdateAjaxMixin and ModelForm from bootstrap modal form
     # Parent 'form_valid(self, form)' call will save TaxCategory to database
-    template_name = 'restaurant/popup_tax_category.html'
+    template_name = 'helpers/popup_tax_category.html'
     form_class = TaxCategoryForm
     success_message = 'Success: Tax Category was added'
     success_url = reverse_lazy('restaurant_menu')

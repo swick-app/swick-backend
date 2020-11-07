@@ -1,44 +1,36 @@
 {% extends 'restaurant/base.html' %}
 
 {% block content %}
-<div class="panel">
-  <!--- Order header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">Requests</h4>
-  </div>
+<!--- Requests header --->
+<div class="page-title">Requests</div>
+<br>
 
-  <div class="panel-body">
-    <p class="pull-left">Requests will show up in app in order listed below.</p>
-    <!--- Add request button --->
-    <a href="{% url 'restaurant_add_request' %}" class="btn btn-success pull-right">Add Request</a>
-    <br/>
-    <br/>
+<p class="pull-left">Requests will show up in app in order listed below.</p>
+<!--- Add request button --->
+<a href="{% url 'restaurant_add_request' %}" class="btn btn-success pull-right">Add request</a>
+<br>
+<br>
 
-    <!--- Requests table --->
-    <table class="table table-bordered">
-      <!--- Requests table header --->
-      <thead>
-        <tr class="bg-gray">
-          <!--- Click name to edit --->
-          <th class="text-center">Name</th>
-          <th class="text-center">Delete</th>
-        </tr>
-      </thead>
-      <!--- Requests table body --->
-      <tbody>
-        {% for request in requests %}
-          <tr>
-              <td><a href="{% url 'restaurant_edit_request' request.id %}">
-                {{ request.name }}
-              </a></td>
-                <!--- Delete button --->
-              <td class="text-center"><a href="{% url 'restaurant_delete_request' request.id %}"
-                class="btn btn-danger btn-outline">Delete</a>
-              </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
-</div>
+<!--- Requests table --->
+<table class="table table-bordered">
+  <!--- Requests table header --->
+  <thead>
+    <tr class="bg-gray">
+      <!--- Click name to edit --->
+      <th class="text-center">Name</th>
+      <th class="text-center">Edit</th>
+    </tr>
+  </thead>
+  <!--- Requests table body --->
+  <tbody>
+    {% for request in requests %}
+    <tr>
+      <td>{{ request.name }}</td>
+      <!--- Edit button --->
+      <td class="text-center"><a href="{% url 'restaurant_edit_request' request.id %}" class="btn btn-primary btn-outline">Edit</a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

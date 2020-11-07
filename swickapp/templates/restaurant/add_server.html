@@ -2,24 +2,17 @@
 {% load bootstrap3 %}
 
 {% block content %}
-<div class="col-lg-offset-2 col-lg-8">
-  <div class="panel">
-    <div class="panel-heading">
-      <h4 class="panel-title text-center">
-        Add Server
-      </h4>
-    </div>
-    <div class="panel-body">
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!--- Server request form --->
-        {% bootstrap_form server_request_form %}
-        <p>An email will be sent to the server.
-        Their status will remain in "Pending" until they accept.</p>
-        <!--- Add server button --->
-        <button type="submit" class="btn btn-success">Add server</button>
-      </form>
-    </div>
-  </div>
+<div class="col-sm-8">
+  <div class="page-title">Add Server</div>
+  <br>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--- Server request form --->
+    {% bootstrap_form server_request_form %}
+    <p>An email will be sent to the server.
+      Their status will remain in "Pending" until they accept.</p>
+    <!--- Add server button --->
+    <button type="submit" class="btn btn-success">Add server</button>
+  </form>
 </div>
 {% endblock %}

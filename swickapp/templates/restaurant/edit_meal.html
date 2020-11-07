@@ -4,47 +4,40 @@
 
 {% block content %}
 {% include "helpers/popup_image_cropper.html" %}
-<div class="col-lg-offset-2 col-lg-8">
-  <div class="panel">
-    <div class="panel-heading">
-      <h4 class="panel-title text-center">
-        Edit Meal
-      </h4>
-    </div>
-    <div class="panel-body">
-      <form id="update_meal_form" method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!--- Meal form --->
-        {% bootstrap_form meal_form %}
-        <!--- Tax categories selector --->
-        <label class="control-label">Sales tax category</label>
-        <select name="Tax Categories" id="tax_categories" class="form-control"></select>
-        <br>
-        <!--- Customization formset --->
-        {{ customization_formset.management_form }}
-        <div id="form_set">
-          {% for form in customization_formset.forms %}
-            <div id="{{ form.prefix }}">
-              {% bootstrap_form form %}
-            </div>
-          {% endfor %}
-        </div>
-        <!--- Add customization form button --->
-        <input type="button" class="btn btn-success btn-outline" value="Add customization" id="add_form">
-        <!--- Delete customization form button --->
-        <input type="button" class="btn btn-danger btn-outline" value="Delete customization" id="delete_form">
-        <br>
-        <br>
 
-        <!--- Update meal button --->
-        <button type="submit" class="btn btn-primary">Update meal</button>
-
-        <!--- Delete meal button --->
-        <a href="{% url 'restaurant_delete_meal' meal_id %}"
-          class="btn btn-danger">Delete meal</a>
-      </form>
+<div class="col-sm-8">
+  <div class="page-title">Edit Meal</div>
+  <br>
+  <form id="update_meal_form" method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--- Meal form --->
+    {% bootstrap_form meal_form %}
+    <!--- Tax categories selector --->
+    <label class="control-label">Sales tax category</label>
+    <select name="Tax Categories" id="tax_categories" class="form-control"></select>
+    <br>
+    <!--- Customization formset --->
+    {{ customization_formset.management_form }}
+    <div id="form_set">
+      {% for form in customization_formset.forms %}
+      <div id="{{ form.prefix }}">
+        {% bootstrap_form form %}
+      </div>
+      {% endfor %}
     </div>
-  </div>
+    <!--- Add customization form button --->
+    <input type="button" class="btn btn-success btn-outline" value="Add customization" id="add_form">
+    <!--- Delete customization form button --->
+    <input type="button" class="btn btn-danger btn-outline" value="Delete customization" id="delete_form">
+    <br>
+    <br>
+
+    <!--- Update meal button --->
+    <button type="submit" class="btn btn-primary">Update meal</button>
+
+    <!--- Delete meal button --->
+    <a href="{% url 'restaurant_delete_meal' meal_id %}" class="btn btn-danger">Delete meal</a>
+  </form>
 </div>
 
 <!--- Empty customization form template --->

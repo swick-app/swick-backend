@@ -1,114 +1,121 @@
 {% extends 'restaurant/base.html' %}
-{% block content %}
 {% load bootstrap3 %}
-<div class="panel">
-  <!--- Order header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">Finances</h4>
-  </div>
 
-  <div class="panel-body">
-     <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <div class="row no-pad" >
-           <div class="col-sm-2"> <label> Start Date </label> </div>
-           <div class="col-sm-2"> <label> End Date </label> </div>
-      </div>
-        <div class="row no-pad" >
-           <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
-           <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
-        <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
-      </div>
-      <div class="row no-pad" >
-         <div class="col-sm-2"> {{ start_time_error }} </div>
-         <div class="col-sm-2"> {{ end_time_error }} </div>
-    </div>
-     </form>
+{% block content %}
+<!--- Finances header --->
+<div class="page-title">Finances</div>
+<br>
+
+<!--- Link to Stripe dashboard -->
+<a href={{ stripe_link }}>Access Stripe dashboard</a>
+<br>
+<br>
+
+<!--- Datetime form --->
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  <div class="row no-pad">
+    <div class="col-sm-2"> <label> Start Date </label> </div>
+    <div class="col-sm-2"> <label> End Date </label> </div>
   </div>
-  <div class="panel-body">
-    <table class="table table-bordered">
-      <!--- Tax table header --->
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-center">Type</th>
-          <th class="text-center">Total</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr>
-              <td class="text-left"> Gross revenue </td>
-              <td class="text-left"> ${{ gross_revenue }} </td>
-          </tr>
-          <tr>
-              <td class="text-left"> Collected sales tax </td>
-              <td class="text-left"> - ${{ total_tax }} </td>
-          </tr>
-          <tr>
-              <td class="text-left"> Collected tip </td>
-              <td class="text-left"> - ${{ total_tip }} </td>
-          </tr>
-          <tr>
-              <td class="text-left"> Stripe processing fees </td>
-              <td class="text-left"> - ${{ stripe_fees }} </td>
-          </tr>
-          <tr>
-              <th class="text-left"> Revenue </th>
-              <th class="text-left"> ${{ revenue }} </th>
-          </tr>
-      </tbody>
-      </table>
-</div>
-<div class="panel-body">
-  <!--- Add tax category button --->
-  <a href="{% url 'restaurant_add_tax_category' %}" class="btn btn-success pull-right">Add Tax Category</a>
-  <br/>
-  <br/>
-    <!--- Tax table --->
-    <table class="table table-bordered">
-      <!--- Tax table header --->
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-center">Sales Tax Category</th>
-          <th class="text-center">Delete</th>
-        </tr>
-      </thead>
-      <!--- Tax table body --->
-      <tbody>
-          <tr>
-              <td id="{{ default_category.id }}"></td>
-              <script>
-                function formatTax(){
-                  // remove trailing "0" and "." for decimal number
-                  var formatted = "{{ default_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
-                  var name = "<a href={% url 'restaurant_edit_tax_category' default_category.id %}> {{ default_category.name }} </a>"
-                  document.getElementById("{{ default_category.id }}").innerHTML = name +" (" + formatted + "%)"
-                }
-                formatTax()
-              </script>
-              <!--- Delete button --->
-            <td class="text-center"><a href="{% url 'restaurant_delete_tax_category' default_category.id %}"</td>
-          </tr>
-        {% for tax_category in tax_categories %}
-          <tr>
-              <td id="{{ tax_category.id }}"></td>
-              <script>
-                function formatTax(){
-                  // remove trailing "0" and "." for decimal number
-                  var formatted = "{{ tax_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
-                  var name = "<a href={% url 'restaurant_edit_tax_category' tax_category.id %}> {{ tax_category.name }} </a>"
-                  document.getElementById("{{ tax_category.id }}").innerHTML = name +" (" + formatted + "%)"
-                }
-                formatTax()
-              </script>
-                <!--- Delete button --->
-              <td class="text-center"><a href="{% url 'restaurant_delete_tax_category' tax_category.id %}"
-                id="{{ tax_category.name }}_delete_button"
-                class="btn btn-danger">Delete</a>
-              </td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
+  <div class="row no-pad">
+    <div class="col-sm-2"> {{ datetime_range_form.start_time }} </div>
+    <div class="col-sm-2"> {{ datetime_range_form.end_time }} </div>
+    <div class="col-sm-2"><button type="submit" class="btn btn-primary">Refresh orders</button></div>
   </div>
-</div>
+  <div class="row no-pad">
+    <div class="col-sm-2"> {{ start_time_error }} </div>
+    <div class="col-sm-2"> {{ end_time_error }} </div>
+  </div>
+</form>
+<br>
+
+<!--- Financial information table --->
+<table class="table table-bordered">
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Type</th>
+      <th class="text-center">Total</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td> Gross revenue </td>
+      <td> ${{ gross_revenue }} </td>
+    </tr>
+    <tr>
+      <td> Collected sales tax </td>
+      <td> -${{ total_tax }} </td>
+    </tr>
+    <tr>
+      <td> Collected tip </td>
+      <td> -${{ total_tip }} </td>
+    </tr>
+    <tr>
+      <td> Stripe processing fees </td>
+      <td> -${{ stripe_fees }} </td>
+    </tr>
+    <tr>
+      <th> Revenue </th>
+      <th> ${{ revenue }} </th>
+    </tr>
+  </tbody>
+</table>
+
+<h4 class="pull-left">Tax Categories</h4>
+<!--- Add tax category button --->
+<a href="{% url 'restaurant_add_tax_category' %}" class="btn btn-success pull-right">Add tax category</a>
+<br>
+<br>
+<!--- Tax table --->
+<table class="table table-bordered">
+  <!--- Tax table header --->
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Name</th>
+      <th class="text-center">Edit</th>
+    </tr>
+  </thead>
+  <!--- Tax table body --->
+  <tbody>
+    <tr>
+      <td id="{{ default_category.id }}"></td>
+      <script>
+        function formatTax() {
+          // remove trailing "0" and "." for decimal number
+          var formatted = "{{ default_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
+          var name = "{{ default_category.name }}"
+          document.getElementById("{{ default_category.id }}").innerHTML = name + " (" + formatted + "%)"
+        }
+        formatTax()
+      </script>
+      <!--- Edit button --->
+      <td class="text-center">
+        <a href="{% url 'restaurant_edit_tax_category' default_category.id %}" class="btn btn-primary btn-outline">
+          Edit
+        </a>
+      </td>
+    </tr>
+    {% for tax_category in tax_categories %}
+    <tr>
+      <td id="{{ tax_category.id }}"></td>
+      <script>
+        function formatTax() {
+          // remove trailing "0" and "." for decimal number
+          var formatted = "{{ tax_category.tax }}".replace(/0+$/, "").replace(/\.$/, "");
+          var name = "{{ tax_category.name }}"
+          document.getElementById("{{ tax_category.id }}").innerHTML = name + " (" + formatted + "%)"
+        }
+        formatTax()
+      </script>
+      <!--- Edit button --->
+      <td class="text-center">
+        <a href="{% url 'restaurant_edit_tax_category' tax_category.id %}" class="btn btn-primary btn-outline">
+          Edit
+        </a>
+      </td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

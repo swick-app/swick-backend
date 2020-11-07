@@ -2,34 +2,25 @@
 {% load bootstrap3 %}
 
 {% block content %}
-<div class="col-lg-offset-2 col-lg-8">
-  <div class="panel">
-    <div class="panel-heading">
-      <h4 class="panel-title text-center">
-        Edit Sales Tax Category
-      </h4>
-    </div>
-    <div class="panel-body">
-      <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        <!--- Request form --->
-        {% bootstrap_form tax_category_form %}
-        <!--- Update button --->
-        <button type="submit" class="btn btn-primary">Update</button>
-      </form>
-      <br>
+<div class="col-sm-8">
+  <div class="page-title">Edit Tax Category</div>
+  <br>
+  <form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+    <!--- Request form --->
+    {% bootstrap_form tax_category_form %}
+    <!--- Update button --->
+    <button type="submit" class="btn btn-primary">Update</button>
 
-      <!--- Delete tax category button --->
-      <a id="{{ tax_category_name }}_delete_button" href="{% url 'restaurant_delete_tax_category' tax_category_id %}"
-        class="btn btn-danger">Delete</a>
-      <script>
-        function hide_default_delete(){
-          $("#" + "Default_delete_button").hide()
-        }
-        hide_default_delete()
-      </script>
-    </div>
-  </div>
+    <!--- Delete tax category button --->
+    <a id="{{ tax_category_name }}_delete_button" href="{% url 'restaurant_delete_tax_category' tax_category_id %}" class="btn btn-danger">Delete</a>
+  </form>
+
+  <script>
+    function hide_default_delete() {
+      $("#" + "Default_delete_button").hide()
+    }
+    hide_default_delete()
+  </script>
 </div>
-
 {% endblock %}

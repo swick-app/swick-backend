@@ -1,70 +1,39 @@
-{% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-  <script src="{% static 'js/jquery.bootstrap.modal.forms.js' %}"></script>
-  <script src="{% static 'js/cropper.min.js' %}"></script>
-  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-  <link rel="stylesheet" href="{% static 'css/style.css' %}">
-  <link href="{% static 'css/cropper.min.css' %}" rel="stylesheet">
-  <title>Swick</title>
-</head>
-<body>
-  <!--- Aliases for navigation bar item active conditional --->
-  {% url 'restaurant_menu' as menu_url %}
-  {% url 'restaurant_orders' as orders_url %}
-  {% url 'restaurant_finances' as finances_url %}
-  {% url 'restaurant_requests' as requests_url %}
-  {% url 'restaurant_servers' as servers_url %}
-  {% url 'restaurant_account' as account_url %}
+{% extends 'base.html' %}
 
-  <div class="container-fluid">
-    <div class="row">
+{% block body %}
+<div class="sidenav">
+  <div class="logo">swick</div>
+  <a href="{% url 'restaurant_menu' %}" {% if "/menu/" in request.path %}class="active"{% endif %}>
+    Menu
+  </a>
+  <a href="{% url 'restaurant_orders' %}" {% if "/orders/" in request.path %}class="active"{% endif %}>
+    Orders
+  </a>
+  <a href="{% url 'restaurant_finances' %}" {% if "/finances/" in request.path %}class="active"{% endif %}>
+    Finances
+  </a>
+  <a href="{% url 'restaurant_requests' %}" {% if "/requests/" in request.path %}class="active"{% endif %}>
+    Requests
+  </a>
+  <a href="{% url 'restaurant_servers' %}" {% if "/servers/" in request.path %}class="active"{% endif %}>
+    Servers
+  </a>
+  <a href="{% url 'restaurant_account' %}" {% if "/account/" in request.path %}class="active"{% endif %}>
+    Account
+  </a>
+  <a href="{% url 'logout' %}?next={{ request.path }}" class="confirm-logout">
+    Logout
+  </a>
+</div>
 
-      <!--- Navigation sidebar --->
-      <div class="col-sm-2 sidebar">
-          <!--- Display name and restaurant name --->
-          <div class="text-center">
-            <h1>swick</h1>
-          </div>
-          <br>
-          <!--- Navigation bar items --->
-          <div class="list-group text-center">
-            <a href="{% url 'restaurant_menu' %}"
-              class="list-group-item {% if request.path == menu_url %} active {% endif %}">
-              Menu</a>
-            <a href="{% url 'restaurant_orders' %}"
-              class="list-group-item {% if request.path == orders_url %} active {% endif %}">
-              Orders</a>
-            <a href="{% url 'restaurant_finances' %}"
-              class="list-group-item {% if request.path == finances_url %} active {% endif %}">
-              Finances</a>
-            <a href="{% url 'restaurant_requests' %}"
-              class="list-group-item {% if request.path == requests_url %} active {% endif %}">
-              Requests</a>
-            <a href="{% url 'restaurant_servers' %}"
-              class="list-group-item {% if request.path == servers_url %} active {% endif %}">
-              Servers</a>
-            <a href="{% url 'restaurant_account' %}"
-              class="list-group-item {% if request.path == account_url %} active {% endif %}">
-              Account</a>
-          </div>
-          <!--- Logout button --->
-          <div class="text-center">
-            <a href="{% url 'logout' %}?next={{ request.path }}"
-                class="btn">Logout</a>
-          </div>
-      </div>
+<!--- Page content --->
+<div class="main">
+  {% block content %}{% endblock %}
+</div>
 
-      <!--- Page content --->
-      <div class="col-sm-10 col-sm-offset-2 content">
-          {% block content %}{% endblock %}
-      </div>
-    </div>
-  </div>
-
-</body>
-</html>
+<script>
+  $(document).on('click', '.confirm-logout', function() {
+    return confirm('Are you sure?');
+})
+</script>
+{% endblock %}

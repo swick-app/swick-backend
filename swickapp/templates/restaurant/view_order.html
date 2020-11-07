@@ -2,63 +2,58 @@
 {% load custom_filters %}
 
 {% block content %}
-<div class="panel">
-  <!--- Order header --->
-  <div class="panel-heading">
-    <h4 class="panel-title text-center">View Order</h4>
-  </div>
+<!--- Order header --->
+<div class="page-title">Order Details</div>
+<br>
 
-  <div class="panel-body">
-    <!--- Order information --->
-    <div>Time: {{ order.order_time|date:"m/d/y g:iA" }}</div>
-    <div>Customer: {{ order.customer }}</div>
-    <div>Table: {{ order.table }}</div>
-    <div>Subtotal: ${{ order.subtotal }}</div>
-    <div>Sales tax: ${{ order.tax }}</div>
-    <div>
-      Tip: {% if not order.tip %}
-        $0.00
-      {% else %}
-        ${{ order.tip }}
-      {% endif %}
-    </div>
-    <div>Total: ${{ order.total }}</div>
-    <div>Status: {{ order.get_status_display }}</div>
-    <br>
-
-    <!--- Order items table --->
-    <table class="table table-bordered">
-      <!--- Order items table header --->
-      <thead>
-        <tr class="bg-gray">
-          <th class="text-center">Meal</th>
-          <th class="text-center">Customizations</th>
-          <th class="text-center">Quantity</th>
-          <th class="text-center">Total</th>
-          <th class="text-center">Status</th>
-        </tr>
-      </thead>
-      <!--- Order items table body --->
-      <tbody>
-        {% for item in order.order_item.all %}
-          <tr>
-            <td>{{ item.meal_name }} (${{ item.meal_price }})</td>
-            <!--- Customizations --->
-            <td>
-              {% for cust in item.order_item_cust.all %}
-                <div><b>{{ cust.customization_name }}</b></div>
-                {% for option, addition in cust.options|zip:cust.price_additions %}
-                  <div>- {{ option }} (+${{ addition }})</div>
-                {% endfor %}
-              {% endfor %}
-            </td>
-            <td>{{ item.quantity }}</td>
-            <td>${{ item.total }}</td>
-            <td>{{ item.get_status_display }}</td>
-          </tr>
-        {% endfor %}
-      </tbody>
-    </table>
-  </div>
+<!--- Order information --->
+<div>Time: {{ order.order_time|date:"m/d/y g:iA" }}</div>
+<div>Customer: {{ order.customer }}</div>
+<div>Table: {{ order.table }}</div>
+<div>Subtotal: ${{ order.subtotal }}</div>
+<div>Tax: ${{ order.tax }}</div>
+<div>
+  Tip: {% if not order.tip %}
+  $0.00
+  {% else %}
+  ${{ order.tip }}
+  {% endif %}
 </div>
+<div>Total: ${{ order.total }}</div>
+<div>Status: {{ order.get_status_display }}</div>
+<br>
+
+<!--- Order items table --->
+<table class="table table-bordered">
+  <!--- Order items table header --->
+  <thead>
+    <tr class="bg-gray">
+      <th class="text-center">Meal</th>
+      <th class="text-center">Customizations</th>
+      <th class="text-center">Quantity</th>
+      <th class="text-center">Total</th>
+      <th class="text-center">Status</th>
+    </tr>
+  </thead>
+  <!--- Order items table body --->
+  <tbody>
+    {% for item in order.order_item.all %}
+    <tr>
+      <td>{{ item.meal_name }} (${{ item.meal_price }})</td>
+      <!--- Customizations --->
+      <td>
+        {% for cust in item.order_item_cust.all %}
+        <div><b>{{ cust.customization_name }}</b></div>
+        {% for option, addition in cust.options|zip:cust.price_additions %}
+        <div>- {{ option }} (+${{ addition }})</div>
+        {% endfor %}
+        {% endfor %}
+      </td>
+      <td>{{ item.quantity }}</td>
+      <td>${{ item.total }}</td>
+      <td>{{ item.get_status_display }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
 {% endblock %}

@@ -1,9 +1,24 @@
 /* Custom fonts */
 @font-face {
     font-family: 'forma';
-    src: url('forma-webfont.woff2') format('woff2'),
-         url('forma-webfont.woff') format('woff');
+    src: url('../fonts/forma-webfont.woff2') format('woff2'),
+         url('../fonts/forma-webfont.woff') format('woff');
     font-weight: normal;
+    font-style: normal;
+}
+@font-face {
+    font-family: 'orkney';
+    src: url('../fonts/orkney-regular-webfont.woff2') format('woff2'),
+         url('../fonts/orkney-regular-webfont.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+
+}
+@font-face {
+    font-family: 'orkney';
+    src: url('../fonts/orkney-bold-webfont.woff2') format('woff2'),
+         url('../fonts/orkney-bold-webfont.woff') format('woff');
+    font-weight: bold;
     font-style: normal;
 }
 
@@ -11,18 +26,7 @@
 :root {
   --red: #E63946;
   --light-gray: #f7f7f7;
-}
-
-body {
-  padding-top: 50px;
-  /* Background color */
-  background-color: var(--light-gray);
-  overflow: auto;
-}
-
-/* Image aspect fill */
-img {
-  object-fit: cover;
+  --dark-gray: #5c5c5c;
 }
 
 /* Red color */
@@ -35,65 +39,59 @@ img {
   background-color: var(--light-gray);
 }
 
-/* Sidebar */
-.sidebar {
-  height: 100vh;
+body {
+  font-family: 'orkney';
+}
+
+/* Side nav bar from https://www.w3schools.com/howto/howto_css_fixed_sidebar.asp */
+.sidenav {
+  height: 100%;
+  width: 180px;
   position: fixed;
+  z-index: 1;
   top: 0;
-  padding: 0;
-  background-color: var(--red);
-  overflow: auto;
-}
-
-/* Sidebar header */
-.sidebar > div:first-child {
-  padding: 20px;
-
-}
-.sidebar > div:first-child > h1 {
-  color: white;
-  font-family: 'forma';
-}
-
-/* Sidebar list */
-.sidebar .list-group .list-group-item,
-.sidebar .list-group .list-group-item:focus {
-  background-color: var(--red);
-  color: white;
-  border: 0;
-  padding-top: 15px;
-  padding-bottom: 15px;
-}
-.sidebar .list-group .list-group-item.active,
-.sidebar .list-group .list-group-item:hover {
-  background-color: white;
-  color: var(--red);
-}
-
-/* Sidebar logout button */
-.sidebar > div:last-child .btn {
-  color: var(--red);
-  background-color: white;
-  width: 80%;
-}
-.sidebar > div:last-child .btn:hover {
+  left: 0;
   background-color: var(--light-gray);
+  overflow-x: hidden;
+  padding-top: 20px;
 }
 
-/* Panel */
-.content {
-  padding: 0 40px;
+.logo {
+  padding: 5px 0px 5px 30px;
+  font-size: 45px;
+  color: var(--red);
+  display: block;
+  font-family: forma;
 }
-.content .panel {
-  border: none;
+
+.sidenav a {
+  padding: 8px 0px 8px 30px;
+  text-decoration: none;
+  font-size: 20px;
+  color: var(--dark-gray);
+  display: block;
 }
-.panel-heading {
-  color: white;
-  background-color: var(--red);
+
+.sidenav a:hover, .sidenav a.active {
+  color: var(--red);
+}
+
+.main {
+  margin-left: 180px; /* Same as the width of the sidenav */
+  padding: 30px 30px;
+}
+
+.page-title {
+  font-size: 40px;
+}
+
+/* Image aspect fill */
+img {
+  object-fit: cover;
 }
 
 /* Bootstrap 3 outline buttons add-on */
-.btn-outline {
+.btn-outline, .btn-outline:focus {
     background-color: transparent;
     color: inherit;
     transition: all .5s;
