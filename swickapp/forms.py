@@ -1,57 +1,29 @@
+from bootstrap_modal_forms.forms import BSModalModelForm
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.files import File
-from .models import User, Restaurant, ServerRequest, Category, Meal, \
-    Customization, RequestOption, TaxCategory
+
+from .forms_helper import formatted_image_blob, validate_no_restaurant
+from .models import (Category, Customization, Meal, RequestOption, Restaurant,
+                     ServerRequest, TaxCategory, User)
 from .widgets import DateTimePickerInput
-from bootstrap_modal_forms.forms import BSModalModelForm
-from PIL import Image
-from io import BytesIO
 
-# Validate that email does not already have restaurant account linked
-def validate_no_restaurant(value):
-    try:
-        user = User.objects.get(email=value)
-        if hasattr(user, 'restaurant'):
-            raise ValidationError('Account with this email already exists')
-    except User.DoesNotExist:
-        pass
 
-# Restaurant owner form
 class UserForm(forms.Form):
+    """
+    Restaurant owner form
+    """
     name = forms.CharField(max_length=256)
     email = forms.EmailField(validators=[validate_no_restaurant])
     password = forms.CharField(widget=forms.PasswordInput())
 
-# Restaurant owner update form
+
 class UserUpdateForm(forms.ModelForm):
     class Meta:
         model = User
         fields = ("name", "email")
 
-# Formats original form image to 1080p and 5/3 ratio and returns in byte blob
-def formatted_image_blob(image, x, y, w, h):
-    im = Image.open(image)
-    if x is None:
-        if im.width/im.height > 5/3:
-            w = im.height * (5/3)
-            h = im.height
-            x = (im.width - w)/2
-            y = 0
-        else:
-            w = im.width
-            h = im.width * 3/5
-            x = 0
-            y = (im.height - h)/2
 
-    cropped_image = im.crop((x, y, w+x, h+y))
-    cropped_image.thumbnail((1920,1152), Image.ANTIALIAS)
-
-    blob = BytesIO()
-    cropped_image.save(blob, im.format)
-    return blob
-
-# Restaurant form
 class RestaurantForm(forms.ModelForm):
     # Image cropping fields
     x = forms.FloatField(widget=forms.HiddenInput(), required=False)
@@ -70,11 +42,12 @@ class RestaurantForm(forms.ModelForm):
                                     self.cleaned_data.get('y'),
                                     self.cleaned_data.get('width'),
                                     self.cleaned_data.get('height'))
-        restaurant.image.save(name=restaurant.image.name, content=File(blob), save=commit)
+        restaurant.image.save(name=restaurant.image.name,
+                              content=File(blob), save=commit)
 
         return restaurant
 
-# Server request form
+
 class ServerRequestForm(forms.ModelForm):
     class Meta:
         model = ServerRequest
@@ -93,19 +66,20 @@ class ServerRequestForm(forms.ModelForm):
                 email=cleaned_data['email'],
                 restaurant=self.request.user.restaurant
             )
-            raise ValidationError('Request has already been sent to this email')
+            raise ValidationError(
+                'Request has already been sent to this email')
         except ServerRequest.DoesNotExist:
             pass
 
         return cleaned_data
 
-# Category form
+
 class CategoryForm(forms.ModelForm):
     class Meta:
         model = Category
         exclude = ("restaurant",)
 
-# Meal form
+
 class MealForm(forms.ModelForm):
     # Image cropping fields
     x = forms.FloatField(widget=forms.HiddenInput(), required=False)
@@ -127,10 +101,11 @@ class MealForm(forms.ModelForm):
         meal.image.save(name=meal.image.name, content=File(blob), save=False)
         return meal
 
+
 class TaxCategoryFormBase(forms.ModelForm):
     class Meta:
         model = TaxCategory
-        fields =  ('name', 'tax')
+        fields = ('name', 'tax')
 
     # Pass in request and save as a parameter
     def __init__(self, *args, **kwargs):
@@ -143,20 +118,20 @@ class TaxCategoryFormBase(forms.ModelForm):
             matching_category = TaxCategory.objects.get(restaurant=self.request.user.restaurant,
                                                         name=cleaned_data.get("name"))
             if self.instance.pk != matching_category.pk:
-                raise ValidationError({'name' : ["Duplicate category name",]})
+                raise ValidationError({'name': ["Duplicate category name", ]})
 
         except TaxCategory.DoesNotExist:
             pass
 
-# Tax Category form
+
 class TaxCategoryForm(BSModalModelForm):
     def clean(self):
         cleaned_data = super().clean()
         # Check if combination of restaurant and name exists in database
         try:
             TaxCategory.objects.get(restaurant=self.request.user.restaurant,
-                                        name=cleaned_data.get("name"))
-            raise ValidationError({'name' : ["Duplicate category name",]})
+                                    name=cleaned_data.get("name"))
+            raise ValidationError({'name': ["Duplicate category name", ]})
         except TaxCategory.DoesNotExist:
             pass
 
@@ -164,16 +139,16 @@ class TaxCategoryForm(BSModalModelForm):
         model = TaxCategory
         fields = ('name', 'tax',)
         error_messages = {
-                    'name': {
-                        'max_length': "Name is too long.",
-                        'required' : "Please input a name"
-                    },
-                    'tax' : {
-                        'required' : 'Please input a number'
-                    }
-                }
+            'name': {
+                'max_length': "Name is too long.",
+                'required': "Please input a name"
+            },
+            'tax': {
+                'required': 'Please input a number'
+            }
+        }
 
-# Customization form
+
 class CustomizationForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -186,11 +161,14 @@ class CustomizationForm(forms.ModelForm):
     def clean(self):
         cleaned_data = self.cleaned_data
         if len(cleaned_data.get('options') or []) != len(cleaned_data.get('price_additions') or []):
-            raise ValidationError('The number of options and price additions must be equal')
+            raise ValidationError(
+                'The number of options and price additions must be equal')
         if (cleaned_data.get('max') or 0) > len(cleaned_data.get('options') or []):
-            raise ValidationError('Maximum number of selectable options cannot be greater than the number of options')
+            raise ValidationError(
+                'Maximum number of selectable options cannot be greater than the number of options')
         if (cleaned_data.get('min') or 0) > (cleaned_data.get('max') or 0):
-            raise ValidationError('Minimum number of options cannot be greater than maximum number of options')
+            raise ValidationError(
+                'Minimum number of options cannot be greater than maximum number of options')
         return cleaned_data
 
     class Meta:
@@ -205,11 +183,12 @@ class CustomizationForm(forms.ModelForm):
         }
         exclude = ("meal",)
 
-# Request form
+
 class RequestForm(forms.ModelForm):
     class Meta:
         model = RequestOption
         exclude = ("restaurant",)
+
 
 class DateTimeRangeForm(forms.Form):
     start_time = forms.DateTimeField(

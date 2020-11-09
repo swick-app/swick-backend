@@ -1,18 +1,22 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
 from drfpasswordless.models import CallbackToken
-from .models import User, Restaurant, Customer, Server, ServerRequest, \
-    Category, Meal, Customization, Order, OrderItem, OrderItemCustomization, \
-    RequestOption, Request, TaxCategory
 
-# Custom user model display on admin dashboard
+from .models import (Category, Customer, Customization, Meal, Order, OrderItem,
+                     OrderItemCustomization, Request, RequestOption,
+                     Restaurant, Server, ServerRequest, TaxCategory, User)
+
+
 @admin.register(User)
 class UserAdmin(DjangoUserAdmin):
+    """
+    Custom user model display on admin dashboard
+    """
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Personal info', {'fields': ('name',)}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser',
-                                       'groups', 'user_permissions')}),
+                                    'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
@@ -24,6 +28,7 @@ class UserAdmin(DjangoUserAdmin):
     list_display = ('email', 'name', 'is_staff')
     search_fields = ('email', 'name')
     ordering = ('email',)
+
 
 # Display models on admin dashboard
 admin.site.register(CallbackToken)
