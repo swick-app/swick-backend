@@ -3,10 +3,11 @@ from drf_multiple_model.mixins import FlatMultipleModelMixin
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView
 
-from .models import Order, OrderItem, Restaurant, Server, ServerRequest
-from .serializers import (OrderDetailsSerializerForServer,
-                          OrderItemToCookSerializer, OrderItemToSendSerializer,
-                          OrderSerializerForServer, RequestSerializer)
+from .models import (Order, OrderItem, Request, Restaurant, Server,
+                     ServerRequest)
+from .serializers import (OrderDetailsSerializer, OrderItemToCookSerializer,
+                          OrderItemToSendSerializer, OrderSerializer,
+                          RequestSerializer)
 
 
 @api_view(['POST'])
@@ -48,6 +49,7 @@ def get_orders(request):
     return:
         [orders]
             id
+            restaurant_name (unused)
             customer_name
             order_time
             status
@@ -58,7 +60,7 @@ def get_orders(request):
         return JsonResponse({
             "status": "restaurant_not_set"
         })
-    orders = OrderSerializerForServer(
+    orders = OrderSerializer(
         Order.objects.filter(restaurant=restaurant)
         .order_by("-id")[:20],
         many=True
@@ -74,6 +76,7 @@ def get_order(request, order_id):
     return:
         order
             id
+            restaurant_name (unused)
             customer_name
             order_time
             status
@@ -88,7 +91,7 @@ def get_order(request, order_id):
         order_object = Order.objects.get(id=order_id)
     except Restaurant.DoesNotExist:
         return JsonResponse({"status": "order_does_not_exist"})
-    order = OrderSerializerForServer(order_object).data
+    order = OrderSerializer(order_object).data
     return JsonResponse({"order": order, "status": "success"})
 
 
@@ -103,6 +106,9 @@ def get_order_details(request, order_id):
             customer_name
             table
             order_time
+            subtotal
+            tax
+            tip
             total
             [cooking_order_items] / [sending_order_items] / [complete_order_items]
                 id
@@ -122,7 +128,7 @@ def get_order_details(request, order_id):
     if order.restaurant != restaurant:
         return JsonResponse({"status": "invalid_request"})
 
-    order_details = OrderDetailsSerializerForServer(
+    order_details = OrderDetailsSerializer(
         order
     ).data
     return JsonResponse({"order_details": order_details, "status": "success"})
@@ -169,8 +175,8 @@ class ServerGetItemsToSend(FlatMultipleModelMixin, GenericAPIView):
         [OrderItem or Request]
             id
             order_id (only for OrderItem)
-            table
             customer_name
+            table
             meal_name or request_name
             time
             type

@@ -13,8 +13,8 @@ from .models import (Category, Customer, Customization, Meal, Order, OrderItem,
                      OrderItemCustomization, Request, RequestOption,
                      Restaurant)
 from .serializers import (CategorySerializer, CustomizationSerializer,
-                          MealSerializer, OrderDetailsSerializerForCustomer,
-                          OrderSerializerForCustomer, RequestOptionSerializer,
+                          MealSerializer, OrderDetailsSerializer,
+                          OrderSerializer, RequestOptionSerializer,
                           RestaurantSerializer)
 
 stripe.api_key = STRIPE_API_KEY
@@ -410,11 +410,12 @@ def get_orders(request):
         [orders]
             id
             restaurant_name
+            customer_name (unused)
             order_time
             status
         status
     """
-    orders = OrderSerializerForCustomer(
+    orders = OrderSerializer(
         Order.objects
         .filter(customer=request.user.customer).exclude(status=Order.PROCESSING)
         .order_by("-id"),
@@ -432,7 +433,8 @@ def get_order_details(request, order_id):
     return:
         order_details
             id
-            restaurant_name
+            customer_name (unused)
+            table (unused)
             order_time
             subtotal
             tax
@@ -453,7 +455,7 @@ def get_order_details(request, order_id):
     order = Order.objects.get(id=order_id)
     # Check if order's customer is the customer making the request
     if order.customer == request.user.customer:
-        order_details = OrderDetailsSerializerForCustomer(order).data
+        order_details = OrderDetailsSerializer(order).data
         return JsonResponse({"order_details": order_details, "status": "success"})
     else:
         return JsonResponse({"status": "invalid_order_id"})
