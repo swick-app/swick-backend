@@ -26,14 +26,15 @@ def login(request):
     header:
         Authorization: Token ...
     return:
+        name_set
         status
     """
     # Create customer account if not created
     Customer.objects.get_or_create(user=request.user)
     # Check that user's name is set
     if not request.user.name:
-        return JsonResponse({"status": "name_not_set"})
-    return JsonResponse({"status": "success"})
+        return JsonResponse({"name_set": False, "status": "success"})
+    return JsonResponse({"name_set": True, "status": "success"})
 
 
 def get_restaurants(request):

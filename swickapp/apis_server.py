@@ -16,6 +16,7 @@ def login(request):
     header:
         Authorization: Token ...
     return:
+        name_set
         status
     """
     # Create server account if not created
@@ -36,8 +37,8 @@ def login(request):
 
     # Check that user's name is set
     if not request.user.name:
-        return JsonResponse({"status": "name_not_set"})
-    return JsonResponse({"status": "success"})
+        return JsonResponse({"name_set": False, "status": "success"})
+    return JsonResponse({"name_set": True, "status": "success"})
 
 
 @api_view()
