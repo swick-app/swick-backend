@@ -15,9 +15,10 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 
-from .forms import (CategoryForm, CustomizationForm, MealForm, RequestForm,
-                    RestaurantForm, ServerRequestForm, TaxCategoryForm,
-                    TaxCategoryFormBase, UserForm, UserUpdateForm)
+from .forms import (CategoryForm, CustomizationForm, MealForm, RequestDemoForm,
+                    RequestForm, RestaurantForm, ServerRequestForm,
+                    TaxCategoryForm, TaxCategoryFormBase, UserForm,
+                    UserUpdateForm)
 from .models import (Category, Customization, Meal, Order, RequestOption,
                      Restaurant, Server, ServerRequest, TaxCategory, User)
 from .views_helper import (create_default_request_options,
@@ -25,8 +26,34 @@ from .views_helper import (create_default_request_options,
                            initalize_datetime_range_orders)
 
 
-def home(request):
-    return redirect(restaurant_home)
+def main_home(request):
+    return render(request, 'main/home.html')
+
+
+def request_demo(request):
+    demo_form = RequestDemoForm()
+
+    if request.method == "POST":
+        demo_form = RequestDemoForm(request.POST)
+        if demo_form.is_valid():
+            name = demo_form.cleaned_data["name"]
+            email = demo_form.cleaned_data["email"]
+            restaurant = demo_form.cleaned_data["restaurant"]
+            body = "Name: " + name + "\nEmail: " + email + "\nRestaurant: " + restaurant
+            send_mail(
+                'Swick Demo Request',
+                body,
+                None,
+                ["seanlu99@gmail.com"]
+            )
+            return redirect('request_demo_done')
+    return render(request, 'registration/request_demo.html', {
+        "demo_form": demo_form
+    })
+
+
+def request_demo_done(request):
+    return render(request, 'registration/request_demo_done.html')
 
 
 def restaurant_sign_up(request):
@@ -105,7 +132,7 @@ def restaurant_sign_up(request):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def refresh_stripe_link(request):
     """
     Redirect to refresh stripe link
@@ -123,19 +150,19 @@ def refresh_stripe_link(request):
     return redirect(stripe_connect_redirect.url)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_home(request):
     return redirect(restaurant_menu)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_menu(request):
     categories = Category.objects.filter(
         restaurant=request.user.restaurant).order_by("name")
     return render(request, 'restaurant/menu.html', {"categories": categories})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_add_category(request):
     category_form = CategoryForm()
 
@@ -155,7 +182,7 @@ def restaurant_add_category(request):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_edit_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if category.restaurant != request.user.restaurant:
@@ -178,7 +205,7 @@ def restaurant_edit_category(request, category_id):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_category(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     if category.restaurant != request.user.restaurant:
@@ -187,7 +214,7 @@ def restaurant_delete_category(request, category_id):
     return redirect(restaurant_menu)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_add_meal(request, category_id):
     category = get_object_or_404(Category, id=category_id)
     # Checks if requested category belongs to user's restaurant
@@ -235,7 +262,7 @@ def restaurant_add_meal(request, category_id):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_edit_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
@@ -292,7 +319,7 @@ def restaurant_edit_meal(request, meal_id):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
@@ -303,7 +330,7 @@ def restaurant_delete_meal(request, meal_id):
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_enable_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
@@ -315,7 +342,7 @@ def restaurant_enable_meal(request, meal_id):
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_disable_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
@@ -327,7 +354,7 @@ def restaurant_disable_meal(request, meal_id):
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_orders(request):
     data = initalize_datetime_range_orders(request)
     return render(request, 'restaurant/orders.html', {"orders": data["orders_in_range"],
@@ -336,7 +363,7 @@ def restaurant_orders(request):
                                                       "end_time_error": data["end_time_error"]})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_view_order(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     # Checks if requested order belongs to user's restaurant
@@ -346,13 +373,13 @@ def restaurant_view_order(request, order_id):
     return render(request, 'restaurant/view_order.html', {"order": order})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_requests(request):
     requests = RequestOption.objects.filter(restaurant=request.user.restaurant)
     return render(request, 'restaurant/requests.html', {"requests": requests})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_add_request(request):
     request_form = RequestForm()
 
@@ -371,7 +398,7 @@ def restaurant_add_request(request):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_edit_request(request, id):
     request_object = get_object_or_404(RequestOption, id=id)
     # Checks if request belongs to user's restaurant
@@ -394,7 +421,7 @@ def restaurant_edit_request(request, id):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_request(request, id):
     request_object = get_object_or_404(RequestOption, id=id)
     if request_object.restaurant != request.user.restaurant:
@@ -403,7 +430,7 @@ def restaurant_delete_request(request, id):
     return redirect(restaurant_requests)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_servers(request):
     servers = Server.objects.filter(restaurant=request.user.restaurant)
     server_requests = ServerRequest.objects.filter(
@@ -433,7 +460,7 @@ def restaurant_servers(request):
     return render(request, 'restaurant/servers.html', {"servers": all_servers})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_add_server(request):
     # Pass in request so it can be used in form validation
     server_request_form = ServerRequestForm(request=request)
@@ -470,7 +497,7 @@ def restaurant_add_server(request):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_server(request, id):
     server = get_object_or_404(Server, id=id)
     if server.restaurant != request.user.restaurant:
@@ -480,7 +507,7 @@ def restaurant_delete_server(request, id):
     return redirect(restaurant_servers)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_server_request(request, id):
     server_request = get_object_or_404(ServerRequest, id=id)
     if server_request.restaurant != request.user.restaurant:
@@ -489,7 +516,7 @@ def restaurant_delete_server_request(request, id):
     return redirect(restaurant_servers)
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_account(request):
     # Prefix required because both forms share a field with the same name
     user_form = UserUpdateForm(prefix="user", instance=request.user)
@@ -542,7 +569,7 @@ def server_link_restaurant(request, token):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def get_tax_categories(request):
     """
     Returns json response for tax_categories
@@ -551,7 +578,7 @@ def get_tax_categories(request):
     return JsonResponse({"category": get_tax_categories_list(request.user.restaurant)})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_finances(request):
     default_category = TaxCategory.objects.get(
         restaurant=request.user.restaurant, name="Default")
@@ -608,7 +635,7 @@ def restaurant_finances(request):
                                                         "stripe_link": stripe_url})
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_add_tax_category(request):
     tax_category_form = TaxCategoryFormBase()
     if request.method == "POST":
@@ -646,7 +673,7 @@ class TaxCategoryCreateView(BSModalCreateView):
         return tax_category
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_edit_tax_category(request, id):
     tax_category_object = get_object_or_404(TaxCategory, id=id)
     # Checks if request belongs to user's restaurant
@@ -675,7 +702,7 @@ def restaurant_edit_tax_category(request, id):
     })
 
 
-@login_required(login_url='/accounts/login/')
+@login_required(login_url='/main/')
 def restaurant_delete_tax_category(request, id):
     tax_category_object = get_object_or_404(TaxCategory, id=id)
     if tax_category_object.restaurant != request.user.restaurant or tax_category_object.name == "Default":

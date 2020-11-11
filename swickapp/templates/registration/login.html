@@ -8,7 +8,7 @@
   {% csrf_token %}
   {% bootstrap_form form %}
   <button type="submit" class="btn btn-primary">Login</button>
-  <a href="{% url 'sign_up' %}" class="pull-right">Create an account</a>
+  <a href="{% url 'request_demo' %}" class="pull-right">Request a demo</a>
   <br>
   <a href="{% url 'password_reset' %}" class="pull-right">Forgot your password?</a>
 </form>

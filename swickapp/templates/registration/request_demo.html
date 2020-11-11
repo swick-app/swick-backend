@@ -1,0 +1,13 @@
+{% extends 'registration/base.html' %}
+{% load bootstrap3 %}
+
+{% block heading %}Request a demo{% endblock %}
+
+{% block content %}
+<form method="POST" enctype="multipart/form-data">
+  {% csrf_token %}
+  {% bootstrap_form demo_form %}
+  <button type="submit" class="btn btn-primary">Request</button>
+  <a href="{% url 'login'%}" class="pull-right">Already have an account?</a>
+</form>
+{% endblock %}

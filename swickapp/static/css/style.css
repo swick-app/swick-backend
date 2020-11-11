@@ -56,11 +56,19 @@ body {
   padding-top: 20px;
 }
 
-.logo {
+.logo, .logo:hover {
   padding: 5px 0px 5px 30px;
   font-size: 45px;
   color: var(--red);
   display: block;
+  font-family: forma;
+  text-decoration: none;
+}
+
+.navbar-light .navbar-brand, .navbar-light .navbar-brand:hover {
+  padding-top: 12px;
+  font-size: 35px;
+  color: var(--red);
   font-family: forma;
 }
 

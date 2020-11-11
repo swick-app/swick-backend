@@ -9,6 +9,15 @@ from .models import (Category, Customization, Meal, RequestOption, Restaurant,
 from .widgets import DateTimePickerInput
 
 
+class RequestDemoForm(forms.Form):
+    """
+    Form for restaurant to request a demo
+    """
+    name = forms.CharField(max_length=256)
+    email = forms.EmailField(validators=[validate_no_restaurant])
+    restaurant = forms.CharField(max_length=256)
+
+
 class UserForm(forms.Form):
     """
     Restaurant owner form
@@ -93,12 +102,13 @@ class MealForm(forms.ModelForm):
 
     def save(self, commit=True):
         meal = super(MealForm, self).save(commit=commit)
-        blob = formatted_image_blob(meal.image,
-                                    self.cleaned_data.get('x'),
-                                    self.cleaned_data.get('y'),
-                                    self.cleaned_data.get('width'),
-                                    self.cleaned_data.get('height'))
-        meal.image.save(name=meal.image.name, content=File(blob), save=False)
+        if meal.image:
+            blob = formatted_image_blob(meal.image,
+                                        self.cleaned_data.get('x'),
+                                        self.cleaned_data.get('y'),
+                                        self.cleaned_data.get('width'),
+                                        self.cleaned_data.get('height'))
+            meal.image.save(name=meal.image.name, content=File(blob), save=False)
         return meal
 
 

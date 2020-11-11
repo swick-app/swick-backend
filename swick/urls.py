@@ -7,10 +7,16 @@ from swickapp import apis, apis_customer, apis_server, views
 urlpatterns = [
     # Admin page url
     path('admin/', admin.site.urls),
-    # Home page url
-    path('', views.home, name='home'),
+
+    # Main page url
+    path('main/', views.main_home, name='main_home'),
+
+    # Restaurant home page url
+    path('', views.restaurant_home, name='home'),
 
     ##### RESTAURANT REGISTRATION URLS #####
+    path('request_demo/', views.request_demo, name='request_demo'),
+    path('request_demo_done/', views.request_demo_done, name='request_demo_done'),
     # accounts/login/ [name='login']
     # accounts/logout/ [name='logout']
     # accounts/password_change/ [name='password_change']
@@ -20,8 +26,10 @@ urlpatterns = [
     # accounts/reset/<uidb64>/<token>/ [name='password_reset_confirm']
     # accounts/reset/done/ [name='password_reset_complete']
     path('accounts/', include('django.contrib.auth.urls')),
-    path('accounts/sign_up/', views.restaurant_sign_up,
-         name='sign_up'),
+    # TODO: temporarily disabled sign up page, need to send customized sign up
+    # links to restaurants after they are approved
+    # path('accounts/sign_up/', views.restaurant_sign_up,
+    #      name='sign_up'),
 
     ##### STRIPE REDIRECT URLS #####
     path('accounts/refresh_stripe_link/', views.refresh_stripe_link),
