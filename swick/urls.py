@@ -115,6 +115,7 @@ urlpatterns = [
 
     ##### CUSTOMER API URLS #####
     path('api/customer/login/', apis_customer.login),
+    path('api/customer/pusher_auth/', apis_customer.pusher_auth),
     path('api/customer/get_restaurants/', apis_customer.get_restaurants),
     path('api/customer/get_restaurant/<int:restaurant_id>/',
          apis_customer.get_restaurant),
@@ -139,6 +140,7 @@ urlpatterns = [
 
     ##### SERVER API URLS #####
     path('api/server/login/', apis_server.login),
+    path('api/server/pusher_auth/', apis_server.pusher_auth),
     path('api/server/get_orders/', apis_server.get_orders),
     path('api/server/get_order/<int:order_id>/', apis_server.get_order),
     path('api/server/get_order_details/<int:order_id>/',

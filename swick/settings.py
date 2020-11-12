@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'drfpasswordless',
     'drf_multiple_model',
+    'pusher',
 ]
 
 MIDDLEWARE = [
@@ -135,7 +136,7 @@ LOGIN_REDIRECT_URL = '/'
 # Django REST framework configuration
 REST_FRAMEWORK = {
     # Send times through rest framework in this format
-    'DATETIME_FORMAT': "%Y-%m-%dT%H:%MZ",
+    'DATETIME_FORMAT': "%Y-%m-%dT%H:%M:%SZ",
     'DEFAULT_AUTHENTICATION_CLASSES':
         ('rest_framework.authentication.TokenAuthentication',)
 }
@@ -189,3 +190,9 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
 
 # Stripe configuration
 STRIPE_API_KEY = os.environ.get('STRIPE_API_KEY')
+
+# Pusher configuration
+PUSHER_APP_ID = os.environ.get('PUSHER_APP_ID')
+PUSHER_KEY = os.environ.get('PUSHER_KEY')
+PUSHER_SECRET = os.environ.get('PUSHER_SECRET')
+PUSHER_CLUSTER = os.environ.get('PUSHER_CLUSTER')

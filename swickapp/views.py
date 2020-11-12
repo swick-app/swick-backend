@@ -21,6 +21,7 @@ from .forms import (CategoryForm, CustomizationForm, MealForm, RequestDemoForm,
                     UserUpdateForm)
 from .models import (Category, Customization, Meal, Order, RequestOption,
                      Restaurant, Server, ServerRequest, TaxCategory, User)
+from .pusher_events import send_event_restaurant_added
 from .views_helper import (create_default_request_options,
                            get_tax_categories_list,
                            initalize_datetime_range_orders)
@@ -560,6 +561,7 @@ def server_link_restaurant(request, token):
         server.restaurant = server_request.restaurant
         server.save()
         server_request.delete()
+        send_event_restaurant_added(server)
     except Server.DoesNotExist:
         server_request.accepted = True
         server_request.save()

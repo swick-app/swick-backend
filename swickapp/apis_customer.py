@@ -1,17 +1,23 @@
 import json
 from decimal import ROUND_HALF_UP, Decimal
 
+import pusher
 import stripe
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
-from swick.settings import STRIPE_API_KEY
+from swick.settings import (PUSHER_APP_ID, PUSHER_CLUSTER, PUSHER_KEY,
+                            PUSHER_SECRET, STRIPE_API_KEY)
 
 from .apis_helper import (attempt_stripe_payment, get_stripe_fee,
                           retry_stripe_payment)
 from .models import (Category, Customer, Customization, Meal, Order, OrderItem,
                      OrderItemCustomization, Request, RequestOption,
                      Restaurant)
+from .pusher_events import (send_event_item_status_updated,
+                            send_event_order_placed,
+                            send_event_order_status_updated,
+                            send_event_request_made, send_event_tip_added)
 from .serializers import (CategorySerializer, CustomizationSerializer,
                           MealSerializer, OrderDetailsSerializer,
                           OrderSerializer, RequestOptionSerializer,
@@ -26,15 +32,52 @@ def login(request):
     header:
         Authorization: Token ...
     return:
+        id
         name_set
         status
     """
     # Create customer account if not created
-    Customer.objects.get_or_create(user=request.user)
+    customer = Customer.objects.get_or_create(user=request.user)[0]
     # Check that user's name is set
     if not request.user.name:
-        return JsonResponse({"name_set": False, "status": "success"})
-    return JsonResponse({"name_set": True, "status": "success"})
+        return JsonResponse({"id": customer.id, "name_set": False, "status": "success"})
+    return JsonResponse({"id": customer.id, "name_set": True, "status": "success"})
+
+
+@api_view(['POST'])
+def pusher_auth(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        channel_name
+        socket_id
+    return:
+        channel_name
+        socket_id
+    """
+    channel = request.POST['channel_name']
+    try:
+        if not channel.startswith("private-customer-"):
+            raise AssertionError("Unknown channel requested " + channel)
+        customer = Customer.objects.get(user=request.user)
+        channel_id = int(channel.split('-')[2])
+        if customer.id != channel_id:
+            raise AssertionError("Requested unauthorized channnel")
+
+        pusher_client = pusher.Pusher(app_id=PUSHER_APP_ID,
+                                      key=PUSHER_KEY,
+                                      secret=PUSHER_SECRET,
+                                      cluster=PUSHER_CLUSTER)
+
+        payload = pusher_client.authenticate(
+            channel=request.POST['channel_name'],
+            socket_id=request.POST['socket_id'])
+
+        return JsonResponse(payload)
+    except (Customer.DoesNotExist, ValueError, AssertionError, IndexError) as e:
+        print(e)
+        return HttpResponseForbidden()
 
 
 def get_restaurants(request):
@@ -275,6 +318,7 @@ def place_order(request):
             order.stripe_fee = get_stripe_fee(content["payment_intent"])
             order.status = Order.ACTIVE
             order.save()
+            send_event_order_placed(order)
     return response
 
 
@@ -335,6 +379,7 @@ def add_tip(request):
                 content["payment_intent"])
             order_object.total += order_object.tip
             order_object.save()
+            send_event_tip_added(order_object)
 
     return response
 
@@ -365,6 +410,7 @@ def retry_order_payment(request):
             order.status = Order.ACTIVE
             order.stripe_fee = get_stripe_fee(order.stripe_payment_id)
             order.save()
+            send_event_order_placed(order)
 
     return response
 
@@ -396,6 +442,7 @@ def retry_tip_payment(request):
                 order.stripe_fee += get_stripe_fee(
                     request.POST["payment_intent_id"])
                 order.save()
+                send_event_tip_added(order_object)
             except stripe.error.StripeError:
                 return JsonResponse({"status": "stripe_api_error"})
     return response
@@ -489,11 +536,12 @@ def make_request(request):
     except Request.DoesNotExist:
         pass
 
-    Request.objects.create(
+    request_obj = Request.objects.create(
         customer=request.user.customer,
         request_option=request_option,
         table=request.POST["table"]
     )
+    send_event_request_made(request_obj)
     return JsonResponse({"status": "success"})
 
 

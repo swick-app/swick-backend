@@ -9,6 +9,12 @@ from .serializers import (OrderDetailsSerializer, OrderItemToCookSerializer,
                           OrderItemToSendSerializer, OrderSerializer,
                           RequestSerializer)
 
+from swick.settings import PUSHER_APP_ID, PUSHER_KEY, PUSHER_SECRET, PUSHER_CLUSTER
+
+from .pusher_events import send_event_order_placed, send_event_tip_added, \
+    send_event_item_status_updated, send_event_order_status_updated, send_event_request_deleted
+import pusher
+
 
 @api_view(['POST'])
 def login(request):
@@ -16,11 +22,15 @@ def login(request):
     header:
         Authorization: Token ...
     return:
+        id
+        restaurant_id
         name_set
         status
     """
     # Create server account if not created
-    if not Server.objects.filter(user=request.user).exists():
+    try:
+        server = Server.objects.get(user=request.user)
+    except Server.DoesNotExist:
         server = Server.objects.create(user=request.user)
         # Set server's restaurant if server has already accepted request
         # from restaurant
@@ -35,10 +45,53 @@ def login(request):
         except ServerRequest.DoesNotExist:
             pass
 
+    restaurant_id = None if server.restaurant is None else server.restaurant.id
     # Check that user's name is set
     if not request.user.name:
-        return JsonResponse({"name_set": False, "status": "success"})
-    return JsonResponse({"name_set": True, "status": "success"})
+        return JsonResponse({"id": server.id, "restaurant_id": restaurant_id, "name_set": False, "status": "success"})
+    return JsonResponse({"id": server.id, "restaurant_id": restaurant_id, "name_set": True, "status": "success"})
+
+
+@api_view(['POST'])
+def pusher_auth(request):
+    """
+    header:
+        Authorization: Token ...
+    params:
+        channel_name
+        socket_id
+    return:
+        channel_name
+        socket_id
+    """
+    channel = request.POST['channel_name']
+    try:
+        server = Server.objects.get(user=request.user)
+        channel_id = int(channel.split('-')[2])
+        if channel.startswith("private-server"):
+            if server.id != channel_id:
+                raise AssertionError("Requested unauthorized channel")
+        elif channel.startswith("private-restaurant"):
+            if server.restaurant is not None and server.restaurant.id != channel_id:
+                raise AssertionError(
+                    "Server does not have access to restaurant")
+        else:
+            raise AssertionError("Unknown channel requested: " + channel)
+
+        pusher_client = pusher.Pusher(app_id=PUSHER_APP_ID,
+                                      key=PUSHER_KEY,
+                                      secret=PUSHER_SECRET,
+                                      cluster=PUSHER_CLUSTER)
+
+        # We must generate the token with pusher's service
+        payload = pusher_client.authenticate(
+            channel=request.POST['channel_name'],
+            socket_id=request.POST['socket_id'])
+
+        return JsonResponse(payload)
+
+    except (Server.DoesNotExist, ValueError, AssertionError, IndexError) as e:
+        return HttpResponseForbidden()
 
 
 @api_view()
@@ -184,7 +237,7 @@ class ServerGetItemsToSend(FlatMultipleModelMixin, GenericAPIView):
     """
 
     # Sort combined query list by time
-    sorting_fields = ['time']
+    sorting_fields = ['time', 'id']
 
     # Overrided function to build combined query list
     def get_querylist(self):
@@ -231,20 +284,25 @@ def update_order_item_status(request):
         return JsonResponse({"status": "invalid_request"})
 
     order = item.order
-    new_status = request.POST.get("status")
+    if item.status != request.POST.get("status"):
+        new_status = request.POST.get("status")
 
-    # Update item with new status
-    item.status = new_status
-    item.save()
+        # Update item with new status
+        item.status = new_status
+        item.save()
+        send_event_item_status_updated(item)
 
-    # Check if order status needs to be updated
-    if new_status == OrderItem.COMPLETE:
-        if not OrderItem.objects.filter(order=order).exclude(status=OrderItem.COMPLETE).exists():
-            order.status = Order.COMPLETE
-            order.save()
-    else:
-        order.status = Order.ACTIVE
-        order.save()
+        # Check if order status needs to be updated
+        if new_status == OrderItem.COMPLETE:
+            if not OrderItem.objects.filter(order=order).exclude(status=OrderItem.COMPLETE).exists():
+                order.status = Order.COMPLETE
+                order.save()
+                send_event_order_status_updated(order)
+        else:
+            if order.status != Order.ACTIVE:
+                order.status = Order.ACTIVE
+                order.save()
+                send_event_order_status_updated(order)
 
     return JsonResponse({"status": "success"})
 
@@ -266,6 +324,7 @@ def delete_request(request):
     if request_object.request_option.restaurant != restaurant:
         return JsonResponse({"status": "invalid_request"})
 
+    send_event_request_deleted(request_object)
     request_object.delete()
 
     return JsonResponse({"status": "success"})
