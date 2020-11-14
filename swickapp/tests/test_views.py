@@ -53,3 +53,14 @@ class RestaurantTest(TestCase):
         self.assertRedirects(resp, reverse('restaurant_menu') + "#Appetizers")
         category = Category.objects.get(id=12)
         self.assertTrue(category.name, 'Appetizers')
+
+    def test_delete_category(self):
+        # GET success
+        resp = self.client.get(reverse('restaurant_delete_category', args=(12,)))
+        self.assertRedirects(resp, reverse('restaurant_menu'))
+        # GET error: category does not exist
+        resp = self.client.get(reverse('restaurant_delete_category', args=(11,)))
+        self.assertEqual(resp.status_code, 404)
+        # GET error: category does not belong to restaurant
+        resp = self.client.get(reverse('restaurant_delete_category', args=(14,)))
+        self.assertEqual(resp.status_code, 404)
