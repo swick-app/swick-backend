@@ -1,0 +1,517 @@
+[
+{
+    "model": "swickapp.user",
+    "pk": 1,
+    "fields": {
+        "password": "pbkdf2_sha256$180000$cwSNncCPnAqX$gkkhIGVkDG4shUbbRr93+MaFTwiOqtkqjfFn3V9HMzw=",
+        "last_login": "2020-11-14T04:10:03.152Z",
+        "is_superuser": true,
+        "is_staff": true,
+        "is_active": true,
+        "date_joined": "2020-09-10T23:08:52.065Z",
+        "email": "swickappdev@gmail.com",
+        "name": null,
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.user",
+    "pk": 28,
+    "fields": {
+        "password": "pbkdf2_sha256$180000$fI9T6hRxatNm$+J8pebCCVS42kImn7Fbj+d3OYWqS2M4P4uVKbEqh3IE=",
+        "last_login": "2020-11-14T05:46:41.601Z",
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-09-29T15:07:55.462Z",
+        "email": "john@gmail.com",
+        "name": "John",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.user",
+    "pk": 29,
+    "fields": {
+        "password": "!SFeBEZrtDIv16eiceaT6WiKul259S76H3VBgU2NJ",
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-09-29T17:06:28.628Z",
+        "email": "seanlu99@gmail.com",
+        "name": "Sean Lu",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.user",
+    "pk": 32,
+    "fields": {
+        "password": "pbkdf2_sha256$180000$95Pr2cVEiYM8$P2lJRH10CHMHK6WrzlWpBYa/hcMLXFEa2c6fAmPww68=",
+        "last_login": "2020-11-14T05:37:38.741Z",
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-10-15T21:07:50.712Z",
+        "email": "bob@gmail.com",
+        "name": "Bob",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.user",
+    "pk": 46,
+    "fields": {
+        "password": "!mFRERzjeJPRclpz78EQxJOw0FpkXy9NvWdMB8lGF",
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-11-14T05:31:14.173Z",
+        "email": "seanlu@umich.edu",
+        "name": "Sean Two",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.restaurant",
+    "pk": 26,
+    "fields": {
+        "user": 28,
+        "name": "Ice Cream Shop",
+        "address": "1 State St, Ann Arbor, MI 48104",
+        "image": "icecreamshop_Vik1OdQ.jpg",
+        "timezone": "US/Eastern",
+        "stripe_acct_id": "acct_1HWkQqLLOOlR3Uqr",
+        "default_sales_tax": "6.000"
+    }
+},
+{
+    "model": "swickapp.restaurant",
+    "pk": 29,
+    "fields": {
+        "user": 32,
+        "name": "The Cozy Diner",
+        "address": "1 Main St, Ann Arbor, MI 48104",
+        "image": "cozydiner_xLKEJtJ.jpg",
+        "timezone": "US/Eastern",
+        "stripe_acct_id": "acct_1HcdfwLjWyCBqqSM",
+        "default_sales_tax": "6.000"
+    }
+},
+{
+    "model": "swickapp.customer",
+    "pk": 11,
+    "fields": {
+        "user": 29,
+        "stripe_cust_id": "cus_I73kcNltPbkIZY"
+    }
+},
+{
+    "model": "swickapp.customer",
+    "pk": 22,
+    "fields": {
+        "user": 46,
+        "stripe_cust_id": "cus_IO3TPVSU82kcvN"
+    }
+},
+{
+    "model": "swickapp.server",
+    "pk": 11,
+    "fields": {
+        "user": 29,
+        "restaurant": 26
+    }
+},
+{
+    "model": "swickapp.server",
+    "pk": 13,
+    "fields": {
+        "user": 46,
+        "restaurant": 29
+    }
+},
+{
+    "model": "swickapp.serverrequest",
+    "pk": 41,
+    "fields": {
+        "restaurant": 26,
+        "name": "Chris",
+        "email": "chris@gmail.com",
+        "token": "0149b02fa340a6b1049d2ae74741da72c4dc3e7e",
+        "created_time": "2020-11-14T05:03:32.970Z",
+        "accepted": false
+    }
+},
+{
+    "model": "swickapp.taxcategory",
+    "pk": 1,
+    "fields": {
+        "restaurant": 26,
+        "name": "Default",
+        "tax": "6.000"
+    }
+},
+{
+    "model": "swickapp.taxcategory",
+    "pk": 3,
+    "fields": {
+        "restaurant": 29,
+        "name": "Default",
+        "tax": "6.000"
+    }
+},
+{
+    "model": "swickapp.taxcategory",
+    "pk": 4,
+    "fields": {
+        "restaurant": 26,
+        "name": "Drinks",
+        "tax": "8.000"
+    }
+},
+{
+    "model": "swickapp.category",
+    "pk": 12,
+    "fields": {
+        "restaurant": 26,
+        "name": "Entrees"
+    }
+},
+{
+    "model": "swickapp.category",
+    "pk": 13,
+    "fields": {
+        "restaurant": 26,
+        "name": "Drinks"
+    }
+},
+{
+    "model": "swickapp.category",
+    "pk": 14,
+    "fields": {
+        "restaurant": 29,
+        "name": "Entrees"
+    }
+},
+{
+    "model": "swickapp.meal",
+    "pk": 17,
+    "fields": {
+        "category": 12,
+        "name": "Pizza",
+        "description": "Fully customizable pizza",
+        "price": "10.00",
+        "image": "pizza_dnqyCDg.jpg",
+        "tax_category": 1,
+        "enabled": true
+    }
+},
+{
+    "model": "swickapp.meal",
+    "pk": 18,
+    "fields": {
+        "category": 12,
+        "name": "Cheeseburger",
+        "description": null,
+        "price": "6.25",
+        "image": "",
+        "tax_category": 1,
+        "enabled": true
+    }
+},
+{
+    "model": "swickapp.meal",
+    "pk": 19,
+    "fields": {
+        "category": 13,
+        "name": "Wine",
+        "description": null,
+        "price": "7.50",
+        "image": "",
+        "tax_category": 4,
+        "enabled": true
+    }
+},
+{
+    "model": "swickapp.meal",
+    "pk": 20,
+    "fields": {
+        "category": 14,
+        "name": "French fries",
+        "description": null,
+        "price": "3.25",
+        "image": "",
+        "tax_category": 3,
+        "enabled": true
+    }
+},
+{
+    "model": "swickapp.customization",
+    "pk": 7,
+    "fields": {
+        "meal": 17,
+        "name": "Size",
+        "options": "[\"12\\\"\", \"14\\\"\", \"16\\\"\"]",
+        "price_additions": "[\"0.00\", \"2.00\", \"4.00\"]",
+        "min": 1,
+        "max": 1
+    }
+},
+{
+    "model": "swickapp.customization",
+    "pk": 8,
+    "fields": {
+        "meal": 17,
+        "name": "Toppings",
+        "options": "[\"Pepperoni\", \"Bacon\", \"Sausage\", \"Chicken\", \"Mushrooms\"]",
+        "price_additions": "[\"0.50\", \"0.50\", \"0.50\", \"0.50\", \"0.50\"]",
+        "min": 0,
+        "max": 5
+    }
+},
+{
+    "model": "swickapp.customization",
+    "pk": 9,
+    "fields": {
+        "meal": 20,
+        "name": "Size",
+        "options": "[\"Small\", \"Medium\", \"Large\"]",
+        "price_additions": "[\"0.00\", \"0.50\", \"1.00\"]",
+        "min": 1,
+        "max": 1
+    }
+},
+{
+    "model": "swickapp.order",
+    "pk": 35,
+    "fields": {
+        "restaurant": 26,
+        "customer": 11,
+        "order_time": "2020-11-14T05:21:47.683Z",
+        "status": "ACTIVE",
+        "table": 2,
+        "subtotal": "32.50",
+        "tax": "2.10",
+        "tip": "4.88",
+        "total": "39.48",
+        "stripe_fee": "1.44",
+        "stripe_payment_id": "pi_1HnHCqBnGfJIkyujV9C6UV1U",
+        "tip_stripe_payment_id": null
+    }
+},
+{
+    "model": "swickapp.order",
+    "pk": 36,
+    "fields": {
+        "restaurant": 26,
+        "customer": 11,
+        "order_time": "2020-11-14T05:22:09.493Z",
+        "status": "COMPLETE",
+        "table": 2,
+        "subtotal": "6.25",
+        "tax": "0.38",
+        "tip": "1.13",
+        "total": "7.76",
+        "stripe_fee": "0.53",
+        "stripe_payment_id": "pi_1HnHDBBnGfJIkyujlEii1SAE",
+        "tip_stripe_payment_id": null
+    }
+},
+{
+    "model": "swickapp.order",
+    "pk": 37,
+    "fields": {
+        "restaurant": 29,
+        "customer": 11,
+        "order_time": "2020-11-14T05:27:16.451Z",
+        "status": "ACTIVE",
+        "table": 2,
+        "subtotal": "3.75",
+        "tax": "0.23",
+        "tip": "0.68",
+        "total": "4.66",
+        "stripe_fee": "0.44",
+        "stripe_payment_id": "pi_1HnHI8BnGfJIkyujDSZQl8Hh",
+        "tip_stripe_payment_id": null
+    }
+},
+{
+    "model": "swickapp.order",
+    "pk": 38,
+    "fields": {
+        "restaurant": 26,
+        "customer": 22,
+        "order_time": "2020-11-14T05:37:13.008Z",
+        "status": "ACTIVE",
+        "table": 2,
+        "subtotal": "29.00",
+        "tax": "1.74",
+        "tip": "5.80",
+        "total": "36.54",
+        "stripe_fee": "1.36",
+        "stripe_payment_id": "pi_1HnHRlBnGfJIkyujM2DCF4LK",
+        "tip_stripe_payment_id": null
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 49,
+    "fields": {
+        "order": 35,
+        "status": "COOKING",
+        "meal_name": "Pizza",
+        "meal_price": "10.00",
+        "quantity": 2,
+        "total": "25.00"
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 50,
+    "fields": {
+        "order": 35,
+        "status": "SENDING",
+        "meal_name": "Wine",
+        "meal_price": "7.50",
+        "quantity": 1,
+        "total": "7.50"
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 51,
+    "fields": {
+        "order": 36,
+        "status": "COMPLETE",
+        "meal_name": "Cheeseburger",
+        "meal_price": "6.25",
+        "quantity": 1,
+        "total": "6.25"
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 52,
+    "fields": {
+        "order": 37,
+        "status": "COOKING",
+        "meal_name": "French fries",
+        "meal_price": "3.25",
+        "quantity": 1,
+        "total": "3.75"
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 53,
+    "fields": {
+        "order": 38,
+        "status": "COOKING",
+        "meal_name": "Pizza",
+        "meal_price": "10.00",
+        "quantity": 2,
+        "total": "29.00"
+    }
+},
+{
+    "model": "swickapp.orderitemcustomization",
+    "pk": 21,
+    "fields": {
+        "order_item": 49,
+        "customization_name": "Size",
+        "options": "[\"14\\\"\"]",
+        "price_additions": "[\"2.00\"]"
+    }
+},
+{
+    "model": "swickapp.orderitemcustomization",
+    "pk": 22,
+    "fields": {
+        "order_item": 49,
+        "customization_name": "Toppings",
+        "options": "[\"Chicken\"]",
+        "price_additions": "[\"0.50\"]"
+    }
+},
+{
+    "model": "swickapp.orderitemcustomization",
+    "pk": 23,
+    "fields": {
+        "order_item": 52,
+        "customization_name": "Size",
+        "options": "[\"Medium\"]",
+        "price_additions": "[\"0.50\"]"
+    }
+},
+{
+    "model": "swickapp.orderitemcustomization",
+    "pk": 24,
+    "fields": {
+        "order_item": 53,
+        "customization_name": "Size",
+        "options": "[\"16\\\"\"]",
+        "price_additions": "[\"4.00\"]"
+    }
+},
+{
+    "model": "swickapp.orderitemcustomization",
+    "pk": 25,
+    "fields": {
+        "order_item": 53,
+        "customization_name": "Toppings",
+        "options": "[\"Mushrooms\"]",
+        "price_additions": "[\"0.50\"]"
+    }
+},
+{
+    "model": "swickapp.requestoption",
+    "pk": 1,
+    "fields": {
+        "restaurant": 26,
+        "name": "Water"
+    }
+},
+{
+    "model": "swickapp.requestoption",
+    "pk": 5,
+    "fields": {
+        "restaurant": 26,
+        "name": "Fork"
+    }
+},
+{
+    "model": "swickapp.requestoption",
+    "pk": 27,
+    "fields": {
+        "restaurant": 29,
+        "name": "Help"
+    }
+},
+{
+    "model": "swickapp.request",
+    "pk": 18,
+    "fields": {
+        "customer": 11,
+        "request_option": 1,
+        "request_time": "2020-11-14T05:22:18.504Z",
+        "table": 2
+    }
+},
+{
+    "model": "swickapp.request",
+    "pk": 19,
+    "fields": {
+        "customer": 11,
+        "request_option": 27,
+        "request_time": "2020-11-14T05:27:24.120Z",
+        "table": 2
+    }
+}
+]
