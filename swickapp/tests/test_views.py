@@ -58,6 +58,7 @@ class RestaurantTest(TestCase):
         # GET success
         resp = self.client.get(reverse('restaurant_delete_category', args=(12,)))
         self.assertRedirects(resp, reverse('restaurant_menu'))
+        self.assertRaises(Category.DoesNotExist, Category.objects.get, id=12)
         # GET error: category does not exist
         resp = self.client.get(reverse('restaurant_delete_category', args=(11,)))
         self.assertEqual(resp.status_code, 404)
