@@ -51,7 +51,7 @@ class RestaurantTest(TestCase):
         resp = self.client.get(reverse('sign_up'))
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, 'registration/sign_up.html')
-        # POST success
+        # POST success: create new user
         resp = self.client.post(
             reverse('sign_up'),
             data={
@@ -70,6 +70,24 @@ class RestaurantTest(TestCase):
         )
         user = User.objects.get(email="ben@gmail.com")
         restaurant = Restaurant.objects.get(name="Sandwich Place")
+        # POST success: user already exists
+        resp = self.client.post(
+            reverse('sign_up'),
+            data={
+                'user-name': 'Sean',
+                'user-email': 'seanlu99@gmail.com',
+                'user-password': 'password',
+                'restaurant-name': 'Burger Palace',
+                'restaurant-address': '1 North St, Ann Arbor, MI 48104',
+                'restaurant-image': SimpleUploadedFile(
+                    'mock.jpg',
+                    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+                ),
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '6'
+            }
+        )
+        restaurant = Restaurant.objects.get(name="Burger Palace")
 
     def test_restaurant_home(self):
         resp = self.client.get(reverse('restaurant_home'))
