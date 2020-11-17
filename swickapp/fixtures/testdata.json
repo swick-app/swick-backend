@@ -20,7 +20,7 @@
     "pk": 28,
     "fields": {
         "password": "pbkdf2_sha256$180000$fI9T6hRxatNm$+J8pebCCVS42kImn7Fbj+d3OYWqS2M4P4uVKbEqh3IE=",
-        "last_login": "2020-11-14T05:46:41.601Z",
+        "last_login": "2020-11-17T01:25:27.554Z",
         "is_superuser": false,
         "is_staff": false,
         "is_active": true,
@@ -52,7 +52,7 @@
     "pk": 32,
     "fields": {
         "password": "pbkdf2_sha256$180000$95Pr2cVEiYM8$P2lJRH10CHMHK6WrzlWpBYa/hcMLXFEa2c6fAmPww68=",
-        "last_login": "2020-11-14T05:37:38.741Z",
+        "last_login": "2020-11-17T01:09:32.150Z",
         "is_superuser": false,
         "is_staff": false,
         "is_active": true,
@@ -80,13 +80,29 @@
     }
 },
 {
+    "model": "swickapp.user",
+    "pk": 47,
+    "fields": {
+        "password": "!kJ7kV1dxCzhx1Zf6iapix34nH2Y5QcZ2DlmtrFwX",
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-11-17T01:37:03.520Z",
+        "email": "andrewjiang99@gmail.com",
+        "name": "Andrew Jiang",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
     "model": "swickapp.restaurant",
     "pk": 26,
     "fields": {
         "user": 28,
         "name": "Ice Cream Shop",
         "address": "1 State St, Ann Arbor, MI 48104",
-        "image": "icecreamshop_Vik1OdQ.jpg",
+        "image": "",
         "timezone": "US/Eastern",
         "stripe_acct_id": "acct_1HWkQqLLOOlR3Uqr",
         "default_sales_tax": "6.000"
@@ -99,7 +115,7 @@
         "user": 32,
         "name": "The Cozy Diner",
         "address": "1 Main St, Ann Arbor, MI 48104",
-        "image": "cozydiner_xLKEJtJ.jpg",
+        "image": "",
         "timezone": "US/Eastern",
         "stripe_acct_id": "acct_1HcdfwLjWyCBqqSM",
         "default_sales_tax": "6.000"
@@ -138,14 +154,46 @@
     }
 },
 {
+    "model": "swickapp.server",
+    "pk": 14,
+    "fields": {
+        "user": 47,
+        "restaurant": null
+    }
+},
+{
     "model": "swickapp.serverrequest",
-    "pk": 41,
+    "pk": 45,
+    "fields": {
+        "restaurant": 29,
+        "name": "Alex",
+        "email": "alex@gmail.com",
+        "token": "954f3725b2893cb171f27aea7d1c0118213a9ba4",
+        "created_time": "2020-11-17T01:09:44.809Z",
+        "accepted": false
+    }
+},
+{
+    "model": "swickapp.serverrequest",
+    "pk": 46,
+    "fields": {
+        "restaurant": 26,
+        "name": "Andrew Jiang",
+        "email": "andrewjiang99@gmail.com",
+        "token": "fba4d1e7a36379d4466934c66619a42fea2e7c5c",
+        "created_time": "2020-11-17T01:36:47.800Z",
+        "accepted": false
+    }
+},
+{
+    "model": "swickapp.serverrequest",
+    "pk": 47,
     "fields": {
         "restaurant": 26,
         "name": "Chris",
         "email": "chris@gmail.com",
-        "token": "0149b02fa340a6b1049d2ae74741da72c4dc3e7e",
-        "created_time": "2020-11-14T05:03:32.970Z",
+        "token": "965d251703b4f32190b132014c29749d0d657460",
+        "created_time": "2020-11-17T01:43:02.213Z",
         "accepted": false
     }
 },
@@ -208,7 +256,7 @@
         "name": "Pizza",
         "description": "Fully customizable pizza",
         "price": "10.00",
-        "image": "pizza_dnqyCDg.jpg",
+        "image": "",
         "tax_category": 1,
         "enabled": true
     }

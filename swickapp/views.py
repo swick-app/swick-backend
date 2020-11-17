@@ -332,24 +332,12 @@ def restaurant_delete_meal(request, meal_id):
 
 
 @login_required(login_url='/main/')
-def restaurant_enable_meal(request, meal_id):
+def restaurant_toggle_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
     if request.user.restaurant != meal.category.restaurant:
         raise Http404()
-    meal.enabled = True
-    meal.save()
-    # Redirect to category fragment identifier
-    return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
-
-
-@login_required(login_url='/main/')
-def restaurant_disable_meal(request, meal_id):
-    meal = get_object_or_404(Meal, id=meal_id)
-    # Checks if requested meal belongs to user's restaurant
-    if request.user.restaurant != meal.category.restaurant:
-        raise Http404()
-    meal.enabled = False
+    meal.enabled = not meal.enabled
     meal.save()
     # Redirect to category fragment identifier
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
