@@ -28,8 +28,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     # TODO: temporarily disabled sign up page, need to send customized sign up
     # links to restaurants after they are approved
-    # path('accounts/sign_up/', views.restaurant_sign_up,
-    #      name='sign_up'),
+    path('accounts/sign_up/', views.restaurant_sign_up,
+         name='sign_up'),
 
     ##### STRIPE REDIRECT URLS #####
     path('accounts/refresh_stripe_link/', views.refresh_stripe_link),

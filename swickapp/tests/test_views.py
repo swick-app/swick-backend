@@ -1,11 +1,15 @@
-import tempfile
-
 from django.core import mail
+from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from swickapp.models import (Category, Customization, Meal, RequestOption,
-                             Restaurant, Server, ServerRequest, User)
+                             Restaurant, Server, ServerRequest, TaxCategory,
+                             User)
 
+mock_image = SimpleUploadedFile(
+    'mock.jpg',
+    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+)
 
 class RestaurantTest(TestCase):
     fixtures = ['testdata.json']
@@ -18,6 +22,54 @@ class RestaurantTest(TestCase):
     def test_main_home(self):
         resp = self.client.get(reverse('main_home'))
         self.assertTemplateUsed(resp, 'main/home.html')
+
+    def test_request_demo(self):
+        # GET success
+        resp = self.client.get(reverse('request_demo'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'registration/request_demo.html')
+        # POST success
+        resp = self.client.post(
+            reverse('request_demo'),
+            data={
+                'name': 'Dan',
+                'email': 'dan@gmail.com',
+                'restaurant': 'Sandwich Place'
+            }
+        )
+        self.assertRedirects(resp, reverse('request_demo_done'))
+        self.assertEqual(mail.outbox[0].subject, 'Swick Demo Request')
+
+    def test_request_demo_done(self):
+        # GET success
+        resp = self.client.get(reverse('request_demo_done'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'registration/request_demo_done.html')
+
+    def test_sign_up(self):
+        # GET success
+        resp = self.client.get(reverse('sign_up'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'registration/sign_up.html')
+        # POST success
+        resp = self.client.post(
+            reverse('sign_up'),
+            data={
+                'user-name': 'Ben',
+                'user-email': 'ben@gmail.com',
+                'user-password': 'password',
+                'restaurant-name': 'Sandwich Place',
+                'restaurant-address': '1 S University Ave, Ann Arbor, MI 48104',
+                'restaurant-image': SimpleUploadedFile(
+                    'mock.jpg',
+                    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+                ),
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '6.250'
+            }
+        )
+        user = User.objects.get(email="ben@gmail.com")
+        restaurant = Restaurant.objects.get(name="Sandwich Place")
 
     def test_restaurant_home(self):
         resp = self.client.get(reverse('restaurant_home'))
@@ -102,6 +154,7 @@ class RestaurantTest(TestCase):
                 'name': 'Filet mignon',
                 'description': '11 ounces',
                 'price': 22.50,
+                'image': '',
                 'meal_tax_category': 'Default',
                 'form-TOTAL_FORMS': 1,
                 'form-INITIAL_FORMS': 0,
@@ -148,6 +201,7 @@ class RestaurantTest(TestCase):
                 'name': 'Vodka',
                 'description': '1.5 ounces',
                 'price': 22.50,
+                'image': '',
                 'meal_tax_category': 'Drinks',
                 'form-TOTAL_FORMS': 1,
                 'form-INITIAL_FORMS': 0,
@@ -190,10 +244,10 @@ class RestaurantTest(TestCase):
         meal = Meal.objects.get(id=17)
         self.assertTrue(meal.enabled)
         # GET error: meal does not exist
-        resp = self.client.get(reverse('restaurant_delete_meal', args=(16,)))
+        resp = self.client.get(reverse('restaurant_toggle_meal', args=(16,)))
         self.assertEqual(resp.status_code, 404)
         # GET error: meal does not belong to restaurant
-        resp = self.client.get(reverse('restaurant_delete_meal', args=(20,)))
+        resp = self.client.get(reverse('restaurant_toggle_meal', args=(20,)))
         self.assertEqual(resp.status_code, 404)
 
     def test_requests(self):
@@ -258,15 +312,19 @@ class RestaurantTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, 'restaurant/servers.html')
         servers = resp.context['servers']
-        server_request = servers[0]
-        server = servers[2]
         self.assertEqual(len(servers), 3)
-        self.assertEqual(server_request['name'], 'Andrew Jiang')
-        self.assertEqual(server_request['status'], 'Pending')
-        self.assertTrue(server_request['request'])
-        self.assertEqual(server['name'], 'Sean Lu')
-        self.assertEqual(server['status'], 'Accepted')
-        self.assertFalse(server['request'])
+        server1 = servers[0]
+        server2 = servers[1]
+        server3 = servers[2]
+        self.assertEqual(server1['name'], 'Andrew Jiang')
+        self.assertEqual(server1['status'], 'Pending')
+        self.assertTrue(server1['request'])
+        self.assertEqual(server2['name'], 'Chris')
+        self.assertEqual(server2['status'], 'Accepted')
+        self.assertTrue(server2['request'])
+        self.assertEqual(server3['name'], 'Sean Lu')
+        self.assertEqual(server3['status'], 'Accepted')
+        self.assertFalse(server3['request'])
 
     def test_add_server(self):
         # GET success
@@ -343,3 +401,29 @@ class RestaurantTest(TestCase):
             resp, 'registration/server_link_restaurant_confirm.html')
         request = ServerRequest.objects.get(id=47)
         self.assertTrue(request.accepted)
+
+    def test_account(self):
+        # GET success
+        resp = self.client.get(reverse('restaurant_account'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/account.html')
+        # POST success
+        resp = self.client.post(
+            reverse('restaurant_account'),
+            data={
+                'user-name': 'Evan',
+                'user-email': 'john@gmail.comm',
+                'restaurant-name': 'Sandwich Place',
+                'restaurant-address': '1 State St, Ann Arbor, MI 48104',
+                'restaurant-image': mock_image,
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '7.250'
+            }
+        )
+        self.assertEqual(resp.status_code, 200)
+        user = User.objects.get(id=28)
+        self.assertEqual(user.name, 'Evan')
+        restaurant = Restaurant.objects.get(id=26)
+        self.assertEqual(restaurant.name, 'Sandwich Place')
+        tax_category = TaxCategory.objects.get(id=1)
+        self.assertEqual(tax_category.tax, 7.250)

@@ -68,6 +68,9 @@ def restaurant_sign_up(request):
         restaurant_form = RestaurantForm(
             request.POST, request.FILES, prefix="restaurant")
 
+        print(user_form.errors)
+        print(restaurant_form.errors)
+
         # Create user and restaurant objects in database
         if user_form.is_valid() and restaurant_form.is_valid():
             email = user_form.cleaned_data["email"]
@@ -513,8 +516,6 @@ def restaurant_account(request):
         prefix="restaurant", instance=request.user.restaurant)
     # Update account info
     if request.method == "POST":
-        request.user.restaurant
-
         user_form = UserUpdateForm(
             request.POST, prefix="user", instance=request.user)
         restaurant_form = RestaurantForm(
