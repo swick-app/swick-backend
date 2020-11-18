@@ -1,3 +1,6 @@
+import tempfile
+from decimal import Decimal
+
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
@@ -10,6 +13,7 @@ mock_image = SimpleUploadedFile(
     'mock.jpg',
     b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
 )
+
 
 class RestaurantTest(TestCase):
     fixtures = ['testdata.json']
@@ -70,6 +74,11 @@ class RestaurantTest(TestCase):
         )
         user = User.objects.get(email="ben@gmail.com")
         restaurant = Restaurant.objects.get(name="Sandwich Place")
+        self.assertEqual(restaurant.default_sales_tax, Decimal("6.250"))
+        tax_categories = TaxCategory.objects.filter(restaurant=restaurant, name="Default")
+        self.assertEqual(tax_categories.count(), 1)
+        self.assertEqual(tax_categories[0].name, "Default")
+        self.assertEqual(resp.status_code, 302)
         # POST success: user already exists
         resp = self.client.post(
             reverse('sign_up'),
@@ -88,6 +97,16 @@ class RestaurantTest(TestCase):
             }
         )
         restaurant = Restaurant.objects.get(name="Burger Palace")
+
+    def test_refresh_stripe_link(self):
+        # GET success
+        resp = self.client.get(reverse('refresh_stripe_link'))
+        self.assertEqual(resp.status_code, 302)
+        # GET error: stripe account id is invalid
+        self.restaurant.stripe_acct_id = "invalid"
+        self.restaurant.save()
+        resp = self.client.get(reverse('refresh_stripe_link'))
+        self.assertEqual(resp.status_code, 404)
 
     def test_restaurant_home(self):
         resp = self.client.get(reverse('restaurant_home'))
@@ -267,6 +286,206 @@ class RestaurantTest(TestCase):
         # GET error: meal does not belong to restaurant
         resp = self.client.get(reverse('restaurant_toggle_meal', args=(20,)))
         self.assertEqual(resp.status_code, 404)
+
+    def test_orders(self):
+        # GET success
+        resp = self.client.get(reverse("restaurant_orders"))
+        orders = resp.context["orders"]
+        self.assertTrue(not orders.exists())
+        # POST success
+        resp = self.client.post(
+            reverse('restaurant_orders'),
+            data={'start_time': '11/14/2020 12:00AM',
+                  'end_time': '11/14/2020 5:00AM'}
+        )
+        orders = resp.context["orders"]
+        self.assertEqual(orders[0].stripe_payment_id, "pi_1HnHCqBnGfJIkyujV9C6UV1U")
+        self.assertEqual(orders.count(), 3)
+
+    def test_view_order(self):
+        # GET success
+        resp = self.client.get(reverse("restaurant_view_order", args=(35,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/view_order.html')
+        order = resp.context["order"]
+        self.assertEqual(order.stripe_payment_id,
+                         "pi_1HnHCqBnGfJIkyujV9C6UV1U")
+        # GET error: restaurant does not own order
+        resp = self.client.get(reverse("restaurant_view_order", args=(37,)))
+        self.assertEqual(resp.status_code, 404)
+        # GET error: order id does not exist
+        resp = self.client.get(reverse("restaurant_view_order", args=(15,)))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_finances(self):
+        # GET success
+        resp = self.client.get(reverse('restaurant_finances'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/finances.html')
+        default_category = resp.context["default_category"]
+        tax_categories = resp.context["tax_categories"]
+        gross_revenue = resp.context["gross_revenue"]
+        total_tax = resp.context["total_tax"]
+        total_tip = resp.context["total_tip"]
+        stripe_fees = resp.context["stripe_fees"]
+        revenue = resp.context["revenue"]
+        self.assertEqual(default_category.name, "Default")
+        self.assertEqual(tax_categories[0].name, "Drinks")
+        self.assertEqual(gross_revenue, 0)
+        self.assertEqual(total_tip, 0)
+        self.assertEqual(stripe_fees, 0)
+        self.assertEqual(revenue, 0)
+        # GET success: default stripe link
+        self.restaurant.stripe_acct_id = "invalid"
+        self.restaurant.save()
+        resp = self.client.get(reverse('restaurant_finances'))
+        stripe_link = resp.context["stripe_link"]
+        # POST success
+        resp = self.client.post(
+            reverse('restaurant_finances'),
+            data={'start_time': '11/14/2020 12:00AM',
+                  'end_time': '11/14/2020 5:00AM'}
+        )
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/finances.html')
+        default_category = resp.context["default_category"]
+        tax_categories = resp.context["tax_categories"]
+        gross_revenue = resp.context["gross_revenue"]
+        total_tax = resp.context["total_tax"]
+        total_tip = resp.context["total_tip"]
+        stripe_fees = resp.context["stripe_fees"]
+        revenue = resp.context["revenue"]
+        self.assertEqual(default_category.name, "Default")
+        self.assertEqual(tax_categories[0].name, "Drinks")
+        self.assertEqual(gross_revenue, Decimal("83.78"))
+        self.assertEqual(total_tax, Decimal("4.22"))
+        self.assertEqual(total_tip, Decimal("11.81"))
+        self.assertEqual(stripe_fees, Decimal("1.97"))
+        self.assertEqual(revenue, Decimal("65.78"))
+        self.assertEqual(stripe_link, "https://dashboard.stripe.com")
+        # POST success: invalid datetime range
+        resp = self.client.post(
+            reverse('restaurant_finances'),
+            data={'start_time': '<invalid_format>',
+                  'end_time': '<invalid_format>'}
+        )
+        start_time_error = resp.context["start_time_error"]
+        end_time_error = resp.context["end_time_error"]
+        self.assertEqual(start_time_error, "Enter a valid date/time.")
+        self.assertEqual(end_time_error, "Enter a valid date/time.")
+
+    def test_add_tax_category(self):
+        # GET success
+        resp = self.client.get(reverse('restaurant_add_tax_category'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/add_tax_category.html')
+        # POST success:
+        resp = self.client.post(
+            reverse('restaurant_add_tax_category'),
+            data={'name': 'Baked Goods', 'tax': '0.05'}
+        )
+        self.assertRedirects(resp, reverse('restaurant_finances'))
+        tax_categories = TaxCategory.objects.filter(restaurant=self.restaurant)
+        self.assertEqual(tax_categories.count(), 3)
+        # POST error: tax categroy name is repeated
+        resp = self.client.post(
+            reverse('restaurant_edit_tax_category', args=(4,)),
+            data={'name': 'Default', 'tax': '0.3'}
+        )
+        self.assertContains(resp, 'Duplicate category name', 1, 200)
+
+    def test_tax_edit_category(self):
+        # GET success
+        resp = self.client.get(
+            reverse('restaurant_edit_tax_category', args=(4,)))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/edit_tax_category.html')
+        # GET error: tax category does not exist
+        resp = self.client.get(
+            reverse('restaurant_edit_tax_category', args=(10,)))
+        self.assertEqual(resp.status_code, 404)
+        # GET error: tax category does not belong to restaurant
+        resp = self.client.get(
+            reverse('restaurant_edit_tax_category', args=(3,)))
+        self.assertEqual(resp.status_code, 404)
+        # POST success
+        resp = self.client.post(
+            reverse('restaurant_edit_tax_category', args=(4,)),
+            data={'name': 'New Drinks', 'tax': '0.4'}
+        )
+        self.assertRedirects(resp, reverse('restaurant_finances'))
+        tax_category = TaxCategory.objects.get(id=4)
+        self.assertEqual(tax_category.name, 'New Drinks')
+        self.assertEqual(tax_category.tax, Decimal("0.4"))
+        # POST success: Default tax category
+        resp = self.client.post(
+            reverse('restaurant_edit_tax_category', args=(1,)),
+            data={'name': 'Default', 'tax': '0.26'}
+        )
+        default = TaxCategory.objects.get(id=1)
+        self.assertEqual(default.name, "Default")
+        self.assertEqual(default.tax, Decimal("0.26"))
+        self.assertEqual(TaxCategory.objects.filter(restaurant=self.restaurant).count(), 2)
+        # POST error: tax category named is repeated
+        resp = self.client.post(
+            reverse('restaurant_edit_tax_category', args=(4,)),
+            data={'name': 'Default', 'tax': '0.3'}
+        )
+        self.assertContains(resp, 'Duplicate category name', 1, 200)
+
+    def test_delete_tax_category(self):
+        # GET success
+        resp = self.client.get(
+            reverse('restaurant_delete_tax_category', args=(4,)))
+        self.assertRedirects(resp, reverse('restaurant_finances'))
+        self.assertRaises(Category.DoesNotExist, Category.objects.get, id=4)
+        # GET error: tax category does not exist
+        resp = self.client.get(
+            reverse('restaurant_delete_tax_category', args=(15,)))
+        self.assertEqual(resp.status_code, 404)
+        # GET error: tax category is 'Default'
+        resp = self.client.get(
+            reverse('restaurant_delete_tax_category', args=(1,)))
+        self.assertEqual(resp.status_code, 404)
+        # GET error: tax category does not belong to restaurant
+        resp = self.client.get(
+            reverse('restaurant_delete_tax_category', args=(3,)))
+        self.assertEqual(resp.status_code, 404)
+
+    def test_tax_category_create_view(self):
+        # GET success
+        resp = self.client.get(reverse('popup_tax_category'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'helpers/popup_tax_category.html')
+        # POST error: tax category named is repeated
+        resp = self.client.post(
+            reverse('popup_tax_category'),
+            data={
+                'name': 'Default',
+                'tax': '0.3'
+            },
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest'
+        )
+        self.assertContains(resp, 'Duplicate category name', 1, 200)
+        # POST success
+        resp = self.client.post(
+            reverse('popup_tax_category'),
+            data={
+                'name': 'Baked Goods',
+                'tax': '0.5'
+            }
+        )
+        self.assertEqual(resp.status_code, 302)
+        self.assertRedirects(resp, reverse('restaurant_menu'))
+        tax_categories = TaxCategory.objects.filter(restaurant=self.restaurant)
+        self.assertEqual(tax_categories.count(), 3)
+
+    def test_get_tax_category(self):
+        # GET success
+        resp = self.client.get(reverse('get_tax_categories'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertJSONEqual(
+            resp.content, {"category": [["Default", "6"], ["Drinks", "8"]]})
 
     def test_requests(self):
         # GET success

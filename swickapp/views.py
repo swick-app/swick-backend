@@ -24,7 +24,7 @@ from .models import (Category, Customization, Meal, Order, RequestOption,
 from .pusher_events import send_event_restaurant_added
 from .views_helper import (create_default_request_options,
                            get_tax_categories_list,
-                           initalize_datetime_range_orders)
+                           initialize_datetime_range_orders)
 
 
 def main_home(request):
@@ -345,7 +345,7 @@ def restaurant_toggle_meal(request, meal_id):
 
 @login_required(login_url='/main/')
 def restaurant_orders(request):
-    data = initalize_datetime_range_orders(request)
+    data = initialize_datetime_range_orders(request)
     return render(request, 'restaurant/orders.html', {"orders": data["orders_in_range"],
                                                       "datetime_range_form": data["datetime_range_form"],
                                                       "start_time_error": data["start_time_error"],
@@ -572,7 +572,7 @@ def restaurant_finances(request):
         restaurant=request.user.restaurant, name="Default")
     tax_categories = TaxCategory.objects.filter(
         restaurant=request.user.restaurant).exclude(name="Default").order_by("name")
-    data = initalize_datetime_range_orders(request)
+    data = initialize_datetime_range_orders(request)
 
     gross_revenue = 0
     total_tax = 0

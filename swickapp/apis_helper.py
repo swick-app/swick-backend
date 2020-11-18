@@ -1,7 +1,6 @@
 from decimal import ROUND_HALF_UP, Decimal
 
 import stripe
-from django.conf import settings
 from django.http import JsonResponse
 from swick.settings import STRIPE_API_KEY
 
@@ -20,10 +19,9 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
         return JsonResponse({"status" : "invalid_charge_amount"})
 
     try:
-        # Direct payments to stripe connected account if in production
-        if not settings.DEVELOPMENT:
-            stripe_acct_id = Restaurant.objects.get(id=restaurant_id).stripe_acct_id
-            payment_intent = stripe.PaymentIntent.create(amount = amount,
+        # Direct payments to stripe connected account
+        stripe_acct_id = Restaurant.objects.get(id=restaurant_id).stripe_acct_id
+        payment_intent = stripe.PaymentIntent.create(amount = amount,
                                                     currency="usd",
                                                     customer=cust_stripe_id,
                                                     payment_method=payment_method_id,
@@ -35,17 +33,6 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
                                                         'destination' : stripe_acct_id
                                                     },
                                                     metadata=payment_intent_metadata)
-        # Direct payments to developer Stripe account if in development
-        else:
-            payment_intent = stripe.PaymentIntent.create(amount = amount,
-                                                     currency="usd",
-                                                     customer=cust_stripe_id,
-                                                     payment_method=payment_method_id,
-                                                     receipt_email=cust_email,
-                                                     use_stripe_sdk=True,
-                                                     confirmation_method='manual',
-                                                     confirm=True,
-                                                     metadata=payment_intent_metadata)
     except stripe.error.CardError as e:
         error = e.user_message
         return JsonResponse({"intent_status" : "card_error", "error" : error, "status" : "success"})

@@ -32,7 +32,8 @@ urlpatterns = [
          name='sign_up'),
 
     ##### STRIPE REDIRECT URLS #####
-    path('accounts/refresh_stripe_link/', views.refresh_stripe_link),
+    path('accounts/refresh_stripe_link/', views.refresh_stripe_link,
+        name='refresh_stripe_link'),
 
     ##### RESTAURANT URLS #####
     # Home

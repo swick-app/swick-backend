@@ -104,7 +104,7 @@
         "address": "1 State St, Ann Arbor, MI 48104",
         "image": "",
         "timezone": "US/Eastern",
-        "stripe_acct_id": "acct_1HWkQqLLOOlR3Uqr",
+        "stripe_acct_id": "acct_1HYx8GHEFsYoAI3t",
         "default_sales_tax": "6.000"
     }
 },
@@ -117,7 +117,7 @@
         "address": "1 Main St, Ann Arbor, MI 48104",
         "image": "",
         "timezone": "US/Eastern",
-        "stripe_acct_id": "acct_1HcdfwLjWyCBqqSM",
+        "stripe_acct_id": "invalid_acct",
         "default_sales_tax": "6.000"
     }
 },
@@ -403,7 +403,7 @@
         "tax": "1.74",
         "tip": "5.80",
         "total": "36.54",
-        "stripe_fee": "1.36",
+        "stripe_fee": null,
         "stripe_payment_id": "pi_1HnHRlBnGfJIkyujM2DCF4LK",
         "tip_stripe_payment_id": null
     }
