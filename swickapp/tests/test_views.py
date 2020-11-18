@@ -74,7 +74,8 @@ class ViewsTest(TestCase):
         user = User.objects.get(email="ben@gmail.com")
         restaurant = Restaurant.objects.get(name="Sandwich Place")
         self.assertEqual(restaurant.default_sales_tax, Decimal("6.250"))
-        tax_category = TaxCategory.objects.get(restaurant=restaurant, name="Default")
+        tax_category = TaxCategory.objects.get(
+            restaurant=restaurant, name="Default")
         self.assertEqual(tax_category.name, "Default")
         self.assertEqual(resp.status_code, 302)
         # POST success: user already exists
@@ -393,7 +394,7 @@ class ViewsTest(TestCase):
         )
         self.assertContains(resp, 'Duplicate category name', 1, 200)
 
-    def test_tax_edit_category(self):
+    def test_edit_tax_category(self):
         # GET success
         resp = self.client.get(
             reverse('restaurant_edit_tax_category', args=(4,)))
@@ -480,7 +481,7 @@ class ViewsTest(TestCase):
         tax_categories = TaxCategory.objects.filter(restaurant=self.restaurant)
         self.assertEqual(tax_categories.count(), 3)
 
-    def test_get_tax_category(self):
+    def test_get_tax_categories(self):
         # GET success
         resp = self.client.get(reverse('get_tax_categories'))
         self.assertEqual(resp.status_code, 200)
@@ -607,6 +608,32 @@ class ViewsTest(TestCase):
             reverse('restaurant_delete_server_request', args=(45,)))
         self.assertEqual(resp.status_code, 404)
 
+    def test_account(self):
+        # GET success
+        resp = self.client.get(reverse('restaurant_account'))
+        self.assertEqual(resp.status_code, 200)
+        self.assertTemplateUsed(resp, 'restaurant/account.html')
+        # POST success
+        resp = self.client.post(
+            reverse('restaurant_account'),
+            data={
+                'user-name': 'Evan',
+                'user-email': 'john@gmail.comm',
+                'restaurant-name': 'Sandwich Place',
+                'restaurant-address': '1 State St, Ann Arbor, MI 48104',
+                'restaurant-image': mock_image,
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '7.250'
+            }
+        )
+        self.assertEqual(resp.status_code, 200)
+        user = User.objects.get(id=28)
+        self.assertEqual(user.name, 'Evan')
+        restaurant = Restaurant.objects.get(id=26)
+        self.assertEqual(restaurant.name, 'Sandwich Place')
+        tax_category = TaxCategory.objects.get(id=1)
+        self.assertEqual(tax_category.tax, 7.250)
+
     def test_server_link_restaurant(self):
         # GET error: invalid token
         resp = self.client.get(
@@ -638,29 +665,3 @@ class ViewsTest(TestCase):
             resp, 'registration/server_link_restaurant_confirm.html')
         request = ServerRequest.objects.get(id=47)
         self.assertTrue(request.accepted)
-
-    def test_account(self):
-        # GET success
-        resp = self.client.get(reverse('restaurant_account'))
-        self.assertEqual(resp.status_code, 200)
-        self.assertTemplateUsed(resp, 'restaurant/account.html')
-        # POST success
-        resp = self.client.post(
-            reverse('restaurant_account'),
-            data={
-                'user-name': 'Evan',
-                'user-email': 'john@gmail.comm',
-                'restaurant-name': 'Sandwich Place',
-                'restaurant-address': '1 State St, Ann Arbor, MI 48104',
-                'restaurant-image': mock_image,
-                'restaurant-timezone': 'US/Eastern',
-                'restaurant-default_sales_tax': '7.250'
-            }
-        )
-        self.assertEqual(resp.status_code, 200)
-        user = User.objects.get(id=28)
-        self.assertEqual(user.name, 'Evan')
-        restaurant = Restaurant.objects.get(id=26)
-        self.assertEqual(restaurant.name, 'Sandwich Place')
-        tax_category = TaxCategory.objects.get(id=1)
-        self.assertEqual(tax_category.tax, 7.250)
