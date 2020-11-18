@@ -9,7 +9,7 @@ from swickapp.views_helper import (create_default_request_options,
                                    initialize_datetime_range_orders)
 
 
-class ViewsTest(TestCase):
+class ViewsHelperTest(TestCase):
     fixtures = ['testdata.json']
 
     def setUp(self):
