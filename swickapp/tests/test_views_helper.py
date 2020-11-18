@@ -1,7 +1,12 @@
+import tempfile
+
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
 from swickapp.models import RequestOption, Restaurant, User
+from swickapp.views_helper import (create_default_request_options,
+                                   get_tax_categories_list,
+                                   initialize_datetime_range_orders)
 
 
 class ViewsTest(TestCase):
@@ -13,23 +18,16 @@ class ViewsTest(TestCase):
         self.restaurant = Restaurant.objects.get(user=user)
 
     def test_create_default_request_options(self):
-        resp = self.client.post(
-            reverse('sign_up'),
-            data={
-                'user-name': 'Ben',
-                'user-email': 'ben@gmail.com',
-                'user-password': 'password',
-                'restaurant-name': 'Sandwich Place',
-                'restaurant-address': '1 S University Ave, Ann Arbor, MI 48104',
-                'restaurant-image': SimpleUploadedFile(
-                    'mock.jpg',
-                    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
-                ),
-                'restaurant-timezone': 'US/Eastern',
-                'restaurant-default_sales_tax': '6.250'
-            }
+        user = User.objects.get(id=29)
+        restaurant = Restaurant.objects.create(
+            user=user,
+            name='Sandwich Place',
+            address='1 S University Ave, Ann Arbor, MI 48104',
+            image=tempfile.NamedTemporaryFile(suffix=".jpg").name,
+            timezone='US/Eastern',
+            default_sales_tax=6.250
         )
-        restaurant = Restaurant.objects.get(name="Sandwich Place")
+        create_default_request_options(restaurant)
         options = RequestOption.objects.filter(restaurant=restaurant)
         self.assertEqual(options.count(), 6)
         self.assertEqual(options[0].name, 'Water')
