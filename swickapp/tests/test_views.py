@@ -1,4 +1,3 @@
-import tempfile
 from decimal import Decimal
 
 from django.core import mail
@@ -15,7 +14,7 @@ mock_image = SimpleUploadedFile(
 )
 
 
-class RestaurantTest(TestCase):
+class ViewsTest(TestCase):
     fixtures = ['testdata.json']
 
     def setUp(self):
@@ -75,9 +74,8 @@ class RestaurantTest(TestCase):
         user = User.objects.get(email="ben@gmail.com")
         restaurant = Restaurant.objects.get(name="Sandwich Place")
         self.assertEqual(restaurant.default_sales_tax, Decimal("6.250"))
-        tax_categories = TaxCategory.objects.filter(restaurant=restaurant, name="Default")
-        self.assertEqual(tax_categories.count(), 1)
-        self.assertEqual(tax_categories[0].name, "Default")
+        tax_category = TaxCategory.objects.get(restaurant=restaurant, name="Default")
+        self.assertEqual(tax_category.name, "Default")
         self.assertEqual(resp.status_code, 302)
         # POST success: user already exists
         resp = self.client.post(
@@ -291,7 +289,7 @@ class RestaurantTest(TestCase):
         # GET success
         resp = self.client.get(reverse("restaurant_orders"))
         orders = resp.context["orders"]
-        self.assertTrue(not orders.exists())
+        self.assertFalse(orders.exists())
         # POST success
         resp = self.client.post(
             reverse('restaurant_orders'),
@@ -299,7 +297,8 @@ class RestaurantTest(TestCase):
                   'end_time': '11/14/2020 5:00AM'}
         )
         orders = resp.context["orders"]
-        self.assertEqual(orders[0].stripe_payment_id, "pi_1HnHCqBnGfJIkyujV9C6UV1U")
+        self.assertEqual(orders[0].stripe_payment_id,
+                         "pi_1HnHCqBnGfJIkyujV9C6UV1U")
         self.assertEqual(orders.count(), 3)
 
     def test_view_order(self):
@@ -425,7 +424,8 @@ class RestaurantTest(TestCase):
         default = TaxCategory.objects.get(id=1)
         self.assertEqual(default.name, "Default")
         self.assertEqual(default.tax, Decimal("0.26"))
-        self.assertEqual(TaxCategory.objects.filter(restaurant=self.restaurant).count(), 2)
+        self.assertEqual(TaxCategory.objects.filter(
+            restaurant=self.restaurant).count(), 2)
         # POST error: tax category named is repeated
         resp = self.client.post(
             reverse('restaurant_edit_tax_category', args=(4,)),

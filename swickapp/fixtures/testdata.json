@@ -117,7 +117,7 @@
         "address": "1 Main St, Ann Arbor, MI 48104",
         "image": "",
         "timezone": "US/Eastern",
-        "stripe_acct_id": "invalid_acct",
+        "stripe_acct_id": "acct_1HcdfwLjWyCBqqSM",
         "default_sales_tax": "6.000"
     }
 },
