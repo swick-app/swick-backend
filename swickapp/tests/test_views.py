@@ -8,11 +8,6 @@ from swickapp.models import (Category, Customization, Meal, RequestOption,
                              Restaurant, Server, ServerRequest, TaxCategory,
                              User)
 
-mock_image = SimpleUploadedFile(
-    'mock.jpg',
-    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
-)
-
 
 class ViewsTest(TestCase):
     fixtures = ['testdata.json']
@@ -64,8 +59,8 @@ class ViewsTest(TestCase):
                 'restaurant-name': 'Sandwich Place',
                 'restaurant-address': '1 S University Ave, Ann Arbor, MI 48104',
                 'restaurant-image': SimpleUploadedFile(
-                    'mock.jpg',
-                    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+                    name='long-image.jpg',
+                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
                 ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '6.250'
@@ -88,8 +83,8 @@ class ViewsTest(TestCase):
                 'restaurant-name': 'Burger Palace',
                 'restaurant-address': '1 North St, Ann Arbor, MI 48104',
                 'restaurant-image': SimpleUploadedFile(
-                    'mock.jpg',
-                    b'\x47\x49\x46\x38\x39\x61\x01\x00\x01\x00\x80\x00\x00\x05\x04\x04\x00\x00\x00\x2c\x00\x00\x00\x00\x01\x00\x01\x00\x00\x02\x02\x44\x01\x00\x3b'
+                    name='long-image.jpg',
+                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
                 ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '6'
@@ -611,7 +606,10 @@ class ViewsTest(TestCase):
                 'user-email': 'john@gmail.comm',
                 'restaurant-name': 'Sandwich Place',
                 'restaurant-address': '1 State St, Ann Arbor, MI 48104',
-                'restaurant-image': mock_image,
+                'restaurant-image': SimpleUploadedFile(
+                    name='long-image.jpg',
+                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
+                ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '7.250'
             }

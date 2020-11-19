@@ -47,7 +47,7 @@ class FormsTest(TestCase):
         self.assertFormError(
             resp,
             'server_request_form',
-            None,
+            'email',
             'Request has already been sent to this email'
         )
 
@@ -120,35 +120,7 @@ class FormsTest(TestCase):
             }
         )
         self.assertEquals(
-            form.errors['__all__'],
-            ['The number of options and price additions must be equal']
-        )
-        # If options is empty
-        form = CustomizationForm(
-            data={
-                'name': 'Size',
-                'options': '',
-                'price_additions': '0',
-                'min': 0,
-                'max': 1
-            }
-        )
-        self.assertEquals(
-            form.errors['__all__'],
-            ['The number of options and price additions must be equal']
-        )
-        # If price additions is empty
-        form = CustomizationForm(
-            data={
-                'name': 'Size',
-                'options': 'Small',
-                'price_additions': '',
-                'min': 0,
-                'max': 1
-            }
-        )
-        self.assertEquals(
-            form.errors['__all__'],
+            form.errors['options'],
             ['The number of options and price additions must be equal']
         )
         # If max is greater than options size
@@ -162,7 +134,7 @@ class FormsTest(TestCase):
             }
         )
         self.assertEquals(
-            form.errors['__all__'],
+            form.errors['max'],
             ['Maximum number of selectable options cannot be greater than the number of options']
         )
         # If max is greater than options size
@@ -176,6 +148,6 @@ class FormsTest(TestCase):
             }
         )
         self.assertEquals(
-            form.errors['__all__'],
+            form.errors['min'],
             ['Minimum number of options cannot be greater than maximum number of options']
         )

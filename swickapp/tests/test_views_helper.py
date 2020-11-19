@@ -1,5 +1,3 @@
-import tempfile
-
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.test import TestCase
 from django.urls import reverse
@@ -23,7 +21,10 @@ class ViewsHelperTest(TestCase):
             user=user,
             name='Sandwich Place',
             address='1 S University Ave, Ann Arbor, MI 48104',
-            image=tempfile.NamedTemporaryFile(suffix=".jpg").name,
+            image=SimpleUploadedFile(
+                name='long-image.jpg',
+                content=open("./swickapp/tests/long-image.jpg", 'rb').read()
+            ),
             timezone='US/Eastern',
             default_sales_tax=6.250
         )
