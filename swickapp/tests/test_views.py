@@ -363,16 +363,6 @@ class ViewsTest(TestCase):
         self.assertEqual(stripe_fees, Decimal("1.97"))
         self.assertEqual(revenue, Decimal("65.78"))
         self.assertEqual(stripe_link, "https://dashboard.stripe.com")
-        # POST success: invalid datetime range
-        resp = self.client.post(
-            reverse('restaurant_finances'),
-            data={'start_time': '<invalid_format>',
-                  'end_time': '<invalid_format>'}
-        )
-        start_time_error = resp.context["start_time_error"]
-        end_time_error = resp.context["end_time_error"]
-        self.assertEqual(start_time_error, "Enter a valid date/time.")
-        self.assertEqual(end_time_error, "Enter a valid date/time.")
 
     def test_add_tax_category(self):
         # GET success
