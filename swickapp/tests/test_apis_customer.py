@@ -13,6 +13,7 @@ class APICustomerTest(APITestCase):
         self.client.force_authenticate(user)
 
     def test_get_restaurants(self):
+        # GET success
         resp = self.client.get(reverse('customer_get_restaurants'))
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
@@ -22,7 +23,25 @@ class APICustomerTest(APITestCase):
         self.assertEqual(restaurants[0]['name'], 'Ice Cream Shop')
         self.assertEqual(restaurants[1]['name'], 'The Cozy Diner')
 
+    def test_get_restaurant(self):
+        # GET success
+        resp = self.client.get(reverse('customer_get_restaurant', args=(26,)))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        restaurant = content['restaurant']
+        self.assertEqual(restaurant['name'], 'Ice Cream Shop')
+        options = content['request_options']
+        self.assertEqual(len(options), 2)
+        self.assertEqual(options[0]['name'], 'Water')
+        self.assertEqual(options[1]['name'], 'Fork')
+        # GET error: restaurant does not exist
+        resp = self.client.get(reverse('customer_get_restaurant', args=(25,)))
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'restaurant_does_not_exist')
+
     def test_get_orders(self):
+        # GET success
         resp = self.client.get(reverse('customer_get_orders'))
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)

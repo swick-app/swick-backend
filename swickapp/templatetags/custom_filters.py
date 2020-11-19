@@ -8,8 +8,3 @@ register = template.Library()
 @register.filter(name='zip')
 def zip_lists(a, b):
   return zip(a, b)
-
-# Get class name of object
-@register.filter(name='get_class')
-def get_class(value):
-  return value.__class__.__name__

@@ -36,6 +36,8 @@ def login(request):
         name_set
         status
     """
+    if request.user.is_anonymous:
+        return JsonResponse({"status": "invalid_token"})
     # Create customer account if not created
     customer = Customer.objects.get_or_create(user=request.user)[0]
     # Check that user's name is set
