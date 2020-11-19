@@ -110,10 +110,6 @@ def get_orders(request):
         status
     """
     restaurant = request.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
     orders = OrderSerializer(
         Order.objects.filter(restaurant=restaurant)
         .order_by("-id")[:20],
@@ -137,13 +133,9 @@ def get_order(request, order_id):
         status
     """
     restaurant = request.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
     try:
-        order_object = Order.objects.get(id=order_id)
-    except Restaurant.DoesNotExist:
+        order_object = Order.objects.get(id=order_id, restaurant=restaurant)
+    except Order.DoesNotExist:
         return JsonResponse({"status": "order_does_not_exist"})
     order = OrderSerializer(order_object).data
     return JsonResponse({"order": order, "status": "success"})
@@ -177,11 +169,10 @@ def get_order_details(request, order_id):
         status
     """
     restaurant = request.user.server.restaurant
-    order = Order.objects.get(id=order_id)
-    # Check if a restaurant's server is making the request
-    if order.restaurant != restaurant:
-        return JsonResponse({"status": "invalid_request"})
-
+    try:
+        order = Order.objects.get(id=order_id, restaurant=restaurant)
+    except Order.DoesNotExist:
+        return JsonResponse({"status": "order_does_not_exist"})
     order_details = OrderDetailsSerializer(
         order
     ).data
@@ -206,10 +197,6 @@ def get_order_items_to_cook(request):
                 [options]
     """
     restaurant = request.user.server.restaurant
-    if restaurant is None:
-        return JsonResponse({
-            "status": "restaurant_not_set"
-        })
     order_items = OrderItemToCookSerializer(
         OrderItem.objects.filter(
             order__restaurant=restaurant, status=OrderItem.COOKING)
@@ -257,11 +244,6 @@ class ServerGetItemsToSend(FlatMultipleModelMixin, GenericAPIView):
 
     # GET request
     def get(self, request, *args, **kwargs):
-        restaurant = request.user.server.restaurant
-        if restaurant is None:
-            return JsonResponse({
-                "status": "restaurant_not_set"
-            })
         return self.list(request, *args, **kwargs)
 
 
@@ -277,32 +259,32 @@ def update_order_item_status(request):
         status
     """
     restaurant = request.user.server.restaurant
-    item = OrderItem.objects.get(id=request.POST.get("order_item_id"))
+    order_item_id = request.POST.get("order_item_id")
 
-    # Check if a restaurant's server is making the request
-    if item.order.restaurant != restaurant:
-        return JsonResponse({"status": "invalid_request"})
+    try:
+        item = OrderItem.objects.get(
+            id=order_item_id, order__restaurant=restaurant)
+    except OrderItem.DoesNotExist:
+        return JsonResponse({"status": "order_item_does_not_exist"})
 
+    # Update item with new status
+    new_status = request.POST.get("status")
+    item.status = new_status
+    item.save()
+    send_event_item_status_updated(item)
+
+    # Check if order status needs to be updated
     order = item.order
-    if item.status != request.POST.get("status"):
-        new_status = request.POST.get("status")
-
-        # Update item with new status
-        item.status = new_status
-        item.save()
-        send_event_item_status_updated(item)
-
-        # Check if order status needs to be updated
-        if new_status == OrderItem.COMPLETE:
-            if not OrderItem.objects.filter(order=order).exclude(status=OrderItem.COMPLETE).exists():
-                order.status = Order.COMPLETE
-                order.save()
-                send_event_order_status_updated(order)
-        else:
-            if order.status != Order.ACTIVE:
-                order.status = Order.ACTIVE
-                order.save()
-                send_event_order_status_updated(order)
+    if new_status == OrderItem.COMPLETE:
+        if not OrderItem.objects.filter(order=order).exclude(status=OrderItem.COMPLETE).exists():
+            order.status = Order.COMPLETE
+            order.save()
+            send_event_order_status_updated(order)
+    else:
+        if order.status != Order.ACTIVE:
+            order.status = Order.ACTIVE
+            order.save()
+            send_event_order_status_updated(order)
 
     return JsonResponse({"status": "success"})
 
@@ -318,15 +300,14 @@ def delete_request(request):
         status
     """
     restaurant = request.user.server.restaurant
-    request_object = Request.objects.get(id=request.POST.get("id"))
-
-    # Check if a restaurant's server is making the request
-    if request_object.request_option.restaurant != restaurant:
-        return JsonResponse({"status": "invalid_request"})
-
-    send_event_request_deleted(request_object)
+    request_id = request.POST.get("id")
+    try:
+        request_object = Request.objects.get(
+            id=request_id, request_option__restaurant=restaurant)
+    except Request.DoesNotExist:
+        return JsonResponse({"status": "request_does_not_exist"})
     request_object.delete()
-
+    send_event_request_deleted(request_object)
     return JsonResponse({"status": "success"})
 
 

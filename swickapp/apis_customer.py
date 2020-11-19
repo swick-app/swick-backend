@@ -124,7 +124,8 @@ def get_restaurant(request, restaurant_id):
         context={"request": request}
     ).data
     request_options = RequestOptionSerializer(
-        RequestOption.objects.filter(restaurant=restaurant_object),
+        RequestOption.objects.filter(
+            restaurant=restaurant_object).order_by("id"),
         many=True,
     ).data
     return JsonResponse({
@@ -140,9 +141,14 @@ def get_categories(request, restaurant_id):
         [categories]
             id
             name
+        status
     """
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
     categories = CategorySerializer(
-        Category.objects.filter(restaurant_id=restaurant_id).order_by("name"),
+        Category.objects.filter(restaurant=restaurant).order_by("name"),
         many=True,
     ).data
     return JsonResponse({"categories": categories, "status": "success"})
@@ -160,11 +166,21 @@ def get_meals(request, restaurant_id, category_id):
             image
         status
     """
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
+    if category_id != 0:
+        try:
+            category = Category.objects.get(
+                restaurant=restaurant, id=category_id)
+        except Category.DoesNotExist:
+            return JsonResponse({"status": "category_does_not_exist"})
     # Get all meals if category_id is 0
     if category_id == 0:
         meals = MealSerializer(
             Meal.objects.filter(
-                category__restaurant_id=restaurant_id,
+                category__restaurant=restaurant,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -173,7 +189,7 @@ def get_meals(request, restaurant_id, category_id):
     else:
         meals = MealSerializer(
             Meal.objects.filter(
-                category_id=category_id,
+                category=category,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -502,13 +518,13 @@ def get_order_details(request, order_id):
                     [options]
         status
     """
-    order = Order.objects.get(id=order_id)
-    # Check if order's customer is the customer making the request
+    try:
+        order = Order.objects.get(id=order_id, customer=request.user.customer)
+    except Order.DoesNotExist:
+        return JsonResponse({"status": "order_does_not_exist"})
     if order.customer == request.user.customer:
         order_details = OrderDetailsSerializer(order).data
         return JsonResponse({"order_details": order_details, "status": "success"})
-    else:
-        return JsonResponse({"status": "invalid_order_id"})
 
 
 @api_view(['POST'])

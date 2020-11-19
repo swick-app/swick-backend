@@ -511,7 +511,8 @@ def get_tax_categories(request):
 
 @login_required(login_url='/main/')
 def restaurant_requests(request):
-    requests = RequestOption.objects.filter(restaurant=request.user.restaurant)
+    requests = RequestOption.objects.filter(
+        restaurant=request.user.restaurant).order_by("id")
     return render(request, 'restaurant/requests.html', {"requests": requests})
 
 

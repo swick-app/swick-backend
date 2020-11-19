@@ -301,6 +301,19 @@
     }
 },
 {
+    "model": "swickapp.meal",
+    "pk": 21,
+    "fields": {
+        "category": 12,
+        "name": "Sandwich",
+        "description": null,
+        "price": "4.00",
+        "image": "",
+        "tax_category": 1,
+        "enabled": false
+    }
+},
+{
     "model": "swickapp.customization",
     "pk": 7,
     "fields": {
@@ -437,7 +450,7 @@
     "pk": 51,
     "fields": {
         "order": 36,
-        "status": "COMPLETE",
+        "status": "SENDING",
         "meal_name": "Cheeseburger",
         "meal_price": "6.25",
         "quantity": 1,
@@ -559,6 +572,16 @@
         "customer": 11,
         "request_option": 27,
         "request_time": "2020-11-14T05:27:24.120Z",
+        "table": 2
+    }
+},
+{
+    "model": "swickapp.request",
+    "pk": 20,
+    "fields": {
+        "customer": 22,
+        "request_option": 5,
+        "request_time": "2020-11-14T05:29:18.504Z",
         "table": 2
     }
 }

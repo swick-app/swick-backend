@@ -110,7 +110,7 @@ urlpatterns = [
     path('', include('drfpasswordless.urls')),
 
     ##### CUSTOMER AND SERVER SHARED API URLS #####
-    path('api/update_info/', apis.update_info),
+    path('api/update_info/', apis.update_info, name='update_info'),
 
     ##### CUSTOMER API URLS #####
     path('api/customer/login/', apis_customer.login, name='customer_login'),
@@ -139,7 +139,8 @@ urlpatterns = [
          apis_customer.get_order_details, name='customer_get_order_details'),
     path('api/customer/make_request/', apis_customer.make_request,
          name='customer_make_request'),
-    path('api/customer/get_info/', apis_customer.get_info, name='customer_get_info'),
+    path('api/customer/get_info/', apis_customer.get_info,
+         name='customer_get_info'),
     path('api/customer/setup_card/', apis_customer.setup_card,
          name='customer_setup_card'),
     path('api/customer/get_cards/', apis_customer.get_cards,
