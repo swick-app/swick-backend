@@ -163,7 +163,7 @@ class APIServerTest(APITestCase):
         )
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'request_does_not_exist')
-        # POST success
+        # POST error: request does not belong to restaurant
         resp = self.client.post(
             reverse('server_delete_request'),
             data={'id': 19}

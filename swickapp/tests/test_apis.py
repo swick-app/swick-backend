@@ -13,8 +13,8 @@ class APITest(APITestCase):
         self.client.force_authenticate(user)
 
     def test_update_info(self):
-        # GET success
-        resp = self.client.get(
+        # POST success
+        resp = self.client.post(
             reverse('update_info'),
             data={'name': 'Jean-Paul', 'email': 'jeanpaul@gmail.com'}
         )
@@ -23,12 +23,12 @@ class APITest(APITestCase):
         self.assertEqual(content['status'], 'success')
         User.objects.get(email='jeanpaul@gmail.com', name='Jean-Paul')
         self.assertRaises(User.DoesNotExist, User.objects.get,
-                          'seanlu99@gmail.com')
-        # GET error: email already taken
-        resp = self.client.get(
+                          email='seanlu99@gmail.com')
+        # POST error: email already taken
+        resp = self.client.post(
             reverse('update_info'),
             data={'name': 'Jean-Paul', 'email': 'seanlu@umich.edu'}
         )
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
-        self.assertEqual(content['email_already_taken'], 'success')
+        self.assertEqual(content['status'], 'email_already_taken')
