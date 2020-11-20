@@ -2,15 +2,47 @@ import json
 
 from django.urls import reverse
 from rest_framework.test import APITestCase
-from swickapp.models import Order, OrderItem, Request, User
+from swickapp.models import Order, OrderItem, Request, Server, User
 
 
 class APIServerTest(APITestCase):
     fixtures = ['testdata.json']
 
     def setUp(self):
-        user = User.objects.get(email="seanlu99@gmail.com")
+        self.user = User.objects.get(email="seanlu99@gmail.com")
+        self.client.force_authenticate(self.user)
+
+    def test_login(self):
+        # POST success: use existing server, server has restaurant, user has name
+        resp = self.client.post(reverse('server_login'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['restaurant_id'], 26)
+        self.assertEqual(content['name_set'], True)
+        self.assertEqual(content['id'], 11)
+        # POST success: create new server, server has no restaurant, user has no name
+        user = User.objects.get(email="simon@gmail.com")
         self.client.force_authenticate(user)
+        resp = self.client.post(reverse('server_login'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['restaurant_id'], None)
+        self.assertEqual(content['name_set'], False)
+        # POST success: create new server, server has accepted server request
+        user = User.objects.get(email="chris@gmail.com")
+        self.client.force_authenticate(user)
+        resp = self.client.post(reverse('server_login'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['restaurant_id'], 26)
+        # POST error: invalid token
+        self.client.force_authenticate(user=None)
+        resp = self.client.post(reverse('server_login'))
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'invalid_token')
 
     def test_get_orders(self):
         # GET success
@@ -170,3 +202,22 @@ class APIServerTest(APITestCase):
         )
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'request_does_not_exist')
+
+    def test_get_info(self):
+        # GET success
+        resp = self.client.get(reverse('server_get_info'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['name'], 'Sean Lu')
+        self.assertEqual(content['email'], 'seanlu99@gmail.com')
+        self.assertEqual(content['restaurant_name'], 'Ice Cream Shop')
+        # GET success: no restaurant
+        server = self.user.server
+        server.restaurant = None
+        server.save()
+        resp = self.client.get(reverse('server_get_info'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['restaurant_name'], 'none')

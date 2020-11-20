@@ -40,10 +40,9 @@ def login(request):
         return JsonResponse({"status": "invalid_token"})
     # Create customer account if not created
     customer = Customer.objects.get_or_create(user=request.user)[0]
-    # Check that user's name is set
-    if not request.user.name:
-        return JsonResponse({"id": customer.id, "name_set": False, "status": "success"})
-    return JsonResponse({"id": customer.id, "name_set": True, "status": "success"})
+    # Check if user's name is set
+    name_set = False if not request.user.name else True
+    return JsonResponse({"id": customer.id, "name_set": name_set, "status": "success"})
 
 
 @api_view(['POST'])

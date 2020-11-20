@@ -13,6 +13,28 @@ class APICustomerTest(APITestCase):
         self.client.force_authenticate(user)
         self.customer = user.customer
 
+    def test_login(self):
+        # POST success: use existing customer, user has name
+        resp = self.client.post(reverse('customer_login'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['name_set'], True)
+        self.assertEqual(content['id'], 11)
+        # POST success: create new customer, user has no name
+        user = User.objects.get(email="simon@gmail.com")
+        self.client.force_authenticate(user)
+        resp = self.client.post(reverse('customer_login'))
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        self.assertEqual(content['name_set'], False)
+        # POST error: invalid token
+        self.client.force_authenticate(user=None)
+        resp = self.client.post(reverse('customer_login'))
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'invalid_token')
+
     def test_get_restaurants(self):
         # GET success
         resp = self.client.get(reverse('customer_get_restaurants'))
@@ -52,7 +74,7 @@ class APICustomerTest(APITestCase):
         self.assertEqual(categories[0]['name'], 'Drinks')
         self.assertEqual(categories[1]['name'], 'Entrees')
         # GET error: restaurant does not exist
-        resp = self.client.get(reverse('customer_get_restaurant', args=(25,)))
+        resp = self.client.get(reverse('customer_get_categories', args=(25,)))
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'restaurant_does_not_exist')
 

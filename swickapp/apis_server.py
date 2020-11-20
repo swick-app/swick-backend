@@ -27,6 +27,8 @@ def login(request):
         name_set
         status
     """
+    if request.user.is_anonymous:
+        return JsonResponse({"status": "invalid_token"})
     # Create server account if not created
     try:
         server = Server.objects.get(user=request.user)
@@ -46,10 +48,14 @@ def login(request):
             pass
 
     restaurant_id = None if server.restaurant is None else server.restaurant.id
-    # Check that user's name is set
-    if not request.user.name:
-        return JsonResponse({"id": server.id, "restaurant_id": restaurant_id, "name_set": False, "status": "success"})
-    return JsonResponse({"id": server.id, "restaurant_id": restaurant_id, "name_set": True, "status": "success"})
+    # Check if user's name is set
+    name_set = False if not request.user.name else True
+    return JsonResponse({
+        "id": server.id,
+        "restaurant_id": restaurant_id,
+        "name_set": name_set,
+        "status": "success"
+    })
 
 
 @api_view(['POST'])

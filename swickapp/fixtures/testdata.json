@@ -96,6 +96,38 @@
     }
 },
 {
+    "model": "swickapp.user",
+    "pk": 48,
+    "fields": {
+        "password": "!kJ7kV1dxCzhx1Zf6iapix34nH2Y5QcZ2DlmtrFwX",
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-11-18T01:37:03.520Z",
+        "email": "simon@gmail.com",
+        "name": "",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
+    "model": "swickapp.user",
+    "pk": 49,
+    "fields": {
+        "password": "!kJ7kV1dxCzhx1Zf6iapix34nH2Y5QcZ2DlmtrFwX",
+        "last_login": null,
+        "is_superuser": false,
+        "is_staff": false,
+        "is_active": true,
+        "date_joined": "2020-11-19T01:37:03.520Z",
+        "email": "chris@gmail.com",
+        "name": "",
+        "groups": [],
+        "user_permissions": []
+    }
+},
+{
     "model": "swickapp.restaurant",
     "pk": 26,
     "fields": {
