@@ -36,7 +36,7 @@ class MealSerializer(serializers.ModelSerializer):
 class CustomizationSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customization
-        fields = ("id", "name", "options", "price_additions", "min", "max")
+        exclude = ("meal",)
 
 
 class RequestOptionSerializer(serializers.ModelSerializer):
@@ -48,7 +48,7 @@ class RequestOptionSerializer(serializers.ModelSerializer):
 class RequestSerializer(serializers.ModelSerializer):
     customer_name = serializers.ReadOnlyField(source="customer.user.name")
     request_name = serializers.ReadOnlyField(source="request_option.name")
-    time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%S%Z", source="request_time")
+    time = serializers.DateTimeField(source="request_time")
 
     class Meta:
         model = Request
@@ -126,7 +126,7 @@ class OrderItemToSendSerializer(serializers.ModelSerializer):
     customer_name = serializers.ReadOnlyField(
         source="order.customer.user.name")
     table = serializers.ReadOnlyField(source="order.table")
-    time = serializers.DateTimeField(format="%Y-%m-%dT%H:%M:%SZ", source="order.order_time")
+    time = serializers.DateTimeField(source="order.order_time")
 
     class Meta:
         model = OrderItem

@@ -314,7 +314,7 @@
         "name": "Wine",
         "description": null,
         "price": "7.50",
-        "image": "",
+        "image": "image.jpg",
         "tax_category": 4,
         "enabled": true
     }
@@ -481,6 +481,18 @@
     "model": "swickapp.orderitem",
     "pk": 51,
     "fields": {
+        "order": 35,
+        "status": "COMPLETE",
+        "meal_name": "Cheeseburger",
+        "meal_price": "6.25",
+        "quantity": 1,
+        "total": "6.25"
+    }
+},
+{
+    "model": "swickapp.orderitem",
+    "pk": 52,
+    "fields": {
         "order": 36,
         "status": "SENDING",
         "meal_name": "Cheeseburger",
@@ -491,7 +503,7 @@
 },
 {
     "model": "swickapp.orderitem",
-    "pk": 52,
+    "pk": 53,
     "fields": {
         "order": 37,
         "status": "COOKING",
@@ -503,7 +515,7 @@
 },
 {
     "model": "swickapp.orderitem",
-    "pk": 53,
+    "pk": 54,
     "fields": {
         "order": 38,
         "status": "COOKING",

@@ -100,7 +100,7 @@ class APIServerTest(APITestCase):
         items = content['order_items']
         self.assertEqual(len(items), 2)
         self.assertEqual(items[0]['id'], 49)
-        self.assertEqual(items[1]['id'], 53)
+        self.assertEqual(items[1]['id'], 54)
 
     def test_get_order_items_to_send(self):
         # GET success
@@ -110,7 +110,7 @@ class APIServerTest(APITestCase):
         self.assertEqual(len(content), 4)
         self.assertEqual(content[0]['id'], 50)
         self.assertEqual(content[0]['type'], 'OrderItem')
-        self.assertEqual(content[1]['id'], 51)
+        self.assertEqual(content[1]['id'], 52)
         self.assertEqual(content[1]['type'], 'OrderItem')
         self.assertEqual(content[2]['id'], 18)
         self.assertEqual(content[2]['type'], 'Request')
@@ -173,7 +173,7 @@ class APIServerTest(APITestCase):
         # POST error: order item does not belong to restaurant
         resp = self.client.post(
             reverse('server_update_order_item_status'),
-            data={'order_item_id': 52, 'status': OrderItem.SENDING}
+            data={'order_item_id': 53, 'status': OrderItem.SENDING}
         )
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'order_item_does_not_exist')
