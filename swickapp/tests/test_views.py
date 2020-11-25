@@ -1,7 +1,10 @@
 from decimal import Decimal
+from unittest.mock import Mock, patch
 
+import stripe
 from django.core import mail
 from django.core.files.uploadedfile import SimpleUploadedFile
+from django.http import HttpResponseRedirect
 from django.test import TestCase
 from django.urls import reverse
 from swickapp.models import (Category, Customization, Meal, RequestOption,
@@ -44,12 +47,16 @@ class ViewsTest(TestCase):
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, 'registration/request_demo_done.html')
 
-    def test_sign_up(self):
+    @patch("stripe.Account.create")
+    @patch("stripe.AccountLink.create")
+    def test_sign_up(self, account_link_create_mock, account_create_mock):
         # GET success
         resp = self.client.get(reverse('sign_up'))
         self.assertEqual(resp.status_code, 200)
         self.assertTemplateUsed(resp, 'registration/sign_up.html')
         # POST success: create new user
+        account_create_mock.return_value.id = "<mock_stripe_account_id>"
+        account_link_create_mock.return_value.url = 'https://stripe.com'
         resp = self.client.post(
             reverse('sign_up'),
             data={
@@ -60,7 +67,8 @@ class ViewsTest(TestCase):
                 'restaurant-address': '1 S University Ave, Ann Arbor, MI 48104',
                 'restaurant-image': SimpleUploadedFile(
                     name='long-image.jpg',
-                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
+                    content=open(
+                        "./swickapp/tests/long-image.jpg", 'rb').read()
                 ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '6.250'
@@ -84,21 +92,66 @@ class ViewsTest(TestCase):
                 'restaurant-address': '1 North St, Ann Arbor, MI 48104',
                 'restaurant-image': SimpleUploadedFile(
                     name='long-image.jpg',
-                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
+                    content=open(
+                        "./swickapp/tests/long-image.jpg", 'rb').read()
                 ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '6'
             }
         )
         restaurant = Restaurant.objects.get(name="Burger Palace")
+        # POST error: stripe account link create api error
+        account_link_create_mock.side_effect = stripe.error.StripeError(
+            "<mock_stripe_error_message>")
+        resp = self.client.post(
+            reverse('sign_up'),
+            data={
+                'user-name': 'Sean3',
+                'user-email': 'seanlu99_3@gmail.com',
+                'user-password': 'password3',
+                'restaurant-name': 'Burger Palace3',
+                'restaurant-address': '1 North St, Ann Arbor, MI 48104',
+                'restaurant-image': SimpleUploadedFile(
+                    name='long-image.jpg',
+                    content=open(
+                        "./swickapp/tests/long-image.jpg", 'rb').read()
+                ),
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '6'
+            }
+        )
+        self.assertEqual(resp.status_code, 302)
+        # POST error: stripe account create api error
+        account_create_mock.side_effect = stripe.error.StripeError(
+            "<mock_stripe_error_message>")
+        resp = self.client.post(
+            reverse('sign_up'),
+            data={
+                'user-name': 'Sean2',
+                'user-email': 'seanlu99_2@gmail.com',
+                'user-password': 'password2',
+                'restaurant-name': 'Burger Palace2',
+                'restaurant-address': '1 North St, Ann Arbor, MI 48104',
+                'restaurant-image': SimpleUploadedFile(
+                    name='long-image.jpg',
+                    content=open(
+                        "./swickapp/tests/long-image.jpg", 'rb').read()
+                ),
+                'restaurant-timezone': 'US/Eastern',
+                'restaurant-default_sales_tax': '6'
+            }
+        )
+        self.assertEqual(resp.status_code, 404)
 
-    def test_refresh_stripe_link(self):
+    @patch('stripe.AccountLink.create')
+    def test_refresh_stripe_link(self, account_link_create_mock):
+        account_link_create_mock.return_value.url = 'https://stripe.com'
         # GET success
         resp = self.client.get(reverse('refresh_stripe_link'))
         self.assertEqual(resp.status_code, 302)
-        # GET error: stripe account id is invalid
-        self.restaurant.stripe_acct_id = "invalid"
-        self.restaurant.save()
+        # GET error: stripe api error
+        account_link_create_mock.side_effect = stripe.error.StripeError(
+            "mock_stripe_error_message")
         resp = self.client.get(reverse('refresh_stripe_link'))
         self.assertEqual(resp.status_code, 404)
 
@@ -372,7 +425,7 @@ class ViewsTest(TestCase):
         self.assertRedirects(resp, reverse('restaurant_finances'))
         tax_categories = TaxCategory.objects.filter(restaurant=self.restaurant)
         self.assertEqual(tax_categories.count(), 3)
-        # POST error: tax categroy name is repeated
+        # POST error: tax category name is repeated
         resp = self.client.post(
             reverse('restaurant_edit_tax_category', args=(4,)),
             data={'name': 'Default', 'tax': '0.3'}
@@ -608,7 +661,8 @@ class ViewsTest(TestCase):
                 'restaurant-address': '1 State St, Ann Arbor, MI 48104',
                 'restaurant-image': SimpleUploadedFile(
                     name='long-image.jpg',
-                    content=open("./swickapp/tests/long-image.jpg", 'rb').read()
+                    content=open(
+                        "./swickapp/tests/long-image.jpg", 'rb').read()
                 ),
                 'restaurant-timezone': 'US/Eastern',
                 'restaurant-default_sales_tax': '7.250'

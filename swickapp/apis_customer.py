@@ -1,16 +1,16 @@
 import json
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, DecimalException
 
 import pusher
 import stripe
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from swick.settings import (PUSHER_APP_ID, PUSHER_CLUSTER, PUSHER_KEY,
                             PUSHER_SECRET, STRIPE_API_KEY)
 
 from .apis_helper import (attempt_stripe_payment, get_stripe_fee,
-                          retry_stripe_payment)
+                          retry_stripe_payment, create_stripe_customer)
 from .models import (Category, Customer, Customization, Meal, Order, OrderItem,
                      OrderItemCustomization, Request, RequestOption,
                      Restaurant)
@@ -38,8 +38,8 @@ def login(request):
     """
     if request.user.is_anonymous:
         return JsonResponse({"status": "invalid_token"})
-    # Create customer account if not created
-    customer = Customer.objects.get_or_create(user=request.user)[0]
+    customer = Customer.objects.get_or_create(
+        user=request.user, defaults={'stripe_cust_id': create_stripe_customer})[0]
     # Check if user's name is set
     name_set = False if not request.user.name else True
     return JsonResponse({"id": customer.id, "name_set": name_set, "status": "success"})
@@ -61,8 +61,11 @@ def pusher_auth(request):
     try:
         if not channel.startswith("private-customer-"):
             raise AssertionError("Unknown channel requested " + channel)
+        split = channel.split('-')
+        if len(split) != 3:
+            raise AssertionError("Unknown channel requested " + channel)
         customer = Customer.objects.get(user=request.user)
-        channel_id = int(channel.split('-')[2])
+        channel_id = int(split[2])
         if customer.id != channel_id:
             raise AssertionError("Requested unauthorized channnel")
 
@@ -77,7 +80,6 @@ def pusher_auth(request):
 
         return JsonResponse(payload)
     except (Customer.DoesNotExist, ValueError, AssertionError, IndexError) as e:
-        print(e)
         return HttpResponseForbidden()
 
 
@@ -361,7 +363,7 @@ def add_tip(request):
     try:
         tip = Decimal(Decimal(request.POST["tip"]).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP))
-    except ValueError:
+    except (ValueError, DecimalException):
         return JsonResponse({"status": "invalid_request"})
 
     try:
@@ -420,7 +422,7 @@ def retry_order_payment(request):
     content = json.loads(response.content)
     if content["status"] == "success":
         if content["intent_status"] == "card_error" or content["intent_status"] == 'requires_payment_method' or content["intent_status"] == 'requires_source':
-            order = Order.objects.get(id=payment_intent.metadata["order_id"])
+            order = Order.objects.get(id=content["order_id"])
             order.delete()
         elif content["intent_status"] == "succeeded":
             order = Order.objects.get(id=content["order_id"])
@@ -446,20 +448,25 @@ def retry_tip_payment(request):
             status
     """
     response = retry_stripe_payment(
-        request.user.customer, request.POST["payment_intent_id"])
+        request.user.customer, request.POST["payment_intent_id"]
+    )
     content = json.loads(response.content)
     if content["status"] == "success":
         if content["intent_status"] == "succeeded":
             try:
                 payment_intent = stripe.PaymentIntent.retrieve(
-                    request.POST["payment_intent_id"])
+                    request.POST["payment_intent_id"]
+                )
                 order = Order.objects.get(id=content["order_id"])
-                order.tip = Decimal(payment_intent.amount / 100)
+                order.tip = Decimal(Decimal(payment_intent.amount / 100).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP)
+                )
                 order.total += order.tip
                 order.stripe_fee += get_stripe_fee(
-                    request.POST["payment_intent_id"])
+                    request.POST["payment_intent_id"]
+                )
                 order.save()
-                send_event_tip_added(order_object)
+                send_event_tip_added(order)
             except stripe.error.StripeError:
                 return JsonResponse({"status": "stripe_api_error"})
     return response
@@ -606,7 +613,8 @@ def remove_card(request):
     """
     try:
         payment_method = stripe.PaymentMethod.retrieve(
-            request.POST["payment_method_id"])
+            request.POST["payment_method_id"]
+        )
         if payment_method.customer == request.user.customer.stripe_cust_id:
             stripe.PaymentMethod.detach(request.POST["payment_method_id"])
         else:

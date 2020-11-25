@@ -1,4 +1,4 @@
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from drf_multiple_model.mixins import FlatMultipleModelMixin
 from rest_framework.decorators import api_view
 from rest_framework.generics import GenericAPIView

@@ -3,6 +3,7 @@ import json
 from django.urls import reverse
 from rest_framework.test import APITestCase
 from swickapp.models import Order, OrderItem, Request, Server, User
+from unittest.mock import Mock, patch
 
 
 class APIServerTest(APITestCase):
@@ -43,6 +44,58 @@ class APIServerTest(APITestCase):
         resp = self.client.post(reverse('server_login'))
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'invalid_token')
+
+    @patch('pusher.Pusher')
+    def test_pusher_auth(self, pusher_mock):
+        pusher_mock.return_value.authenticate.return_value = {
+            "pusher_payload": "mock_pusher_payload"}
+        # POST success: server with restaurant
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-restaurant-26",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content["pusher_payload"], "mock_pusher_payload")
+        # POST error: server does have access to restaurant
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-restaurant-29",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 403)
+        # POST success: server without restaurant
+        self.user.server.restaurant = None
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-server-11",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content["pusher_payload"], "mock_pusher_payload")
+        # POST error: channel does not start with valid channel type
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-customer-11",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 403)
+        # POST error: channel is not of correct format
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-restaurant_account-11-35",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 403)
+        # POST error: server channel is not requested by user
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-server-22",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 403)
+        # POST error: channel number is not an integer
+        resp = self.client.post(reverse('server_pusher_auth'), data={
+            "channel_name": "private-server-22.2",
+            "socket_id": "1"
+        })
+        self.assertEqual(resp.status_code, 403)
 
     def test_get_orders(self):
         # GET success
