@@ -24,6 +24,17 @@ class APITest(APITestCase):
         User.objects.get(email='jeanpaul@gmail.com', name='Jean-Paul')
         self.assertRaises(User.DoesNotExist, User.objects.get,
                           email='seanlu99@gmail.com')
+        # POST success: no email
+        resp = self.client.post(
+            reverse('update_info'),
+            data={'name': 'Jean', 'email': ''}
+        )
+        self.assertEqual(resp.status_code, 200)
+        content = json.loads(resp.content)
+        self.assertEqual(content['status'], 'success')
+        User.objects.get(email='jeanpaul@gmail.com', name='Jean')
+        self.assertRaises(User.DoesNotExist, User.objects.get,
+                          email='seanlu99@gmail.com')
         # POST error: email already taken
         resp = self.client.post(
             reverse('update_info'),

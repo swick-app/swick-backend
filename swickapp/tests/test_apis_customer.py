@@ -36,6 +36,7 @@ class APICustomerTest(APITestCase):
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'success')
         self.assertEqual(content['name_set'], False)
+        Customer.objects.get(user__email="simon@gmail.com")
         # POST error: invalid token
         self.client.force_authenticate(user=None)
         resp = self.client.post(reverse('customer_login'))
