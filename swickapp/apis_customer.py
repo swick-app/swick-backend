@@ -39,7 +39,7 @@ def login(request):
     if request.user.is_anonymous:
         return JsonResponse({"status": "invalid_token"})
     customer = Customer.objects.get_or_create(
-        user=request.user, defaults={'stripe_cust_id': create_stripe_customer})[0]
+        user=request.user, defaults={'user': request.user, 'stripe_cust_id': create_stripe_customer(request.user.email)})[0]
     # Check if user's name is set
     name_set = False if not request.user.name else True
     return JsonResponse({"id": customer.id, "name_set": name_set, "status": "success"})

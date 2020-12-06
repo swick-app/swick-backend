@@ -9,11 +9,11 @@ from .models import Restaurant
 stripe.api_key = STRIPE_API_KEY
 
 
-def create_stripe_customer():
+def create_stripe_customer(email):
     """
     Create customer in Stripe and return id
     """
-    return stripe.Customer.create().id
+    return stripe.Customer.create(email=email).id
 
 
 def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_method_id, amount, payment_intent_metadata):
@@ -30,17 +30,19 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
         # Direct payments to stripe connected account
         stripe_acct_id = Restaurant.objects.get(
             id=restaurant_id).stripe_acct_id
+        payment_method_clone = stripe.PaymentMethod.create(
+            customer=cust_stripe_id,
+            payment_method=payment_method_id,
+            stripe_account=stripe_acct_id
+        )
         payment_intent = stripe.PaymentIntent.create(amount=amount,
                                                      currency="usd",
-                                                     customer=cust_stripe_id,
-                                                     payment_method=payment_method_id,
+                                                     payment_method=payment_method_clone.id,
                                                      receipt_email=cust_email,
                                                      use_stripe_sdk=True,
                                                      confirmation_method='manual',
                                                      confirm=True,
-                                                     transfer_data={
-                                                         'destination': stripe_acct_id
-                                                     },
+                                                     stripe_account=stripe_acct_id,
                                                      metadata=payment_intent_metadata)
     except stripe.error.CardError as e:
         error = e.user_message

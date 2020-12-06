@@ -15,13 +15,15 @@ class APICustomerTest(APITestCase):
     def setUp(self):
         self.customer = Customer.objects.get(pk=11)
 
+    @patch('stripe.PaymentMethod.create')
     @patch('stripe.PaymentIntent.create')
-    def test_attempt_stripe_payment(self, payment_intent_create_mock):
+    def test_attempt_stripe_payment(self, payment_intent_create_mock, payment_method_create_mock):
         payment_intent_mock = Mock()
         payment_intent_mock.id = 22
         payment_intent_mock.client_secret = "client_secret_mock"
         payment_intent_mock.last_payment_error.message = "payment_error_message_mock"
         payment_intent_create_mock.return_value = payment_intent_mock
+        payment_method_create_mock.return_value.id = "mock_payment_method_id"
         # Test amount less than 50
         resp = attempt_stripe_payment(0, "", "", "", 20, {})
         content = json.loads(resp.content)
