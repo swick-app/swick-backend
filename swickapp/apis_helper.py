@@ -35,6 +35,7 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
             payment_method=payment_method_id,
             stripe_account=stripe_acct_id
         )
+        payment_intent_metadata["payment_method_id"] = payment_method_id
         payment_intent = stripe.PaymentIntent.create(amount=amount,
                                                      currency="usd",
                                                      payment_method=payment_method_clone.id,
@@ -57,6 +58,7 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
         return JsonResponse({"intent_status": intent_status,
                              "payment_intent": payment_intent.id,
                              "client_secret": payment_intent.client_secret,
+                             "connected_acct_id": stripe_acct_id,
                              "status": "success"})
 
     # Card is invalid (this 'elif' branch should never occur due to previous card setup validation)
@@ -78,13 +80,18 @@ def attempt_stripe_payment(restaurant_id, cust_stripe_id, cust_email, payment_me
     return JsonResponse({"status": "unhandled_status"})
 
 
-def retry_stripe_payment(customer, payment_intent_id):
+def retry_stripe_payment(customer, payment_intent_id, restaurant_id):
+    stripe_acct_id = Restaurant.objects.get(id=restaurant_id).stripe_acct_id
     try:
         payment_intent = stripe.PaymentIntent.retrieve(
-            payment_intent_id
+            payment_intent_id,
+            stripe_account=stripe_acct_id
         )
-        if payment_intent.customer == customer.stripe_cust_id:
-            payment_intent = stripe.PaymentIntent.confirm(payment_intent.id)
+        if payment_intent.metadata["customer_id"] == str(customer.id):
+            payment_intent = stripe.PaymentIntent.confirm(
+                payment_intent.id,
+                stripe_account=stripe_acct_id
+            )
         else:
             return JsonResponse({"status": "invalid_stripe_id"})
     except stripe.error.CardError as e:
@@ -105,17 +112,19 @@ def retry_stripe_payment(customer, payment_intent_id):
     return JsonResponse({"status": "unhandled_status"})
 
 
-def get_stripe_fee(payment_intent_id):
+def get_stripe_fee(payment_intent_id, restaurant_id):
     try:
+        stripe_acct_id = Restaurant.objects.get(id=restaurant_id).stripe_acct_id
         # Try determing stripe fee for order
         charge_data = stripe.PaymentIntent.retrieve(
-            payment_intent_id).charges.data
+            payment_intent_id,
+            stripe_account=stripe_acct_id).charges.data
         if not charge_data:
             # If should never reach since all successful payments must have a charge attached
             raise AssertionError(
                 "Unable to find charge attached to payment_intent")
         expanded_charge = stripe.Charge.retrieve(
-            charge_data[0].id, expand=['balance_transaction'])
+            charge_data[0].id, expand=['balance_transaction'], stripe_account=stripe_acct_id)
         for fee in expanded_charge.balance_transaction.fee_details:
             if fee.type == 'stripe_fee':
                 return Decimal((Decimal(fee.amount) / 100).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP))

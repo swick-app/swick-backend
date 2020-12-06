@@ -379,7 +379,7 @@ def restaurant_finances(request):
         try:
             gross_revenue += order.total
             total_tax += order.tax
-            total_tip += order.tip
+            total_tip += order.tip or 0
             stripe_fees += order.stripe_fee
         except TypeError:
             # Critical Error: Catching TypeError means null field was accessed

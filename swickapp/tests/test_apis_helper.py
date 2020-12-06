@@ -87,19 +87,19 @@ class APICustomerTest(APITestCase):
         intent_from_confirm.metadata = {"order_id": 22}
         payment_intent_confirm_mock.return_value = intent_from_confirm
 
-        def retrieve_response(payment_intent):
+        def retrieve_response(payment_intent, stripe_account):
             intent_from_retrieve = Mock()
-            intent_from_retrieve.metadata = {"order_id": 22}
             if payment_intent == "non_customer_payment_intent":
+                intent_from_retrieve.metadata = {"order_id": 22, "customer_id": "invalid_id"}
                 intent_from_retrieve.customer = "invalid_stripe_id"
             elif payment_intent == "valid_cust_payment_intent":
-                intent_from_retrieve.customer = self.customer.stripe_cust_id
+                intent_from_retrieve.metadata = {"order_id": 22, "customer_id": str(self.customer.id)}
                 intent_from_retrieve.id = 22
             return intent_from_retrieve
         payment_intent_retrieve_mock.side_effect = retrieve_response
         # Test customer does not own payment intent
         resp = retry_stripe_payment(
-            self.customer, "non_customer_payment_intent")
+            self.customer, "non_customer_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], "invalid_stripe_id")
         # Test payment intent requires payment method
@@ -107,7 +107,7 @@ class APICustomerTest(APITestCase):
         intent_from_confirm.last_payment_error.message = "mock_last_payment_error_message"
         intent_from_confirm.get.return_value = True
         resp = retry_stripe_payment(
-            self.customer, "valid_cust_payment_intent")
+            self.customer, "valid_cust_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], "success")
         self.assertEqual(content["intent_status"], "requires_payment_method")
@@ -116,7 +116,7 @@ class APICustomerTest(APITestCase):
         # Test successful attempt
         intent_from_confirm.status = 'succeeded'
         resp = retry_stripe_payment(
-            self.customer, "valid_cust_payment_intent")
+            self.customer, "valid_cust_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], "success")
         self.assertEqual(content["intent_status"], "succeeded")
@@ -124,14 +124,14 @@ class APICustomerTest(APITestCase):
         # Test unhandled status
         intent_from_confirm.status = 'unhandled_status'
         resp = retry_stripe_payment(
-            self.customer, "valid_cust_payment_intent")
+            self.customer, "valid_cust_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], 'unhandled_status')
         # Test card fails
         payment_intent_confirm_mock.side_effect = stripe.error.CardError(
             "mock_card_error_message", None, None)
         resp = retry_stripe_payment(
-            self.customer, "valid_cust_payment_intent")
+            self.customer, "valid_cust_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], "success")
         self.assertEqual(content["intent_status"], "card_error")
@@ -140,7 +140,7 @@ class APICustomerTest(APITestCase):
         payment_intent_retrieve_mock.side_effect = stripe.error.StripeError(
             "mock_stripe_error_message")
         resp = retry_stripe_payment(
-            self.customer, "valid_cust_payment_intent")
+            self.customer, "valid_cust_payment_intent", 26)
         content = json.loads(resp.content)
         self.assertEqual(content["status"], "stripe_api_error")
 
@@ -148,7 +148,7 @@ class APICustomerTest(APITestCase):
     @patch('stripe.Charge.retrieve')
     def test_get_stripe_fee(self, charge_retrieve_mock, payment_intent_retrieve_mock):
         # Define mock response for PaymentIntent.retrieve
-        def response(payment_intent):
+        def response(payment_intent, stripe_account):
             response_mock = Mock()
             if payment_intent == "valid_payment_intent_id":
                 mock_latest_charge = Mock()
@@ -162,7 +162,7 @@ class APICustomerTest(APITestCase):
         other_mock_1 = other_mock_2 = Mock()
         fee_details_mock = [other_mock_1, other_mock_2]
         charge_retrieve_mock.return_value.balance_transaction.fee_details = fee_details_mock
-        fee = get_stripe_fee("valid_payment_intent_id")
+        fee = get_stripe_fee("valid_payment_intent_id", 26)
         self.assertEqual(fee, None)
         # Test retrieving stripe fee of 2.50
         stripe_fee_mock = Mock()
@@ -170,13 +170,13 @@ class APICustomerTest(APITestCase):
         stripe_fee_mock.amount = "250"
         fee_details_mock.append(stripe_fee_mock)
         charge_retrieve_mock.return_value.balance_transaction.fee_details = fee_details_mock
-        fee = get_stripe_fee("valid_payment_intent_id")
+        fee = get_stripe_fee("valid_payment_intent_id", 26)
         self.assertEqual(fee, Decimal("2.50"))
         # Test failure with incomplete payment intent
-        fee = get_stripe_fee("invalid_payment_intent_id")
+        fee = get_stripe_fee("invalid_payment_intent_id", 26)
         self.assertEqual(fee, None)
         # Test stripe excpetion raised
         payment_intent_retrieve_mock.side_effect = stripe.error.StripeError(
             "Mock stripe error")
-        fee = get_stripe_fee("some_payment_intent_id")
+        fee = get_stripe_fee("some_payment_intent_id", 26)
         self.assertEqual(fee, None)

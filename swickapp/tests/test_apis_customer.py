@@ -328,10 +328,11 @@ class APICustomerTest(APITestCase):
         self.assertEqual(order.tax, Decimal("2.22"))
         self.assertEqual(order.total, Decimal("43.22"))
 
+    @patch('stripe.PaymentMethod.retrieve')
     @patch('stripe.PaymentIntent.retrieve')
     @patch('swickapp.apis_customer.attempt_stripe_payment')
     @patch('swickapp.apis_customer.get_stripe_fee')
-    def test_add_tip(self, get_stripe_fee_mock, attempt_stripe_payment_mock, payment_intent_retrieve_mock):
+    def test_add_tip(self, get_stripe_fee_mock, attempt_stripe_payment_mock, payment_intent_retrieve_mock, payment_method_retrieve_mock):
         # POST error: customer id is not valid
         resp = self.client.post(reverse('customer_add_tip'), data={
             "order_id": 38,
@@ -350,7 +351,9 @@ class APICustomerTest(APITestCase):
         payment_intent_mock = Mock()
         payment_intent_mock.payment_method = Mock()
         payment_intent_mock.payment_method.customer = "invalid_customer_id"
+        payment_intent_mock.metadata = {"order_id": 35, "payment_method_id": "invalid_payment_method_id"}
         payment_intent_retrieve_mock.return_value = payment_intent_mock
+        payment_method_retrieve_mock.return_value.customer = 111
         resp = self.client.post(reverse('customer_add_tip'), data={
             "order_id": 35,
             "tip": "2.00"
@@ -365,6 +368,8 @@ class APICustomerTest(APITestCase):
         self.assertEqual(order.tip, Decimal("4.88"))
         # POST success: payment method requires_actions
         payment_intent_mock.payment_method.customer = self.customer.stripe_cust_id
+        payment_intent_mock.metadata = {"order_id": 35, "payment_method_id": "valid_payment_method_id"}
+        payment_method_retrieve_mock.return_value.customer = self.customer.stripe_cust_id
         attempt_stripe_payment_mock.return_value = JsonResponse({
             "intent_status": "requires_action",
             "payment_intent": "valid_payment_intent_id",
@@ -429,7 +434,8 @@ class APICustomerTest(APITestCase):
         order.status = Order.PROCESSING
         order.save()
         resp = self.client.post(reverse('customer_retry_order_payment'), data={
-            "payment_intent_id": "valid_payment_intent_id"
+            "payment_intent_id": "valid_payment_intent_id",
+            "restaurant_id": 26
         })
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
@@ -446,7 +452,8 @@ class APICustomerTest(APITestCase):
             "status": "success"
         })
         resp = self.client.post(reverse('customer_retry_order_payment'), data={
-            "payment_intent_id": "valid_payment_intent_id"
+            "payment_intent_id": "valid_payment_intent_id",
+            "restaurant_id": 26
         })
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
@@ -468,7 +475,8 @@ class APICustomerTest(APITestCase):
         payment_intent_retrieve_mock.return_value.amount = 300
 
         resp = self.client.post(reverse('customer_retry_tip_payment'), data={
-            "payment_intent_id": "valid_payment_intent_id"
+            "payment_intent_id": "valid_payment_intent_id",
+            "restaurant_id": 26
         })
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
@@ -485,7 +493,8 @@ class APICustomerTest(APITestCase):
             "status": "success"
         })
         resp = self.client.post(reverse('customer_retry_tip_payment'), data={
-            "payment_intent_id": "valid_payment_intent_id"
+            "payment_intent_id": "valid_payment_intent_id",
+            "restaurant_id": 26
         })
         self.assertEqual(resp.status_code, 200)
         content = json.loads(resp.content)
@@ -503,7 +512,8 @@ class APICustomerTest(APITestCase):
             "mock_stripe_error_message"
         )
         resp = self.client.post(reverse('customer_retry_tip_payment'), data={
-            "payment_intent_id": "valid_payment_intent_id"
+            "payment_intent_id": "valid_payment_intent_id",
+            "restaurant_id": 26
         })
         content = json.loads(resp.content)
         self.assertEqual(content['status'], 'stripe_api_error')

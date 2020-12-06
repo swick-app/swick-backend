@@ -109,6 +109,7 @@ def get_orders(request):
     return:
         [orders]
             id
+            restaurant_id
             restaurant_name (unused)
             customer_name
             order_time

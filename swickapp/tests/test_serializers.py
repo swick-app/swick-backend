@@ -82,7 +82,7 @@ class SerializersTest(APITestCase):
         order = Order.objects.get(id=35)
         data = OrderSerializer(order).data
         self.assertEqual(set(data.keys()), {
-                         "id", "restaurant_name", "customer_name", "order_time", "status"})
+                         "id", "restaurant_id", "restaurant_name", "customer_name", "order_time", "status"})
         self.assertEqual(data['restaurant_name'], "Ice Cream Shop")
         self.assertEqual(data['customer_name'], "Sean Lu")
         self.assertEqual(data['status'], "Active")

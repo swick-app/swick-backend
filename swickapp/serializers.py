@@ -76,13 +76,14 @@ class OrderItemSerializer(serializers.ModelSerializer):
 
 
 class OrderSerializer(serializers.ModelSerializer):
+    restaurant_id = serializers.ReadOnlyField(source="restaurant.id")
     restaurant_name = serializers.ReadOnlyField(source="restaurant.name")
     customer_name = serializers.ReadOnlyField(source="customer.user.name")
     status = serializers.ReadOnlyField(source="get_status_display")
 
     class Meta:
         model = Order
-        fields = ("id", "restaurant_name",
+        fields = ("id", "restaurant_id", "restaurant_name",
                   "customer_name", "order_time", "status")
 
 
