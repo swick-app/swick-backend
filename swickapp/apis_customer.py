@@ -1,16 +1,16 @@
 import json
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, DecimalException
 
 import pusher
 import stripe
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
 from swick.settings import (PUSHER_APP_ID, PUSHER_CLUSTER, PUSHER_KEY,
                             PUSHER_SECRET, STRIPE_API_KEY)
 
 from .apis_helper import (attempt_stripe_payment, get_stripe_fee,
-                          retry_stripe_payment)
+                          retry_stripe_payment, create_stripe_customer)
 from .models import (Category, Customer, Customization, Meal, Order, OrderItem,
                      OrderItemCustomization, Request, RequestOption,
                      Restaurant)
@@ -36,12 +36,15 @@ def login(request):
         name_set
         status
     """
-    # Create customer account if not created
-    customer = Customer.objects.get_or_create(user=request.user)[0]
-    # Check that user's name is set
-    if not request.user.name:
-        return JsonResponse({"id": customer.id, "name_set": False, "status": "success"})
-    return JsonResponse({"id": customer.id, "name_set": True, "status": "success"})
+    if request.user.is_anonymous:
+        return JsonResponse({"status": "invalid_token"})
+    try:
+        customer = Customer.objects.get(user=request.user)
+    except Customer.DoesNotExist:
+        customer = Customer.objects.create(user=request.user, stripe_cust_id=create_stripe_customer(request.user.email))
+    # Check if user's name is set
+    name_set = False if not request.user.name else True
+    return JsonResponse({"id": customer.id, "name_set": name_set, "status": "success"})
 
 
 @api_view(['POST'])
@@ -60,8 +63,11 @@ def pusher_auth(request):
     try:
         if not channel.startswith("private-customer-"):
             raise AssertionError("Unknown channel requested " + channel)
+        split = channel.split('-')
+        if len(split) != 3:
+            raise AssertionError("Unknown channel requested " + channel)
         customer = Customer.objects.get(user=request.user)
-        channel_id = int(channel.split('-')[2])
+        channel_id = int(split[2])
         if customer.id != channel_id:
             raise AssertionError("Requested unauthorized channnel")
 
@@ -76,7 +82,6 @@ def pusher_auth(request):
 
         return JsonResponse(payload)
     except (Customer.DoesNotExist, ValueError, AssertionError, IndexError) as e:
-        print(e)
         return HttpResponseForbidden()
 
 
@@ -122,7 +127,8 @@ def get_restaurant(request, restaurant_id):
         context={"request": request}
     ).data
     request_options = RequestOptionSerializer(
-        RequestOption.objects.filter(restaurant=restaurant_object),
+        RequestOption.objects.filter(
+            restaurant=restaurant_object).order_by("id"),
         many=True,
     ).data
     return JsonResponse({
@@ -138,9 +144,14 @@ def get_categories(request, restaurant_id):
         [categories]
             id
             name
+        status
     """
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
     categories = CategorySerializer(
-        Category.objects.filter(restaurant_id=restaurant_id).order_by("name"),
+        Category.objects.filter(restaurant=restaurant).order_by("name"),
         many=True,
     ).data
     return JsonResponse({"categories": categories, "status": "success"})
@@ -158,11 +169,21 @@ def get_meals(request, restaurant_id, category_id):
             image
         status
     """
+    try:
+        restaurant = Restaurant.objects.get(id=restaurant_id)
+    except Restaurant.DoesNotExist:
+        return JsonResponse({"status": "restaurant_does_not_exist"})
+    if category_id != 0:
+        try:
+            category = Category.objects.get(
+                restaurant=restaurant, id=category_id)
+        except Category.DoesNotExist:
+            return JsonResponse({"status": "category_does_not_exist"})
     # Get all meals if category_id is 0
     if category_id == 0:
         meals = MealSerializer(
             Meal.objects.filter(
-                category__restaurant_id=restaurant_id,
+                category__restaurant=restaurant,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -171,7 +192,7 @@ def get_meals(request, restaurant_id, category_id):
     else:
         meals = MealSerializer(
             Meal.objects.filter(
-                category_id=category_id,
+                category=category,
                 enabled=True
             ).order_by("name"),
             many=True,
@@ -233,6 +254,7 @@ def place_order(request):
         status
     """
     order_items = json.loads(request.POST["order_items"])
+    restaurant_id = request.POST["restaurant_id"]
     # Check if any meals are disabled
     for item in order_items:
         meal = Meal.objects.get(id=item["meal_id"])
@@ -242,7 +264,7 @@ def place_order(request):
     # Create order in database
     order = Order.objects.create(
         customer=request.user.customer,
-        restaurant_id=request.POST["restaurant_id"],
+        restaurant_id=restaurant_id,
         table=request.POST["table"]
     )
 
@@ -298,12 +320,12 @@ def place_order(request):
         "0.01"), rounding=ROUND_HALF_UP)) if request.POST["tip"] != "nil" else None
     order.total = order.subtotal + order.tax + (order.tip or 0)
 
-    response = attempt_stripe_payment(request.POST["restaurant_id"],
+    response = attempt_stripe_payment(restaurant_id,
                                       request.user.customer.stripe_cust_id,
                                       request.user.email,
                                       request.POST["payment_method_id"],
                                       int(order.total * 100),
-                                      {'order_id': order.id})
+                                      {'order_id': order.id, 'customer_id': request.user.customer.id})
 
     content = json.loads(response.content)
     if content["status"] == "success":
@@ -315,7 +337,7 @@ def place_order(request):
             order.save()
         elif intent_status == "succeeded":
             order.stripe_payment_id = content["payment_intent"]
-            order.stripe_fee = get_stripe_fee(content["payment_intent"])
+            order.stripe_fee = get_stripe_fee(content["payment_intent"], restaurant_id)
             order.status = Order.ACTIVE
             order.save()
             send_event_order_placed(order)
@@ -344,17 +366,19 @@ def add_tip(request):
     try:
         tip = Decimal(Decimal(request.POST["tip"]).quantize(
             Decimal("0.01"), rounding=ROUND_HALF_UP))
-    except ValueError:
+    except (ValueError, DecimalException):
         return JsonResponse({"status": "invalid_request"})
 
     try:
         payment_intent = stripe.PaymentIntent.retrieve(order_object.stripe_payment_id,
-                                                       expand=['payment_method'])
+                                                       expand=['payment_method'],
+                                                       stripe_account=order_object.restaurant.stripe_acct_id)
+        payment_method = stripe.PaymentMethod.retrieve(payment_intent.metadata["payment_method_id"])
     except stripe.error.StripeError as e:
         return JsonResponse({"status": "stripe_api_error"})
 
     # Check if user has deleted card
-    if payment_intent.payment_method is not None and request.user.customer.stripe_cust_id != payment_intent.payment_method.customer:
+    if payment_method is not None and request.user.customer.stripe_cust_id != payment_method.customer:
         return JsonResponse({"intent_status": "card_error",
                              "error": "Card used for this order no longer exists",
                              "status": "success"})
@@ -362,9 +386,9 @@ def add_tip(request):
     response = attempt_stripe_payment(order_object.restaurant.id,
                                       request.user.customer.stripe_cust_id,
                                       request.user.email,
-                                      payment_intent.payment_method,
+                                      payment_method.id,
                                       int(tip * 100),
-                                      {'order_id': order_object.id})
+                                      {'order_id': order_object.id, 'customer_id': request.user.customer.id})
 
     content = json.loads(response.content)
     if content["status"] == "success":
@@ -376,7 +400,7 @@ def add_tip(request):
             order_object.tip = Decimal(request.POST["tip"])
             order_object.tip_stripe_payment_id = content["payment_intent"]
             order_object.stripe_fee += get_stripe_fee(
-                content["payment_intent"])
+                content["payment_intent"], order_object.restaurant.id)
             order_object.total += order_object.tip
             order_object.save()
             send_event_tip_added(order_object)
@@ -392,23 +416,25 @@ def retry_order_payment(request):
         Authorization: Token ...
         params:
             payment_intent_id
+            restaurant_id
         return:
             intent_status
             error
             order_id
             status
     """
+    restaurant_id = request.POST["restaurant_id"]
     response = retry_stripe_payment(
-        request.user.customer, request.POST["payment_intent_id"])
+        request.user.customer, request.POST["payment_intent_id"], restaurant_id)
     content = json.loads(response.content)
     if content["status"] == "success":
         if content["intent_status"] == "card_error" or content["intent_status"] == 'requires_payment_method' or content["intent_status"] == 'requires_source':
-            order = Order.objects.get(id=payment_intent.metadata["order_id"])
+            order = Order.objects.get(id=content["order_id"])
             order.delete()
         elif content["intent_status"] == "succeeded":
             order = Order.objects.get(id=content["order_id"])
             order.status = Order.ACTIVE
-            order.stripe_fee = get_stripe_fee(order.stripe_payment_id)
+            order.stripe_fee = get_stripe_fee(order.stripe_payment_id, restaurant_id)
             order.save()
             send_event_order_placed(order)
 
@@ -422,27 +448,36 @@ def retry_tip_payment(request):
         Authorization: Token ...
         params:
             payment_intent_id
+            restaurant_id
         return:
             intent_status
             error
             order_id
             status
     """
+    restaurant_id = request.POST["restaurant_id"]
     response = retry_stripe_payment(
-        request.user.customer, request.POST["payment_intent_id"])
+        request.user.customer, request.POST["payment_intent_id"], restaurant_id
+    )
     content = json.loads(response.content)
     if content["status"] == "success":
         if content["intent_status"] == "succeeded":
             try:
                 payment_intent = stripe.PaymentIntent.retrieve(
-                    request.POST["payment_intent_id"])
+                    request.POST["payment_intent_id"],
+                    stripe_account=Restaurant.objects.get(id=restaurant_id).stripe_acct_id
+                )
                 order = Order.objects.get(id=content["order_id"])
-                order.tip = Decimal(payment_intent.amount / 100)
+                order.tip = Decimal(Decimal(payment_intent.amount / 100).quantize(
+                    Decimal("0.01"), rounding=ROUND_HALF_UP)
+                )
                 order.total += order.tip
                 order.stripe_fee += get_stripe_fee(
-                    request.POST["payment_intent_id"])
+                    request.POST["payment_intent_id"],
+                    restaurant_id
+                )
                 order.save()
-                send_event_tip_added(order_object)
+                send_event_tip_added(order)
             except stripe.error.StripeError:
                 return JsonResponse({"status": "stripe_api_error"})
     return response
@@ -500,13 +535,13 @@ def get_order_details(request, order_id):
                     [options]
         status
     """
-    order = Order.objects.get(id=order_id)
-    # Check if order's customer is the customer making the request
+    try:
+        order = Order.objects.get(id=order_id, customer=request.user.customer)
+    except Order.DoesNotExist:
+        return JsonResponse({"status": "order_does_not_exist"})
     if order.customer == request.user.customer:
         order_details = OrderDetailsSerializer(order).data
         return JsonResponse({"order_details": order_details, "status": "success"})
-    else:
-        return JsonResponse({"status": "invalid_order_id"})
 
 
 @api_view(['POST'])
@@ -589,7 +624,8 @@ def remove_card(request):
     """
     try:
         payment_method = stripe.PaymentMethod.retrieve(
-            request.POST["payment_method_id"])
+            request.POST["payment_method_id"]
+        )
         if payment_method.customer == request.user.customer.stripe_cust_id:
             stripe.PaymentMethod.detach(request.POST["payment_method_id"])
         else:

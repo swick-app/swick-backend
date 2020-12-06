@@ -8,7 +8,7 @@ from django.core.validators import MinValueValidator
 from django.db import models
 from django.utils import timezone
 
-from .models_helper import create_stripe_customer, generate_token
+from .models_helper import generate_token
 
 
 class UserManager(BaseUserManager):
@@ -90,8 +90,7 @@ class Restaurant(models.Model):
 class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE,
                                 related_name='customer')
-    stripe_cust_id = models.CharField(
-        max_length=255, default=create_stripe_customer)
+    stripe_cust_id = models.CharField(max_length=255)
 
     def __str__(self):
         return self.user.email

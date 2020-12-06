@@ -12,7 +12,7 @@ def create_default_request_options(restaurant):
         RequestOption.objects.create(restaurant=restaurant, name=o)
 
 
-def initalize_datetime_range_orders(request):
+def initialize_datetime_range_orders(request):
     """
     Initalizes datetime_range_form and orders queryset and
     returns map containing objects along with any error messages

@@ -24,7 +24,7 @@ from .models import (Category, Customization, Meal, Order, RequestOption,
 from .pusher_events import send_event_restaurant_added
 from .views_helper import (create_default_request_options,
                            get_tax_categories_list,
-                           initalize_datetime_range_orders)
+                           initialize_datetime_range_orders)
 
 
 def main_home(request):
@@ -332,24 +332,12 @@ def restaurant_delete_meal(request, meal_id):
 
 
 @login_required(login_url='/main/')
-def restaurant_enable_meal(request, meal_id):
+def restaurant_toggle_meal(request, meal_id):
     meal = get_object_or_404(Meal, id=meal_id)
     # Checks if requested meal belongs to user's restaurant
     if request.user.restaurant != meal.category.restaurant:
         raise Http404()
-    meal.enabled = True
-    meal.save()
-    # Redirect to category fragment identifier
-    return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
-
-
-@login_required(login_url='/main/')
-def restaurant_disable_meal(request, meal_id):
-    meal = get_object_or_404(Meal, id=meal_id)
-    # Checks if requested meal belongs to user's restaurant
-    if request.user.restaurant != meal.category.restaurant:
-        raise Http404()
-    meal.enabled = False
+    meal.enabled = not meal.enabled
     meal.save()
     # Redirect to category fragment identifier
     return redirect(reverse(restaurant_menu) + '#' + meal.category.name)
@@ -357,7 +345,7 @@ def restaurant_disable_meal(request, meal_id):
 
 @login_required(login_url='/main/')
 def restaurant_orders(request):
-    data = initalize_datetime_range_orders(request)
+    data = initialize_datetime_range_orders(request)
     return render(request, 'restaurant/orders.html', {"orders": data["orders_in_range"],
                                                       "datetime_range_form": data["datetime_range_form"],
                                                       "start_time_error": data["start_time_error"],
@@ -375,8 +363,156 @@ def restaurant_view_order(request, order_id):
 
 
 @login_required(login_url='/main/')
+def restaurant_finances(request):
+    default_category = TaxCategory.objects.get(
+        restaurant=request.user.restaurant, name="Default")
+    tax_categories = TaxCategory.objects.filter(
+        restaurant=request.user.restaurant).exclude(name="Default").order_by("name")
+    data = initialize_datetime_range_orders(request)
+
+    gross_revenue = 0
+    total_tax = 0
+    total_tip = 0
+    stripe_fees = 0
+
+    for order in data["orders_in_range"]:
+        try:
+            gross_revenue += order.total
+            total_tax += order.tax
+            total_tip += order.tip or 0
+            stripe_fees += order.stripe_fee
+        except TypeError:
+            # Critical Error: Catching TypeError means null field was accessed
+            # error would be raised by improper handling of dead orders
+            pass
+
+    revenue = gross_revenue - total_tax - total_tip - stripe_fees
+
+    # Create link for Stripe access
+    stripe_url = "https://dashboard.stripe.com"
+    try:
+        stripe_account = stripe.Account.retrieve(
+            Restaurant.objects.get(user=request.user).stripe_acct_id)
+        if not stripe_account.details_submitted:
+            new_link = stripe.AccountLink.create(
+                account=Restaurant.objects.get(
+                    user=request.user).stripe_acct_id,
+                type="account_onboarding",
+                refresh_url=request.build_absolute_uri(
+                    'accounts/refresh_stripe_link/'),
+                return_url=request.build_absolute_uri('/restaurant/')
+            )
+            stripe_url = new_link.url
+    except stripe.error.StripeError:
+        pass
+
+    return render(request, 'restaurant/finances.html', {"default_category": default_category,
+                                                        "tax_categories": tax_categories,
+                                                        "datetime_range_form": data["datetime_range_form"],
+                                                        "start_time_error": data["start_time_error"],
+                                                        "end_time_error": data["end_time_error"],
+                                                        "gross_revenue": gross_revenue,
+                                                        "total_tax": total_tax,
+                                                        "total_tip": total_tip,
+                                                        "stripe_fees": stripe_fees,
+                                                        "revenue": revenue,
+                                                        "stripe_link": stripe_url})
+
+
+@login_required(login_url='/main/')
+def restaurant_add_tax_category(request):
+    tax_category_form = TaxCategoryFormBase()
+    if request.method == "POST":
+        tax_category_form = TaxCategoryFormBase(request.POST, request=request)
+
+        if tax_category_form.is_valid():
+            tax_category_object = tax_category_form.save(commit=False)
+            tax_category_object.restaurant = request.user.restaurant
+            tax_category_object.save()
+            return redirect(restaurant_finances)
+
+    return render(request, 'restaurant/add_tax_category.html', {
+        "tax_category_form": tax_category_form,
+    })
+
+
+@login_required(login_url='/main/')
+def restaurant_edit_tax_category(request, id):
+    tax_category_object = get_object_or_404(TaxCategory, id=id)
+    # Checks if request belongs to user's restaurant
+    if tax_category_object.restaurant != request.user.restaurant:
+        raise Http404()
+
+    tax_category_form = TaxCategoryFormBase(
+        instance=tax_category_object, request=request)
+
+    # Update request
+    if request.method == "POST":
+        tax_category_form = TaxCategoryFormBase(
+            request.POST, instance=tax_category_object, request=request)
+
+        if tax_category_form.is_valid():
+            instance = tax_category_form.save()
+            if instance.name == "Default":
+                Restaurant.objects.filter(pk=request.user.restaurant.pk).update(
+                    default_sales_tax=instance.tax)
+            return redirect(restaurant_finances)
+
+    return render(request, 'restaurant/edit_tax_category.html', {
+        "tax_category_form": tax_category_form,
+        "tax_category_id": id,
+        "tax_category_name": tax_category_object.name
+    })
+
+
+@login_required(login_url='/main/')
+def restaurant_delete_tax_category(request, id):
+    tax_category_object = get_object_or_404(TaxCategory, id=id)
+    if tax_category_object.restaurant != request.user.restaurant or tax_category_object.name == "Default":
+        raise Http404()
+    # Set meals in tax category to default tax
+    coupled_meals = Meal.objects.filter(tax_category=tax_category_object)
+    # INVARIANT: Default should only be destroyed (thus invalid) when restaurant is deleted
+    coupled_meals.update(tax_category=TaxCategory.objects.get_or_create(
+        restaurant=request.user.restaurant, name="Default")[0])
+    tax_category_object.delete()
+    return redirect(restaurant_finances)
+
+
+class TaxCategoryCreateView(BSModalCreateView):
+    """
+    Class view to create popup with tax category model
+    BSModalCreateView inherits CreateUpdateAjaxMixin and ModelForm from bootstrap modal form
+    Parent 'form_valid(self, form)' call will save TaxCategory to database
+    """
+    template_name = 'helpers/popup_tax_category.html'
+    form_class = TaxCategoryForm
+    success_message = 'Success: Tax Category was added'
+    success_url = reverse_lazy('restaurant_menu')
+
+    @method_decorator(login_required(login_url='/accounts/login'))
+    def dispatch(self, *args, **kwargs):
+        return super().dispatch(*args, **kwargs)
+
+    def form_valid(self, form):
+        form.instance.restaurant = self.request.user.restaurant
+        tax_category = super().form_valid(form)
+        return tax_category
+
+
+@login_required(login_url='/main/')
+def get_tax_categories(request):
+    """
+    Returns json response for tax_categories
+    """
+    tax_categories = get_tax_categories_list(request.user.restaurant)
+    return JsonResponse({"category": get_tax_categories_list(request.user.restaurant)})
+
+
+@login_required(login_url='/main/')
 def restaurant_requests(request):
-    requests = RequestOption.objects.filter(restaurant=request.user.restaurant)
+    requests = RequestOption.objects.filter(
+        restaurant=request.user.restaurant).order_by("id")
     return render(request, 'restaurant/requests.html', {"requests": requests})
 
 
@@ -525,8 +661,6 @@ def restaurant_account(request):
         prefix="restaurant", instance=request.user.restaurant)
     # Update account info
     if request.method == "POST":
-        request.user.restaurant
-
         user_form = UserUpdateForm(
             request.POST, prefix="user", instance=request.user)
         restaurant_form = RestaurantForm(
@@ -569,150 +703,3 @@ def server_link_restaurant(request, token):
     return render(request, 'registration/server_link_restaurant_confirm.html', {
         "restaurant": server_request.restaurant.name
     })
-
-
-@login_required(login_url='/main/')
-def get_tax_categories(request):
-    """
-    Returns json response for tax_categories
-    """
-    tax_categories = get_tax_categories_list(request.user.restaurant)
-    return JsonResponse({"category": get_tax_categories_list(request.user.restaurant)})
-
-
-@login_required(login_url='/main/')
-def restaurant_finances(request):
-    default_category = TaxCategory.objects.get(
-        restaurant=request.user.restaurant, name="Default")
-    tax_categories = TaxCategory.objects.filter(
-        restaurant=request.user.restaurant).exclude(name="Default").order_by("name")
-    data = initalize_datetime_range_orders(request)
-
-    gross_revenue = 0
-    total_tax = 0
-    total_tip = 0
-    stripe_fees = 0
-
-    for order in data["orders_in_range"]:
-        try:
-            gross_revenue += order.total
-            total_tax += order.tax
-            total_tip += order.tip
-            stripe_fees += order.stripe_fee
-        except TypeError:
-            # Critical Error: Catching TypeError means null field was accessed
-            # error would be raised by improper handling of dead orders
-            pass
-
-    revenue = gross_revenue - total_tax - total_tip - stripe_fees
-
-    # Create link for Stripe access
-    stripe_url = "https://dashboard.stripe.com"
-    try:
-        stripe_account = stripe.Account.retrieve(
-            Restaurant.objects.get(user=request.user).stripe_acct_id)
-        if not stripe_account.details_submitted:
-            new_link = stripe.AccountLink.create(
-                account=Restaurant.objects.get(
-                    user=request.user).stripe_acct_id,
-                type="account_onboarding",
-                refresh_url=request.build_absolute_uri(
-                    'accounts/refresh_stripe_link/'),
-                return_url=request.build_absolute_uri('/restaurant/')
-            )
-            stripe_url = new_link.url
-    except stripe.error.StripeError:
-        pass
-
-    return render(request, 'restaurant/finances.html', {"default_category": default_category,
-                                                        "tax_categories": tax_categories,
-                                                        "datetime_range_form": data["datetime_range_form"],
-                                                        "start_time_error": data["start_time_error"],
-                                                        "end_time_error": data["end_time_error"],
-                                                        "gross_revenue": gross_revenue,
-                                                        "total_tax": total_tax,
-                                                        "total_tip": total_tip,
-                                                        "stripe_fees": stripe_fees,
-                                                        "revenue": revenue,
-                                                        "stripe_link": stripe_url})
-
-
-@login_required(login_url='/main/')
-def restaurant_add_tax_category(request):
-    tax_category_form = TaxCategoryFormBase()
-    if request.method == "POST":
-        tax_category_form = TaxCategoryFormBase(request.POST, request=request)
-
-        if tax_category_form.is_valid():
-            tax_category_object = tax_category_form.save(commit=False)
-            tax_category_object.restaurant = request.user.restaurant
-            tax_category_object.save()
-            return redirect(restaurant_finances)
-
-    return render(request, 'restaurant/add_tax_category.html', {
-        "tax_category_form": tax_category_form,
-    })
-
-
-class TaxCategoryCreateView(BSModalCreateView):
-    """
-    Class view to create popup with tax category model
-    BSModalCreateView inherits CreateUpdateAjaxMixin and ModelForm from bootstrap modal form
-    Parent 'form_valid(self, form)' call will save TaxCategory to database
-    """
-    template_name = 'helpers/popup_tax_category.html'
-    form_class = TaxCategoryForm
-    success_message = 'Success: Tax Category was added'
-    success_url = reverse_lazy('restaurant_menu')
-
-    @method_decorator(login_required(login_url='/accounts/login'))
-    def dispatch(self, *args, **kwargs):
-        return super().dispatch(*args, **kwargs)
-
-    def form_valid(self, form):
-        form.instance.restaurant = self.request.user.restaurant
-        tax_category = super().form_valid(form)
-        return tax_category
-
-
-@login_required(login_url='/main/')
-def restaurant_edit_tax_category(request, id):
-    tax_category_object = get_object_or_404(TaxCategory, id=id)
-    # Checks if request belongs to user's restaurant
-    if tax_category_object.restaurant != request.user.restaurant:
-        raise Http404()
-
-    tax_category_form = TaxCategoryFormBase(
-        instance=tax_category_object, request=request)
-
-    # Update request
-    if request.method == "POST":
-        tax_category_form = TaxCategoryFormBase(
-            request.POST, instance=tax_category_object, request=request)
-
-        if tax_category_form.is_valid():
-            instance = tax_category_form.save()
-            if instance.name == "Default":
-                Restaurant.objects.filter(pk=request.user.restaurant.pk).update(
-                    default_sales_tax=instance.tax)
-            return redirect(restaurant_finances)
-
-    return render(request, 'restaurant/edit_tax_category.html', {
-        "tax_category_form": tax_category_form,
-        "tax_category_id": id,
-        "tax_category_name": tax_category_object.name
-    })
-
-
-@login_required(login_url='/main/')
-def restaurant_delete_tax_category(request, id):
-    tax_category_object = get_object_or_404(TaxCategory, id=id)
-    if tax_category_object.restaurant != request.user.restaurant or tax_category_object.name == "Default":
-        raise Http404()
-    # Set meals in tax category to default tax
-    coupled_meals = Meal.objects.filter(tax_category=tax_category_object)
-    # INVARIANT: Default should only be destroyed (thus invalid) when restaurant is deleted
-    coupled_meals.update(tax_category=TaxCategory.objects.get_or_create(
-        restaurant=request.user.restaurant, name="Default")[0])
-    tax_category_object.delete()
-    return redirect(restaurant_finances)

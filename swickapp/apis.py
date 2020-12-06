@@ -21,7 +21,6 @@ def update_info(request):
     # Update email if given
     email = request.POST["email"]
     if email != "":
-        email = request.POST["email"]
         # Check if email is already taken
         try:
             user = User.objects.get(email=email)

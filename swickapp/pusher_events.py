@@ -2,7 +2,7 @@ from enum import Enum
 
 import pusher
 from django.conf import settings
-from swick.settings import (PUSHER_APP_ID, PUSHER_CLUSTER, PUSHER_KEY,
+from swick.settings import (TESTING, PUSHER_APP_ID, PUSHER_CLUSTER, PUSHER_KEY,
                             PUSHER_SECRET)
 
 from .models import OrderItem, Server
@@ -101,13 +101,14 @@ def send_event_restaurant_added(server):
 
 
 def trigger_pusher_event(channels, event, data):
-    pusher_client = pusher.Pusher(
-        app_id=PUSHER_APP_ID,
-        key=PUSHER_KEY,
-        secret=PUSHER_SECRET,
-        cluster=PUSHER_CLUSTER
-    )
-    pusher_client.trigger(channels, event, data)
+    if not TESTING:
+        pusher_client = pusher.Pusher(
+            app_id=PUSHER_APP_ID,
+            key=PUSHER_KEY,
+            secret=PUSHER_SECRET,
+            cluster=PUSHER_CLUSTER
+        )
+        pusher_client.trigger(channels, event, data)
 
 
 def get_customer_channel(customer_id):

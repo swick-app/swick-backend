@@ -31,7 +31,7 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='customer',
             name='stripe_cust_id',
-            field=models.CharField(default=swickapp.models.create_stripe_customer, max_length=255),
+            field=models.CharField(max_length=255),
         ),
         migrations.AlterField(
             model_name='order',
