@@ -5,11 +5,14 @@ from django.urls import include, path
 from swickapp import apis, apis_customer, apis_server, views
 
 urlpatterns = [
-    # Admin page url
+    # Admin page urls
     path('admin/', admin.site.urls),
 
     # Main page url
     path('main/', views.main_home, name='main_home'),
+
+    ##### MAIN PAGE URLS #####
+    path('main/privacy/', views.main_privacy, name='main_privacy'),
 
     # Restaurant home page url
     path('', views.restaurant_home, name='home'),

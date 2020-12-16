@@ -31,6 +31,10 @@ def main_home(request):
     return render(request, 'main/home.html')
 
 
+def main_privacy(request):
+    return render(request, 'main/privacy.html')
+
+
 def request_demo(request):
     demo_form = RequestDemoForm()
 
