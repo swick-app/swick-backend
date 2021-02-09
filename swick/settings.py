@@ -32,7 +32,8 @@ SECRET_KEY = os.environ.get('SECRET_KEY')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DEVELOPMENT
 
-ALLOWED_HOSTS = ['localhost', 'swickapp.herokuapp.com', 'swickapp.com', 'www.swickapp.com']
+ALLOWED_HOSTS = ['localhost', 'swick-staging.herokuapp.com',
+                 'swick-production.herokuapp.com', 'swickapp.com', 'www.swickapp.com']
 
 
 # Application definition
@@ -128,7 +129,7 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Force redirect to HTTPS in production
+# Force redirect to HTTPS in staging/production
 if not DEVELOPMENT:
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
     SECURE_SSL_REDIRECT = True
@@ -148,9 +149,9 @@ REST_FRAMEWORK = {
 
 # drfpasswordless configuration
 PASSWORDLESS_AUTH = {
-   'PASSWORDLESS_AUTH_TYPES': ['EMAIL'],
-   'PASSWORDLESS_EMAIL_NOREPLY_ADDRESS': 'swickappdev@gmail.com',
-   'PASSWORDLESS_EMAIL_SUBJECT': "Swick Login Token"
+    'PASSWORDLESS_AUTH_TYPES': ['EMAIL'],
+    'PASSWORDLESS_EMAIL_NOREPLY_ADDRESS': 'swickappdev@gmail.com',
+    'PASSWORDLESS_EMAIL_SUBJECT': "Swick Login Token"
 }
 
 
