@@ -27,8 +27,28 @@ from .views_helper import (create_default_request_options,
                            initialize_datetime_range_orders)
 
 
+def main(request):
+    return redirect(main_home)
+
+
 def main_home(request):
     return render(request, 'main/home.html')
+
+
+def main_restaurant_dashboard(request):
+    return render(request, 'main/restaurant_dashboard.html')
+
+
+def main_customer_app(request):
+    return render(request, 'main/customer_app.html')
+
+
+def main_server_app(request):
+    return render(request, 'main/server_app.html')
+
+
+def main_about(request):
+    return render(request, 'main/about.html')
 
 
 def main_privacy(request):

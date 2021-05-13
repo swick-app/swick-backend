@@ -1,0 +1,101 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Menu</div>
+      Choose your customer experience with a fully customizable menu. Designate how menu items are categorized and organize the service you want to provide on the fly with real-time menu updates from a single location. 
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-menu.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Add Meal</div>
+      Add or remove customized menu items without the hassle. Simply choose your menu item’s image and any customization options. Then, just specify your pricing options and add a savory description.
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-add-meal.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Orders</div>
+      Stay organized with an easy way to view both active and past orders. Either view today’s orders or choose a range of dates to view and get access to pricing breakdowns for each order. 
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-orders.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Order Details</div>
+      Inspect a more detailed view for each order. See the particulars of each order and how the total price is divided.
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-order-details.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Finances</div>
+      Be on top of your finances. View accumulated financial metrics that are automatically collected with every order. Given any date range, audit fiscal data such as gross revenue, tips collected, and processing fees. Access the Stripe dashboard to view powerful insights on how to direct your service.
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-finances.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Requests</div>
+      Enable customers to request any non-menu items at a touch. Facilitate productive staff members by having customers request items through the Swick app rather than requiring servers to constantly survey customers.
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-requests.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Servers</div>
+      Manage all current servers in your restaurant in seconds. Any accepted server will automatically be connected with your restaurant’s network and be able to start serving orders and requests.
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-servers.png' %}">
+    </div>
+  </div>
+</div>
+
+<div class="screenshot-container">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="screenshot-title">Account</div>
+      Specify the details of your business. Customize what potential customers will see in the Swick app. Additionally, set restaurant specific values such as the current time zone and the default sales tax to be applied. 
+    </div>
+    <div class="col-md-9">
+      <img class="screenshot" src="{% static 'img/restaurant-dashboard-account.png' %}">
+    </div>
+  </div>
+</div>
+
+{% endblock %}

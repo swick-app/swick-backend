@@ -1,0 +1,33 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="ios-screenshot-container">
+    <div class="page-title">Customer App</div>
+    Quick and easy dining brought to your favorite restaurants. The complete service of a server at the touch of your fingertips. Order directly from the app and your food will be brought to where you are. No more unnecessary waiting. Less physical interactions. Frustration-free experience.    <br>
+    <br>
+
+    <div class="row">
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/customer-6.5-1.png' %}">
+        Walk into one of our partnered restaurants and scan the QR code at an open table.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/customer-6.5-2.png' %}">
+        Browse menus and search for items. View menus by category.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/customer-6.5-3.png' %}">
+        Fully customizable meals. Order at the touch of a button.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/customer-6.5-4.png' %}">
+        Request water, utensils, and anything else you need. 
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/customer-6.5-5.png' %}">
+        Pay through our app when you order. Feel free to tip before or after your order.
+      </div>
+    </div>
+</div>
+{% endblock %}

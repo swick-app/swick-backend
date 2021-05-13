@@ -1,0 +1,30 @@
+{% extends 'main/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="ios-screenshot-container">
+    <div class="page-title">Server App</div>
+    Chef and server app for Swick. Keep all your orders organized in one place. Update item statuses with one click. View full order details at any time.
+    <br>
+    <br>
+
+    <div class="row">
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/server-6.5-1.png' %}">
+        View all orders in one place. See which orders are currently in-progress for every customer. Orders with all items completed are automatically marked completed.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/server-6.5-2.png' %}">
+        Curated view for chefs. See all meal items that need to be cooked. Meal customizations laid out for your convenience. Press the fire icon to indicate a meal ready to be served.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/server-6.5-3.png' %}">
+        Curated view for servers. See active meals that need to be served and requests that need to be fulfilled. Either send a meal item back to cook or designate a meal as completed.
+      </div>
+      <div class="col-md">
+        <img class="ios-screenshot" src="{% static 'img/server-6.5-4.png' %}">
+        View any order in detail. Directly manage the status of any active or completed order as well as view order payment and tip.
+      </div>
+    </div>
+</div>
+{% endblock %}

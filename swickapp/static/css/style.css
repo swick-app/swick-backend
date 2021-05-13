@@ -92,6 +92,29 @@ body {
   padding: 30px 30px;
 }
 
+.screenshot-container {
+  padding: 50px;
+}
+
+.screenshot-title {
+  font-size: 30px;
+}
+
+.screenshot {
+  width: 100%;
+  padding-left: 60px;
+  padding-right: 30px;
+}
+
+.ios-screenshot-container {
+  padding: 30px;
+}
+
+.ios-screenshot {
+  width: 100%;
+  padding-bottom: 15px;
+}
+
 /* Component customizations */
 
 .page-title {

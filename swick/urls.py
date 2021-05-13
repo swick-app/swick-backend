@@ -8,10 +8,13 @@ urlpatterns = [
     # Admin page urls
     path('admin/', admin.site.urls),
 
-    # Main page url
-    path('main/', views.main_home, name='main_home'),
-
     ##### MAIN PAGE URLS #####
+    path('main/', views.main, name='main'),
+    path('main/home/', views.main_home, name='main_home'),
+    path('main/restaurant_dashboard/', views.main_restaurant_dashboard, name='main_restaurant_dashboard'),
+    path('main/customer_app/', views.main_customer_app, name='main_customer_app'),
+    path('main/server_app/', views.main_server_app, name='main_server_app'),
+    path('main/about/', views.main_about, name='main_about'),
     path('main/privacy/', views.main_privacy, name='main_privacy'),
 
     # Restaurant home page url
