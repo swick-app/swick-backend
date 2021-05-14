@@ -1,51 +1,36 @@
 # Swick
+Website: [swickapp.com](http://swickapp.com)
+
+iOS Repo: [github.com/swick-app/swick-ios](https://github.com/swick-app/swick-ios)
+
 Swick brings simplicity and efficiency to the dining experience. 
 It serves as an alternative to traditional menus and expensive tablet systems.
-By scanning a QR code at a table, the customer can browse the menu, order, and pay straight from the app.
-Servers receive orders on their app, and have views of orders to cook and to send.
-Restaurant owners can login to their dashboard to edit restaurant information, update their menu and view orders.
+By scanning a QR code at a table, the customer can browse the menu, order, make requests, and pay straight from the app.
+Servers receive orders on their app and are able to manage order statuses and fulfil customer requests.
+Restaurant owners can login to their dashboard to update their menu, view orders and finances, manage servers and edit their information displayed on the apps.
 
-[Video demo on YouTube](https://youtu.be/IzwRwoeHSOk)
-
-## Backend
+## Backend & website
 ### Technologies used
-* Python
-* Django
+* Python 3
+* Django (for backend, website and restaurant dashboard)
 * Django REST Framework
-* PostgreSQL
-* Heroku
-* Amazon S3
-* Stripe
+* PostgreSQL (for storing client data)
+* Heroku (for web hosting)
+* AWS S3 (for static and media assets)
+* Stripe (for payment processing)
+* Pusher (for realtime client-backend communication)
+* drfpasswordless (for passwordless login)
+* coverage (for unit testing)
 * HTML/CSS/JavaScript
 * Bootstrap
 * jQuery
-### Restaurant dashboard features
-* [Restaurant dashboard link](http://swickapp.herokuapp.com)
-* Create an account
-* View menu
-* Add and update meals with customizations and price additions
-* View current and past orders
-* Manage servers
-* View and update account information
 
 ## iOS Apps
-[Github link](https://github.com/swick-app/swick-ios)
 ### Technologies used
-* Swift
+* SwiftUI
+* Introspect (for leveraging UIKit)
+* Stripe (for payment processing)
+* Kingfisher (for image caching)
+* ReachabilitySwift (for detecting network configuration status)
 * Alamofire
 * SwiftyJSON
-* Facebook Login SDK
-* Stripe
-### Customer app features
-* Login through Facebook
-* Browse restaurants and menus
-* Scan QR code to link to restaurant and table
-* Add and customize meals
-* Search for restaurants, categories and meals
-* Pay through Stripe
-* View current and past orders
-### Server app features
-* Login through Facebook
-* View orders to cook
-* View orders to send
-* View past orders
